@@ -1,0 +1,32 @@
+{
+  "name": "viewdb",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha test --recursive",
+    "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- --recursive test -u exports -R spec",
+    "coverage-start": "istanbul cover node_modules/mocha/bin/_mocha test --recursive -- -u exports -R spec && start coverage/lcov-report/index.html",
+    "jshint": "jshint ./lib",
+    "jscs": "jscs -p google ./lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/surikaterna/viewdb"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "istanbul": "^0.3.2",
+    "jshint": "^2.5.10",
+    "mocha": "^2.0.1",
+    "should": "^4.1.0"
+  },
+  "dependencies": {
+    "lodash": "^3.3.1"
+  }
+}
