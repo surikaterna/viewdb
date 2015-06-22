@@ -41,6 +41,7 @@ describe('ViewDB', function() {
 		it('should fail at storing a previously stored document', function(done) {
 			var db = new ViewDB();
 			var collection = db.collection('documents');
+			collection.insert({'_id':1,a:1});
  			collection.insert({'_id':1,a:1}, function(err, ids) {
  				should.exist(err);
  				done();
