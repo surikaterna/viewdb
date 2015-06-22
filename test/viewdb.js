@@ -41,6 +41,7 @@ describe('ViewDB', function() {
 		it('should fail at storing a previously stored document', function(done) {
 			var db = new ViewDB();
 			var collection = db.collection('documents');
+			collection.insert({'_id':1,a:1});
  			collection.insert({'_id':1,a:1}, function(err, ids) {
  				should.exist(err);
  				done();
@@ -68,6 +69,16 @@ describe('ViewDB', function() {
 		it('should add id on insert if missing', function(done) {
 			var db = new ViewDB();
 			var collection = db.collection('documents');
+ 			collection.save({a:1});
+ 			collection.save({b:1});
+ 			collection.count(function(err, result) {
+ 				result.should.equal(2);
+ 				done();
+ 			})
+		});
+		it('should add document on save', function(done) {
+			var db = new ViewDB();
+			var collection = db.collection('documents');
  			collection.save({a:1}, function(err, ids) {
  				collection.count(function(err, count) {
 				    	count.should.equal(1);
@@ -76,7 +87,7 @@ describe('ViewDB', function() {
  				//should.exist(ids._id);
  				//done();
 			});
-		});
+		});		
 		it('should merge if id exists', function(done) {
 			var db = new ViewDB();
 			var collection = db.collection('documents');
