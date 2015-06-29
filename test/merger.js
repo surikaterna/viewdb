@@ -43,6 +43,25 @@ describe('Merger', function() {
 
 //		console.log(_.difference(l1,l2));
 	});	
+
+	it('#merge with objects instead of arrays', function(done) {
+		var l1 = {"0":{a:1}, "1":'b', "2":'d', "3":{e:1}};
+		var l2 = [{a:1}, 'b'];
+		var removed = [];
+		var res = merge(l1,l2, {
+			removed: function(e) {
+				removed.push(e);
+			},
+			comparatorId: _.eq,
+			comparator: _.eq
+		});
+		removed.length.should.equal(2);
+		_.eq(l2, res).should.be.true;
+		done();
+
+//		console.log(_.difference(l1,l2));
+	});	
+
 		
 	it('#merge with one add element', function(done) {
 		var l1 = [{a:1}, 'b'];
