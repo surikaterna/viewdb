@@ -1,6 +1,6 @@
 {
   "name": "viewdb",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "",
   "main": "index.js",
   "directories": {
@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "bluebird": "^2.9.30",
-    "kuery": "^0.1.4",
+    "kuery": "^0.1.5",
     "lodash": "^3.10.1",
     "node-uuid": "^1.4.3"
   }
