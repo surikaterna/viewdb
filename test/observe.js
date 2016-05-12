@@ -31,7 +31,7 @@ describe('Observe', function() {
 			store.collection('dollhouse').insert({_id:'echo2'});
 		});
 	});	
-	it.only('#observe with query and update', function(done) {
+	it('#observe with query and update', function(done) {
 		var store = new ViewDb();
 		store.open().then(function() {
 				var cursor = store.collection('dollhouse').find({_id:'echo'});
