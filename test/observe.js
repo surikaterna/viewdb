@@ -37,11 +37,9 @@ describe('Observe', function() {
 				var cursor = store.collection('dollhouse').find({_id:'echo'});
 				var handle = cursor.observe({
 					added:function(x) {
-						console.log(x);
 						x.age.should.equal(10);
 						x._id.should.equal('echo');
 					}, changed:function(o,n) {
-						console.log('o',o);
 						o.age.should.equal(10);
 						n.age.should.equal(100);
 						handle.stop();
