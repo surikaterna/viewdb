@@ -47,7 +47,7 @@ describe('Observe', function() {
 					}
 				});
 			
-			store.collection('dollhouse').insert({_id:'echo', age:10}, function(){
+			store.collection('dollhouse').insert({_id:'echo', age:10}, function() {
 				store.collection('dollhouse').save({_id:'echo', age:100});
 			});			
 		});

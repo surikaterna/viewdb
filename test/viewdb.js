@@ -138,7 +138,7 @@ describe('ViewDB', function () {
 		});
 	});
 	describe('#drop', function () {
-		it.only('should remove all documents', function (done) {
+		it('should remove all documents', function (done) {
 			var store = new ViewDB();
 			store.open().then(function () {
 				store.collection('dollhouse').insert({ _id: 'echo' });
