@@ -31,15 +31,17 @@ describe('Observe', function() {
 			store.collection('dollhouse').insert({_id:'echo2'});
 		});
 	});	
-	it('#observe with query and update', function(done) {
+	it.only('#observe with query and update', function(done) {
 		var store = new ViewDb();
 		store.open().then(function() {
 				var cursor = store.collection('dollhouse').find({_id:'echo'});
 				var handle = cursor.observe({
 					added:function(x) {
+						console.log(x);
 						x.age.should.equal(10);
 						x._id.should.equal('echo');
 					}, changed:function(o,n) {
+						console.log('o',o);
 						o.age.should.equal(10);
 						n.age.should.equal(100);
 						handle.stop();
@@ -47,7 +49,7 @@ describe('Observe', function() {
 					}
 				});
 			
-			store.collection('dollhouse').insert({_id:'echo', age:10}, function(){
+			store.collection('dollhouse').insert({_id:'echo', age:10}, function() {
 				store.collection('dollhouse').save({_id:'echo', age:100});
 			});			
 		});
