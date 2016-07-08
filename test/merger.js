@@ -19,10 +19,10 @@ describe('Merger', function() {
 				e.should.equal('d');
 				done();
 			},
-			comparatorId: _.eq,
-			comparator: _.eq
+			comparatorId: _.isEqual,
+			comparator: _.isEqual
 		});
-		_.eq(l2, res).should.be.true;
+		_.isEqual(l2, res).should.be.true;
 
 //		console.log(_.difference(l1,l2));
 	});
@@ -34,15 +34,15 @@ describe('Merger', function() {
 			removed: function(e) {
 				removed.push(e);
 			},
-			comparatorId: _.eq,
-			comparator: _.eq
+			comparatorId: _.isEqual,
+			comparator: _.isEqual
 		});
 		removed.length.should.equal(2);
-		_.eq(l2, res).should.be.true;
+		_.isEqual(l2, res).should.be.true;
 		done();
 
 //		console.log(_.difference(l1,l2));
-	});	
+	});
 
 	it('#merge with objects instead of arrays', function(done) {
 		var l1 = {"0":{a:1}, "1":'b', "2":'d', "3":{e:1}};
@@ -52,17 +52,17 @@ describe('Merger', function() {
 			removed: function(e) {
 				removed.push(e);
 			},
-			comparatorId: _.eq,
-			comparator: _.eq
+			comparatorId: _.isEqual,
+			comparator: _.isEqual
 		});
 		removed.length.should.equal(2);
-		_.eq(l2, res).should.be.true;
+		_.isEqual(l2, res).should.be.true;
 		done();
 
 //		console.log(_.difference(l1,l2));
-	});	
+	});
 
-		
+
 	it('#merge with one add element', function(done) {
 		var l1 = [{a:1}, 'b'];
 		var l2 = [{a:1}, 'b', 'c'];
@@ -76,7 +76,7 @@ describe('Merger', function() {
 				done(new Error('should not be called'));
 			}
 		});
-		_.eq(l2, res).should.be.true;
+		_.isEqual(l2, res).should.be.true;
 	});
 	it('#merge with one complex add element', function(done) {
 		var l1 = [{a:1}, 'b'];
@@ -84,14 +84,14 @@ describe('Merger', function() {
 
 		var res = merge(l1,l2, {
 			added: function(e) {
-				_.eq(e,{c:1}).should.be.true;
+				_.isEqual(e,{c:1}).should.be.true;
 				done();
 			},
 			removed: function(e) {
 				done(new Error('should not be called'));
 			}
 		});
-		_.eq(l2, res).should.be.true;
+		_.isEqual(l2, res).should.be.true;
 	});
 	it('#merge with one move element', function(done) {
 		var l1 = [{a:1}, 'b', {c:1}];
@@ -110,10 +110,10 @@ describe('Merger', function() {
 		});
 		moved.length.should.equal(1);
 
-		_.eq(l2, res).should.be.true;
+		_.isEqual(l2, res).should.be.true;
 
 		done();
-	});	
+	});
 	it('#merge with one changing elements', function(done) {
 		var l1 = [{_id:1, a:'Hello'}];
 		var l2 = [{_id:1, a:'Hej'}];
@@ -131,33 +131,33 @@ describe('Merger', function() {
 			},
 			comparatorId: function(a,b) {return a._id === b._id}
 		});
-		_.eq(l2, res).should.be.true;
+		_.isEqual(l2, res).should.be.true;
 		done();
-	});		
+	});
 
 	it('#merge true and false array', function(done) {
 		var l1 = [true, false];
 		var l2 = [false, true];
 		var res = merge(l1,l2);
-		_.eq(l2, res).should.be.true;
+		_.isEqual(l2, res).should.be.true;
 		done();
-	});		
+	});
 	it('#merge complex moves', function(done) {
 		var l1 = [{_id:1, a:'Hello1'}, {_id:2, a:'Hello2'}, {_id:3, a:'Hello3'}, {_id:4, a:'Hello4'}];
 		var l2 = [{_id:4, a:'Hej4'}, {_id:3, a:'Hej3'}, {_id:2, a:'Hej2'}, {_id:1, a:'Hej1'}];
 
 		var res = merge(l1,l2, _.defaults({comparatorId:  function(a,b) {return a._id === b._id}}, {}));
-		_.eq(l2, res).should.be.true;
+		_.isEqual(l2, res).should.be.true;
 		done();
-	});		
+	});
 	it('#merge complex moves and add and remove', function(done) {
 		var l1 = [{_id:1, a:'Hello1'}, {_id:2, a:'Hello2'}, {_id:3, a:'Hello3'}, {_id:4, a:'Hello4'}];
 		var l2 = [{_id:4, a:'Hej4'}, {_id:99, a:'Hej99'}, {_id:2, a:'Hej2'}, {_id:1, a:'Hej1'}, {_id:100, a:'Hej100'}];
 
 		var res = merge(l1,l2, _.defaults({comparatorId:  function(a,b) {return a._id === b._id}}, {}));
-		_.eq(l2, res).should.be.true;
+		_.isEqual(l2, res).should.be.true;
 		done();
-	});		
+	});
 
 })
 
