@@ -137,6 +137,33 @@ describe('ViewDB', function () {
 			});
 		});
 	});
+	describe('#remove', function () {
+		it('should remove one document matching a query', function(done) {
+			var db = new ViewDB();
+			var collection = db.collection('documents');
+			collection.insert({ a: 1, name: 'hello' }, function (err, ids) {
+				collection.remove({ name: 'hello' }, null, function (err, docs) {
+					collection.find({}).toArray(function (err, res) {
+						res.length.should.equal(0);
+						done();
+					});
+				})
+			});
+		})
+
+		it('shouldnt do anything when no documents are matched against the query', function(done) {
+			var db = new ViewDB();
+			var collection = db.collection('documents');
+			collection.insert({ a: 1, name: 'hello' }, function (err, ids) {
+				collection.remove({ name: 'world' }, null, function (err, docs) {
+					collection.find({}).toArray(function (err, res) {
+						res.length.should.equal(1);
+						done();
+					});
+				})
+			});
+		});
+	});
 	describe('#drop', function () {
 		it('should remove all documents', function (done) {
 			var store = new ViewDB();
