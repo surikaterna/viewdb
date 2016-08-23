@@ -1,6 +1,7 @@
 var should = require('should');
 
 var ViewDb = require('..');
+var _ = require('lodash');
 
 
 describe('Observe', function() {
@@ -51,5 +52,28 @@ describe('Observe', function() {
 				store.collection('dollhouse').save({_id:'echo', age:100});
 			});			
 		});
-	});	
+	});
+	it('#observe with query and skip', function(done) {
+		var store = new ViewDb();
+		store.open().then(function () {
+			store.collection('dollhouse').insert({ _id: 'echo' });
+			store.collection('dollhouse').insert({ _id: 'echo2' });
+			store.collection('dollhouse').insert({ _id: 'echo3' });
+			var cursor = store.collection('dollhouse').find({});
+			var skip = 0;
+			cursor.limit(1);
+			var realDone = _.after(function () {
+				cursor.toArray(function (err, res) {
+					res.length.should.equal(0);
+					done();
+				})
+			}, 3);
+			var handle = cursor.observe({
+				added: function (x) {
+					cursor.skip(++skip);
+					realDone();
+				}
+			});
+		});
+	});
 })
