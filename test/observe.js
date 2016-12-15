@@ -62,12 +62,12 @@ describe('Observe', function() {
 			var cursor = store.collection('dollhouse').find({});
 			var skip = 0;
 			cursor.limit(1);
-			var realDone = _.after(function () {
+			var realDone = _.after(3, function () {
 				cursor.toArray(function (err, res) {
 					res.length.should.equal(0);
 					done();
 				})
-			}, 3);
+			});
 			var handle = cursor.observe({
 				added: function (x) {
 					cursor.skip(++skip);
