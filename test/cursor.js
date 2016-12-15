@@ -56,7 +56,6 @@ describe('Cursor', function () {
       collection.insert({ a: 'a', id: i });
     }
     collection.find({ a: 'a' }).skip(8).limit(10).toArray(function (err, res) {
-      console.log('res', res);
       res[1].id.should.equal(9);
       res.length.should.equal(2); // only 2 left after skipping 8/10
       done();
