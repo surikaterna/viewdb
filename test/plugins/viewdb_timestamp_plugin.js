@@ -4,21 +4,21 @@ var ViewDbTimestampPlugin = require('../..').plugins.TimestampPlugin;
 var ViewDBVersioningPlugin = require('../..').plugins.VersioningPlugin;
 
 describe.only('Viewdb timestamp plugin', function () {
-  it('should add timestamp on insert', function (done) {
+  it('should add changeDateTime and createDateTime timestamp on insert', function (done) {
     var viewDb = new ViewDb();
     new ViewDbTimestampPlugin(viewDb);
     new ViewDBVersioningPlugin(viewDb);
     var obj = { id: '123' };
     var collection = viewDb.collection('test');
-
     var currentTime = (new Date().valueOf());
+
     // wait 1ms until update operation to check for lastModified updated
     setTimeout(function () {
       collection.insert(obj);
       collection.find({ id: '123' }).toArray(function (err, objects) {
         var object = objects[0];
-        should.exists(object.lastModified);
-        if (currentTime < object.lastModified) {
+        should.exists(object.createDateTime);
+        if (currentTime < object.createDateTime) {
           done();
         } else {
           done(new Error('Timestamp was not renewed'))
@@ -27,7 +27,7 @@ describe.only('Viewdb timestamp plugin', function () {
     }, 1);
   });
 
-  it('should update timestamp on save', function (done) {
+  it('should update changeDateTime on save', function (done) {
     var viewDb = new ViewDb();
     new ViewDbTimestampPlugin(viewDb);
     new ViewDBVersioningPlugin(viewDb);
@@ -38,16 +38,17 @@ describe.only('Viewdb timestamp plugin', function () {
     collection.insert(obj);
     collection.find({ id: '123' }).toArray(function (err, objects) {
       var object = objects[0];
-      insertTime = object.lastModified;
+      insertTime = object.createDateTime;
     });
 
-    // wait 1ms until update operation to check for lastModified updated
+    // wait 1ms until update operation to check for changeDateTime updated
     setTimeout(function () {
       obj.name = 'Pelle';
       collection.save(obj);
       collection.find({ id: '123' }).toArray(function (err, objects) {
         var object = objects[0];
-        object.lastModified.should.greaterThan(insertTime);
+        object.createDateTime.should.equal(insertTime);
+        object.changeDateTime.should.greaterThan(insertTime);
         done();
       });
     }, 1)
@@ -67,8 +68,9 @@ describe.only('Viewdb timestamp plugin', function () {
       var object = objects[0];
       object.version.should.equal(0);
       object.name.should.equal('Pelle');
-      should.exists(object.lastModified);
+      should.exists(object.createDateTime);
+      should.exists(object.changeDateTime);
       done();
     });
   });
-})
+});
