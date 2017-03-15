@@ -68,7 +68,7 @@ describe('Observe', function() {
 					done();
 				})
 			});
-			var handle = cursor.observe({
+			cursor.observe({
 				added: function (x) {
 					cursor.skip(++skip);
 					realDone();
@@ -76,4 +76,47 @@ describe('Observe', function() {
 			});
 		});
 	});
-})
+  it('#observe with no results', function(done) {
+    var store = new ViewDb();
+    store.open().then(function () {
+      var cursor = store.collection('dollhouse').find({});
+      cursor.observe({
+        init: function (coll) {
+        	coll.length.should.equal(0);
+          done();
+        }
+      });
+    });
+  });
+  it('#observe with init after one insert', function(done) {
+    var store = new ViewDb();
+    store.collection('dollhouse').insert({ _id: 'echo' });
+    store.open().then(function () {
+      var cursor = store.collection('dollhouse').find({});
+      cursor.observe({
+        init: function (coll) {
+        	coll.length.should.equal(1);
+          done();
+        }
+      });
+    });
+  });
+  it('#observe with one insert after init', function(done) {
+    var store = new ViewDb();
+    store.open().then(function () {
+      var cursor = store.collection('dollhouse').find({});
+      cursor.observe({
+        init: function (coll) {
+        	coll.length.should.equal(0);
+        },
+				added: function (a) {
+        	a._id.should.equal('echo');
+          done();
+        }
+      });
+    });
+    setTimeout(function () {
+			store.collection('dollhouse').insert({ _id: 'echo' });
+    }, 1)
+  });
+});
