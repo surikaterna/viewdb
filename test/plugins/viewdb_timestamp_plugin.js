@@ -49,6 +49,7 @@ describe('Viewdb timestamp plugin', function () {
         var object = objects[0];
         object.createDateTime.should.equal(insertTime);
         object.changeDateTime.should.greaterThan(insertTime);
+        console.log('object', object);
         done();
       });
     }, 1)
