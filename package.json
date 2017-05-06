@@ -1,6 +1,6 @@
 {
   "name": "viewdb",
-  "version": "0.1.10",
+  "version": "0.4.2",
   "description": "",
   "main": "index.js",
   "directories": {
@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test": "mocha test --recursive",
+    "test.watch": "mocha test --recursive --watch",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- --recursive test -u exports -R spec",
     "coverage-start": "istanbul cover node_modules/mocha/bin/_mocha test --recursive -- -u exports -R spec && start coverage/lcov-report/index.html",
     "jshint": "jshint ./lib",
@@ -28,7 +29,7 @@
   },
   "dependencies": {
     "bluebird": "^2.9.30",
-    "kuery": "^0.2.0",
+    "kuery": "^0.3.0",
     "lodash": "^4.13.1",
     "node-uuid": "^1.4.3"
   }
