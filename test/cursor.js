@@ -49,6 +49,28 @@ describe('Cursor', function () {
       done();
     });
   });
+  it('#sort', function (done) {
+    var db = new ViewDB();
+    var collection = db.collection('documents');
+    for (var i = 0; i < 10; i++) {
+      collection.insert({ a: 'a', id: i });
+    }
+    collection.find({}).sort({id: 1}).toArray(function (err, res) {
+      res[0].id.should.equal(0);
+      done();
+    });
+  });
+  it('#sort desc', function (done) {
+    var db = new ViewDB();
+    var collection = db.collection('documents');
+    for (var i = 0; i < 10; i++) {
+      collection.insert({ a: 'a', id: i });
+    }
+    collection.find({}).sort({id: -1}).toArray(function (err, res) {
+      res[0].id.should.equal(9);
+      done();
+    });
+  });
   it('#skip/limit', function (done) {
     var db = new ViewDB();
     var collection = db.collection('documents');
