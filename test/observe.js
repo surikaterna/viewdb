@@ -92,15 +92,16 @@ describe('Observe', function () {
   });
   it('#observe with init after one insert', function (done) {
     var store = new ViewDb();
-    store.collection('dollhouse').insert({ _id: 'echo' });
-    store.open().then(function () {
-      var cursor = store.collection('dollhouse').find({});
-      var handle = cursor.observe({
-        init: function (coll) {
-          coll.length.should.equal(1);
-          handle.stop();
-          done();
-        }
+    store.collection('dollhouse').insert({ _id: 'echo' }, function () {
+      store.open().then(function () {
+        var cursor = store.collection('dollhouse').find({});
+        var handle = cursor.observe({
+          init: function (coll) {
+            coll.length.should.equal(1);
+            handle.stop();
+            done();
+          }
+        });
       });
     });
   });
@@ -121,6 +122,6 @@ describe('Observe', function () {
     });
     setTimeout(function () {
       store.collection('dollhouse').insert({ _id: 'echo' });
-    }, 1)
+    }, 5);
   });
 });
