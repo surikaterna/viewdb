@@ -16,7 +16,7 @@ export class Cursor {
     this._isObserving = false;
   }
 
-  forEach =  (callback: any, _thiz: any) => {
+  forEach =  (callback: any) => {
     this._getDocuments(this._query,  (_err: any, result: any) => {
       forEach(result,  (_n) => {
         callback(result)

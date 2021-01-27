@@ -16,6 +16,7 @@ export class Observer {
     this._cache = [];
 
     collection.on('change', this.listener);
+    this.refresh(true);
   }
 
   stop = () => {
@@ -23,7 +24,9 @@ export class Observer {
     this._collection.removeListener('change', this.listener);
   };
 
-  private listener = () => this.refresh();
+  private listener = () => {
+    this.refresh();
+  };
 
   private refresh = (initial?: boolean) => {
     this._collection._getDocuments(this._query, (_err: any, result: any[]) => {

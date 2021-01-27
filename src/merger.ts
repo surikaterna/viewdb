@@ -10,7 +10,7 @@ function contains(list: any, element: any, comparator: any): any {
   return undefined;
 }
 
-export function merge(asis: any, tobe: any, options: any): any[] {
+export function merge(asis: any, tobe: any, options?: any): any[] {
   options = options || {};
   var comparator = options.comparator || isEqual;
   var comparatorId = options.comparatorId || comparator;

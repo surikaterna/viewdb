@@ -16,7 +16,7 @@ export class ViewDB {
 		}
 	};
 
-	collection = (collectionName: any, callback: any) =>  this._store.collection(collectionName, callback);
+	collection = (collectionName: any, callback?: any) =>  this._store.collection(collectionName, callback);
 }
 
 export default ViewDB;

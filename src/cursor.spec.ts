@@ -1,23 +1,23 @@
-var Cursor = require('../lib/cursor');
-var should = require('should');
-var ViewDB = require('..');
+import Cursor from './cursor';
+import 'should';
+import  ViewDB from '.';
 
 describe('Cursor', function () {
   it('#toArray', function (done) {
-    var cursor = new Cursor(null, {}, null, function (query, callback) {
+    var cursor = new Cursor(null, {}, null, function (_query: any, callback: any) {
       callback(null, [1, 2, 3, 4]);
     });
-    cursor.toArray(function (err, result) {
+    cursor.toArray(function (_err: any, result: any) {
       result.length.should.equal(4);
       done();
     });
   });
   it('#forEach', function (done) {
-    var cursor = new Cursor(null, {}, null, function (query, callback) {
+    var cursor = new Cursor(null, {}, null, function (_query: any, callback: any) {
       callback(null, [1, 2, 3, 4]);
     });
     var calls = 0;
-    cursor.forEach(function (result) {
+    cursor.forEach(function (result: any) {
       result.should.be.ok;
       calls++;
     });
@@ -32,7 +32,7 @@ describe('Cursor', function () {
     for (var i = 0; i < 10; i++) {
       collection.insert({ a: 'a', id: i });
     }
-    collection.find({ a: 'a' }).skip(5).toArray(function (err, res) {
+    collection.find({ a: 'a' }).skip(5).toArray(function (_err: any, res: any) {
       res.length.should.equal(5);
       done();
     });
@@ -43,7 +43,7 @@ describe('Cursor', function () {
     for (var i = 0; i < 10; i++) {
       collection.insert({ a: 'a', id: i });
     }
-    collection.find({ a: 'a' }).limit(9).toArray(function (err, res) {
+    collection.find({ a: 'a' }).limit(9).toArray(function (_err: any, res: any) {
       res[8].id.should.equal(8);
       res.length.should.equal(9);
       done();
@@ -55,7 +55,7 @@ describe('Cursor', function () {
     for (var i = 0; i < 10; i++) {
       collection.insert({ a: 'a', id: i });
     }
-    collection.find({}).sort({id: 1}).toArray(function (err, res) {
+    collection.find({}).sort({id: 1}).toArray(function (_err: any, res: any) {
       res[0].id.should.equal(0);
       done();
     });
@@ -66,7 +66,7 @@ describe('Cursor', function () {
     for (var i = 0; i < 10; i++) {
       collection.insert({ a: 'a', id: i });
     }
-    collection.find({}).sort({id: -1}).toArray(function (err, res) {
+    collection.find({}).sort({id: -1}).toArray(function (_err: any, res: any) {
       res[0].id.should.equal(9);
       done();
     });
@@ -77,7 +77,7 @@ describe('Cursor', function () {
     for (var i = 0; i < 10; i++) {
       collection.insert({ a: 'a', id: i });
     }
-    collection.find({ a: 'a' }).skip(8).limit(10).toArray(function (err, res) {
+    collection.find({ a: 'a' }).skip(8).limit(10).toArray(function (_err: any, res: any) {
       res[1].id.should.equal(9);
       res.length.should.equal(2); // only 2 left after skipping 8/10
       done();

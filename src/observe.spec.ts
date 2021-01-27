@@ -1,7 +1,6 @@
-var should = require('should');
-
-var ViewDb = require('..');
-var _ = require('lodash');
+import 'should';
+import _ from 'lodash';
+import ViewDb from '.';
 
 describe('Observe', function () {
   it('#observe with insert', function (done) {
@@ -9,7 +8,7 @@ describe('Observe', function () {
     store.open().then(function () {
       var cursor = store.collection('dollhouse').find({});
       var handle = cursor.observe({
-        added: function (x) {
+        added: function (x: any) {
           x._id.should.equal('echo');
           handle.stop();
           done();
@@ -23,8 +22,8 @@ describe('Observe', function () {
     store.open().then(function () {
       store.collection('dollhouse').insert({ _id: 'echo' });
       var cursor = store.collection('dollhouse').find({ _id: 'echo2' });
-      var handle = cursor.observe({
-        added: function (x) {
+      cursor.observe({
+        added: function (x: any) {
           x._id.should.equal('echo2');
           done();
         }
@@ -37,10 +36,10 @@ describe('Observe', function () {
     store.open().then(function () {
       var cursor = store.collection('dollhouse').find({ _id: 'echo' });
       var handle = cursor.observe({
-        added: function (x) {
+        added: function (x: any) {
           x.age.should.equal(10);
           x._id.should.equal('echo');
-        }, changed: function (o, n) {
+        }, changed: function (o: any, n: any) {
           o.age.should.equal(10);
           n.age.should.equal(100);
           handle.stop();
@@ -63,14 +62,14 @@ describe('Observe', function () {
       var skip = 0;
       cursor.limit(1);
       var realDone = _.after(3, function () {
-        cursor.toArray(function (err, res) {
+        cursor.toArray(function (_err: any, res: any) {
           res.length.should.equal(0);
           handle.stop();
           done();
         })
       });
       var handle = cursor.observe({
-        added: function (x) {
+        added: function (_x: any) {
           cursor.skip(++skip);
           realDone();
         }
@@ -82,7 +81,7 @@ describe('Observe', function () {
     store.open().then(function () {
       var cursor = store.collection('dollhouse').find({});
       var handle = cursor.observe({
-        init: function (coll) {
+        init: function (coll: any) {
           coll.length.should.equal(0);
           handle.stop();
           done();
@@ -96,7 +95,7 @@ describe('Observe', function () {
       store.open().then(function () {
         var cursor = store.collection('dollhouse').find({});
         var handle = cursor.observe({
-          init: function (coll) {
+          init: function (coll: any) {
             coll.length.should.equal(1);
             handle.stop();
             done();
@@ -110,10 +109,10 @@ describe('Observe', function () {
     store.open().then(function () {
       var cursor = store.collection('dollhouse').find({});
       var handle = cursor.observe({
-        init: function (coll) {
+        init: function (coll: any) {
           coll.length.should.equal(0);
         },
-        added: function (a) {
+        added: function (a: any) {
           a._id.should.equal('echo');
           handle.stop();
           done();

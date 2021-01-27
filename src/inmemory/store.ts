@@ -7,7 +7,7 @@ export class Store {
 		this._collections = {};
 	}
 
-	collection = (collectionName: any, callback: any) => {
+	collection = (collectionName: any, callback?: any) => {
 		var coll = this._collections[collectionName];
 		if(coll === undefined) {
 			coll = new Collection(collectionName);

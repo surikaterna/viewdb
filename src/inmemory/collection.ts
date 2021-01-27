@@ -18,7 +18,7 @@ export class Collection extends EventEmitter {
 
   count = (callback: any) => callback(null, this._documents.length);
 
-  _write =  (op: any, documents: any, options: any, callback: any) => {
+  _write =  (op: any, documents: any, options: any, callback?: any) => {
     if(isFunction(options)) {
       callback = options;
       options = undefined;
@@ -51,9 +51,9 @@ export class Collection extends EventEmitter {
     }
   }
 
-  insert = (documents: any, options: any, callback: any) => this._write('insert', documents, options, callback);
+  insert = (documents: any, options?: any, callback?: any) => this._write('insert', documents, options, callback);
 
-  save = (documents: any, options: any, callback: any) => this._write('save', documents, options, callback);
+  save = (documents: any, options?: any, callback?: any) => this._write('save', documents, options, callback);
 
   drop =  (callback: any) => {
     this._documents = [];
