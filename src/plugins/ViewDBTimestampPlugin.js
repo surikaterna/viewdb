@@ -70,19 +70,25 @@ function mutateSave(collection) {
   const oldSave = collection.save;
   collection.save = function (docs, options) {
     let newDocs = docs;
+
     if (!(options && options.skipTimestamp)) {
       const timestamp = new Date().valueOf();
+
       if (!isArray(docs)) {
         newDocs = [docs];
       }
+
       for (let i = 0; i < newDocs.length; i++) {
         const doc = newDocs[i];
+
         if (!doc.createDateTime) {
           doc.createDateTime = timestamp;
         }
+
         doc.changeDateTime = timestamp;
       }
     }
+
     oldSave.apply(collection, arguments);
   };
 }
