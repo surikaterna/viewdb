@@ -1,5 +1,5 @@
-var Cursor = require('../src/cursor');
-var ViewDB = require('../src');
+import Cursor from '../src/Cursor';
+import ViewDB from '../src';
 
 describe('Cursor', function () {
   it('#toArray', function (done) {

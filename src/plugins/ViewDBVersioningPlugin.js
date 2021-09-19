@@ -1,4 +1,4 @@
-var _ = require('lodash');
+import _ from 'lodash';
 
 var ViewDBVersioningPlugin = function (viewDb) {
   var oldCollection = viewDb.collection;
@@ -64,4 +64,4 @@ function _getVersion(version) {
   return newVersion;
 }
 
-module.exports = ViewDBVersioningPlugin;
+export default ViewDBVersioningPlugin;

@@ -1,4 +1,4 @@
-var Collection = require('./collection');
+import Collection from './Collection';
 
 var Store = function () {
   this._collections = {};
@@ -16,4 +16,4 @@ Store.prototype.collection = function (collectionName, callback) {
   return coll;
 };
 
-module.exports = Store;
+export default Store;

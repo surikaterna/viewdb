@@ -1,5 +1,4 @@
-var ViewDB = require('../src');
-
+import ViewDB from '../src';
 
 describe('ViewDB', function () {
   describe('#count', function () {

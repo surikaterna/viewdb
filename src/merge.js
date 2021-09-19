@@ -1,22 +1,12 @@
-var _ = require('lodash');
+import { forEach, isEqual, slice } from 'lodash';
 
-function contains(list, element, comparator) {
-  for (var i in list) {
-    var n = list[i];
-    if (comparator(element, n)) {
-      return n;
-    }
-  }
-  return undefined;
-}
-
-function merge(asis, tobe, options) {
+export default function merge(asis, tobe, options) {
   options = options || {};
-  var comparator = options.comparator || _.isEqual;
+  var comparator = options.comparator || isEqual;
   var comparatorId = options.comparatorId || comparator;
-  var list = _.slice(asis);
+  var list = slice(asis);
   //check removed
-  _.forEach(asis, function (e) {
+  forEach(asis, function (e) {
     var found = contains(tobe, e, comparatorId);
     if (found === undefined) {
       var index = list.indexOf(e);
@@ -27,7 +17,7 @@ function merge(asis, tobe, options) {
     }
   });
   var indexInNew = -1;
-  _.forEach(tobe, function (e) {
+  forEach(tobe, function (e) {
     indexInNew++;
     var found = contains(list, e, comparatorId);
     //added
@@ -57,6 +47,15 @@ function merge(asis, tobe, options) {
     }
   });
   return list;
-  //list = _.exclude()v
 }
-module.exports = merge;
+
+function contains(list, element, comparator) {
+  for (let i in list) {
+    const n = list[i];
+
+    if (comparator(element, n)) {
+      return n;
+    }
+  }
+  return undefined;
+}

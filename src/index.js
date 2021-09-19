@@ -1,6 +1,5 @@
-module.exports = require('./viewdb');
-
-module.exports.Cursor = require('./cursor');
-module.exports.Observer = require('./observe');
-module.exports.merge = require('./merger');
-module.exports.plugins = require('./plugins');
+export { default as Cursor } from './Cursor';
+export { default as Merger } from './merge';
+export { default as Observe } from './Observer';
+export * from './plugins';
+export { default } from './ViewDB';

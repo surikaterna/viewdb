@@ -1,5 +1,5 @@
-var ViewDb = require('../src');
-var _ = require('lodash');
+import ViewDb from '../src';
+import _ from 'lodash';
 
 describe('Observe', function () {
   it('#observe with insert', function (done) {

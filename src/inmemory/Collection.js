@@ -1,12 +1,9 @@
-var _ = require('lodash');
-var uuid = require('uuid').v4;
-
-var EventEmitter = require('events').EventEmitter;
-var util = require('util');
-
-var Kuery = require('kuery');
-
-var Cursor = require('../cursor');
+import _ from 'lodash';
+import { EventEmitter } from 'events';
+import Kuery from 'kuery';
+import { v4 as uuid } from 'uuid';
+import util from 'util';
+import Cursor from '../Cursor';
 
 var Collection = function (collectionName) {
   EventEmitter.call(this);
@@ -110,4 +107,4 @@ Collection.prototype._getDocuments = function (queryObject, callback) {
   });
 };
 
-module.exports = Collection;
+export default Collection;

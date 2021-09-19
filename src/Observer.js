@@ -1,5 +1,5 @@
-var _ = require('lodash');
-var merge = require('./merger');
+import _ from 'lodash';
+import merge from './merge';
 
 var logger = {
   added: function () {
@@ -69,4 +69,4 @@ Observer.prototype.refresh = function (initial) {
   });
 };
 
-module.exports = Observer;
+export default Observer;

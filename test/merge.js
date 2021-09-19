@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var merge = require('../src/merger');
+import merge from '../src/merge';
 
 var logger = {
 	added: function() { console.log("added: "); console.log(arguments); },

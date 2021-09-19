@@ -1,4 +1,4 @@
-var _ = require('lodash');
+import _ from 'lodash';
 
 var ViewDBTimestampPlugin = function (viewDb) {
   var oldCollection = viewDb.collection;
@@ -65,4 +65,4 @@ var ViewDBTimestampPlugin = function (viewDb) {
   };
 };
 
-module.exports = ViewDBTimestampPlugin;
+export default ViewDBTimestampPlugin;

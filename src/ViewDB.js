@@ -1,5 +1,5 @@
-var Promise = require('bluebird');
-var InMemoryStore = require('./inmemory/store');
+import Promise from 'bluebird';
+import InMemoryStore from './inmemory/Store';
 
 var ViewDB = function (store) {
   this._store = store || new InMemoryStore();
@@ -19,4 +19,4 @@ ViewDB.prototype.collection = function (collectionName, callback) {
   return this._store.collection(collectionName, callback);
 };
 
-module.exports = ViewDB;
+export default ViewDB;

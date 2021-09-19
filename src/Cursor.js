@@ -1,5 +1,5 @@
-var _ = require('lodash');
-var Observe = require('./observe');
+import _ from 'lodash';
+import Observe from './Observer';
 
 var Cursor = function (collection, query, options, getDocuments) {
   this._collection = collection;
@@ -77,4 +77,4 @@ Cursor.prototype.count = function (applySkipLimit, callback) {
   });
 };
 
-module.exports = Cursor;
+export default Cursor;
