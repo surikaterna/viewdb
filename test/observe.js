@@ -1,4 +1,4 @@
-var ViewDb = require('..');
+var ViewDb = require('../src');
 var _ = require('lodash');
 
 describe('Observe', function () {

@@ -1,6 +1,6 @@
-var ViewDb = require('../..');
-var ViewDbTimestampPlugin = require('../..').plugins.TimestampPlugin;
-var ViewDBVersioningPlugin = require('../..').plugins.VersioningPlugin;
+var ViewDb = require('../../src');
+var ViewDbTimestampPlugin = require('../../src').plugins.TimestampPlugin;
+var ViewDBVersioningPlugin = require('../../src').plugins.VersioningPlugin;
 
 describe('Viewdb timestamp plugin', function () {
   it('should add changeDateTime and createDateTime timestamp on insert', function (done) {

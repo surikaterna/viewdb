@@ -7,5 +7,8 @@ module.exports = {
     "**/__tests__/**/*.[jt]s?(x)",
     "**/?(*.)+(spec|test).[jt]s?(x)"
   ],
-  testTimeout: 2000
+  testTimeout: 2000,
+  transform: {
+    "^.+\\.[t|j]s$": "babel-jest"
+  }
 };

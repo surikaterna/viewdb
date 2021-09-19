@@ -1,7 +1,7 @@
 var _ = require('lodash');
 
-var ViewDb = require('../..');
-var ViewDbVersioningPlugin = require('../..').plugins.VersioningPlugin;
+var ViewDb = require('../../src');
+var ViewDbVersioningPlugin = require('../../src').plugins.VersioningPlugin;
 
 describe('Viewdb versioning plugin', function () {
   it('should add version on insert', function (done) {

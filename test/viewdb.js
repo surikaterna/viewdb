@@ -1,4 +1,4 @@
-var ViewDB = require('..');
+var ViewDB = require('../src');
 
 
 describe('ViewDB', function () {

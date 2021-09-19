@@ -2,19 +2,20 @@
   "name": "viewdb",
   "version": "0.5.9",
   "description": "",
-  "main": "index.js",
+  "main": "lib/index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
+    "build": "babel src --out-dir lib",
     "test": "jest",
     "test.watch": "jest --watch",
     "coverage": "jest --collectCoverage",
     "coverage-start": "jest --collectCoverage && start coverage/lcov-report/index.html",
-    "eslint": "eslint ./lib",
-    "eslint:fix": "eslint --fix ./lib",
-    "prettier:check": "prettier --check ./lib",
-    "prettier:fix": "prettier --write ./lib"
+    "eslint": "eslint src",
+    "eslint:fix": "eslint --fix src",
+    "prettier:check": "prettier --check src",
+    "prettier:fix": "prettier --write src"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,11 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@babel/cli": "7.15.7",
+    "@babel/core": "7.15.5",
+    "@babel/plugin-proposal-class-properties": "7.14.5",
+    "@babel/plugin-proposal-object-rest-spread": "7.15.6",
+    "@babel/preset-env": "7.15.6",
     "babel-eslint": "10.1.0",
     "eslint": "7.32.0",
     "eslint-config-surikat": "1.2.2",
