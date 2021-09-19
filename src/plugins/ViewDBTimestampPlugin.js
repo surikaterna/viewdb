@@ -1,68 +1,88 @@
-import _ from 'lodash';
+import { clone, isArray } from 'lodash';
 
-var ViewDBTimestampPlugin = function (viewDb) {
-  var oldCollection = viewDb.collection;
+export default class ViewDBTimestampPlugin {
+  constructor(viewDb) {
+    mutateCollection(viewDb);
+  }
+}
+
+function mutateCollection(viewDb) {
+  const oldCollection = viewDb.collection;
   viewDb.collection = function () {
-    var coll = oldCollection.apply(this, arguments);
-    if (!coll.__plugins_timestamp) {
-      coll.__plugins_timestamp = true;
+    const collection = oldCollection.apply(viewDb, arguments);
 
-      var oldSave = coll.save;
-      coll.save = function (docs, options) {
-        var newdocs = docs;
-        if (!(options && options.skipTimestamp)) {
-          var timestamp = new Date().valueOf();
-          if (!_.isArray(docs)) {
-            newdocs = [docs];
-          }
-          for (var i = 0; i < newdocs.length; i++) {
-            var doc = newdocs[i];
-            if (!doc.createDateTime) {
-              doc.createDateTime = timestamp;
-            }
-            doc.changeDateTime = timestamp;
-          }
-        }
-        oldSave.apply(this, arguments);
-      };
+    if (!collection.__plugins_timestamp) {
+      collection.__plugins_timestamp = true;
 
-      var oldInsert = coll.insert;
-      coll.insert = function (docs, options) {
-        if (!(options && options.skipTimestamp)) {
-          if (!_.isArray(docs)) {
-            docs = [docs];
-          }
-          var timestamp = new Date().valueOf();
-          for (var i = 0; i < docs.length; i++) {
-            var doc = docs[i];
-            doc.createDateTime = timestamp;
-            doc.changeDateTime = timestamp;
-          }
-        }
-        oldInsert.apply(this, arguments);
-      };
-
-      var oldFindAndModify = coll.findAndModify;
-      coll.findAndModify = function (query, sort, update, options, cb) {
-        var timestamp = new Date().valueOf();
-        var clonedUpdate = _.clone(update);
-        var setOnInsert = clonedUpdate.$setOnInsert || {};
-        setOnInsert.createDateTime = timestamp;
-        clonedUpdate.$setOnInsert = setOnInsert;
-
-        var set = clonedUpdate.$set || {};
-        set.changeDateTime = timestamp;
-
-        // if consumer tries to $set createDateTime it will lead to conflict. remove it
-        if (set.createDateTime) {
-          delete set.createDateTime;
-        }
-        clonedUpdate.$set = set;
-        oldFindAndModify.apply(this, [query, sort, clonedUpdate, options, cb]);
-      };
+      mutateSave(collection);
+      mutateInsert(collection);
+      mutateFindAndModify(collection);
     }
-    return coll;
-  };
-};
 
-export default ViewDBTimestampPlugin;
+    return collection;
+  };
+}
+
+function mutateFindAndModify(collection) {
+  const oldFindAndModify = collection.findAndModify;
+  collection.findAndModify = function (query, sort, update, options, cb) {
+    const timestamp = new Date().valueOf();
+    const clonedUpdate = clone(update);
+    const setOnInsert = clonedUpdate.$setOnInsert || {};
+    setOnInsert.createDateTime = timestamp;
+    clonedUpdate.$setOnInsert = setOnInsert;
+
+    const set = clonedUpdate.$set || {};
+    set.changeDateTime = timestamp;
+
+    // if consumer tries to $set createDateTime it will lead to conflict. remove it
+    if (set.createDateTime) {
+      delete set.createDateTime;
+    }
+
+    clonedUpdate.$set = set;
+    oldFindAndModify.apply(this, [query, sort, clonedUpdate, options, cb]);
+  };
+}
+
+function mutateInsert(collection) {
+  const oldInsert = collection.insert;
+  collection.insert = function (docs, options) {
+    if (!(options && options.skipTimestamp)) {
+      if (!isArray(docs)) {
+        docs = [docs];
+      }
+
+      const timestamp = new Date().valueOf();
+
+      for (let i = 0; i < docs.length; i++) {
+        const doc = docs[i];
+        doc.createDateTime = timestamp;
+        doc.changeDateTime = timestamp;
+      }
+    }
+
+    oldInsert.apply(collection, arguments);
+  };
+}
+
+function mutateSave(collection) {
+  const oldSave = collection.save;
+  collection.save = function (docs, options) {
+    let newDocs = docs;
+    if (!(options && options.skipTimestamp)) {
+      const timestamp = new Date().valueOf();
+      if (!isArray(docs)) {
+        newDocs = [docs];
+      }
+      for (let i = 0; i < newDocs.length; i++) {
+        const doc = newDocs[i];
+        if (!doc.createDateTime) {
+          doc.createDateTime = timestamp;
+        }
+        doc.changeDateTime = timestamp;
+      }
+    }
+    oldSave.apply(collection, arguments);
+  };
+}
