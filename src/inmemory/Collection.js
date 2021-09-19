@@ -1,110 +1,120 @@
-import _ from 'lodash';
+import { cloneDeep, findIndex, has, isArray, isFunction, isObject, pullAll } from 'lodash';
 import { EventEmitter } from 'events';
 import Kuery from 'kuery';
 import { v4 as uuid } from 'uuid';
-import util from 'util';
 import Cursor from '../Cursor';
 
-var Collection = function (collectionName) {
-  EventEmitter.call(this);
+export default class Collection extends EventEmitter {
+  constructor(collectionName) {
+    super();
 
-  this._documents = [];
-  this._name = collectionName;
-};
-
-util.inherits(Collection, EventEmitter);
-
-Collection.prototype.count = function (callback) {
-  callback(null, this._documents.length);
-};
-
-Collection.prototype._write = function (op, documents, options, callback) {
-  if (_.isFunction(options)) {
-    callback = options;
-    options = undefined;
+    this._documents = [];
+    this._name = collectionName;
   }
-  if (!_.isArray(documents)) {
-    documents = [documents];
-  }
-  var self = this;
-  for (var i = 0; i < documents.length; i++) {
-    var document = documents[i];
-    if (!_.isObject(document)) {
-      return callback(new Error('Document must be object'));
+
+  count = (callback) => {
+    callback(null, this._documents.length);
+  };
+
+  createIndex = (options, callback) => {
+    throw new Error('createIndex not supported!');
+  };
+
+  drop = (callback) => {
+    this._documents = [];
+
+    if (callback) {
+      callback(null);
     }
-    if (!_.has(document, '_id')) {
-      document['_id'] = document['id'] || uuid();
+  };
+
+  ensureIndex = (options, callback) => {
+    throw new Error('ensureIndex not supported!');
+  };
+
+  find = (query, options) => {
+    return new Cursor(this, { query: query }, options, this._getDocuments);
+  };
+
+  insert = (documents, options, callback) => {
+    return this._write('insert', documents, options, callback);
+  };
+
+  remove = (query, options, callback) => {
+    const q = new Kuery(query);
+    const documents = q.find(this._documents);
+    this._documents = pullAll(this._documents, documents);
+
+    process.nextTick(function () {
+      callback(null);
+    });
+  };
+
+  save = (documents, options, callback) => {
+    return this._write('save', documents, options, callback);
+  };
+
+  _getDocuments = (queryObject, callback) => {
+    const query = queryObject.query || queryObject;
+    const q = new Kuery(query);
+
+    if (queryObject.sort) {
+      q.sort(queryObject.sort);
     }
-    var idx = _.findIndex(self._documents, { _id: document['_id'] });
-    if (op === 'insert' && idx >= 0) {
-      return callback(new Error('Unique constraint!'));
+
+    if (queryObject.skip) {
+      q.skip(queryObject.skip);
     }
-    // not stored before
-    if (idx === -1) {
-      self._documents.push(document);
-    } else {
-      this._documents[idx] = document;
+
+    if (queryObject.limit) {
+      q.limit(queryObject.limit);
     }
-  }
-  this.emit('change', documents);
-  if (callback) {
-    callback(null, documents);
-  }
-};
 
-Collection.prototype.insert = function (documents, options, callback) {
-  return this._write('insert', documents, options, callback);
-};
+    const documents = q.find(this._documents);
+    process.nextTick(() => {
+      callback(null, cloneDeep(documents));
+    });
+  };
 
-Collection.prototype.save = function (documents, options, callback) {
-  return this._write('save', documents, options, callback);
-};
+  _write = (op, documents, options, callback) => {
+    if (isFunction(options)) {
+      callback = options;
+      options = undefined;
+    }
 
-Collection.prototype.drop = function (callback) {
-  this._documents = [];
+    if (!isArray(documents)) {
+      documents = [documents];
+    }
 
-  if (callback) {
-    callback(null);
-  }
-};
+    for (let i = 0; i < documents.length; i++) {
+      const document = documents[i];
 
-Collection.prototype.find = function (query, options) {
-  return new Cursor(this, { query: query }, options, this._getDocuments.bind(this));
-};
+      if (!isObject(document)) {
+        return callback(new Error('Document must be object'));
+      }
 
-Collection.prototype.remove = function (query, options, callback) {
-  var q = new Kuery(query);
-  var documents = q.find(this._documents);
-  this._documents = _.pullAll(this._documents, documents);
+      if (!has(document, '_id')) {
+        document['_id'] = document['id'] || uuid();
+      }
 
-  process.nextTick(function () {
-    callback(null);
-  });
-};
-Collection.prototype.ensureIndex = function (options, callback) {
-  throw new Error('ensureIndex not supported!');
-};
-Collection.prototype.createIndex = function (options, callback) {
-  throw new Error('createIndex not supported!');
-};
+      const idx = findIndex(this._documents, { _id: document['_id'] });
 
-Collection.prototype._getDocuments = function (queryObject, callback) {
-  var self = this;
-  var query = queryObject.query || queryObject;
-  var q = new Kuery(query);
-  if (queryObject.sort) {
-    q.sort(queryObject.sort);
-  }
-  if (queryObject.skip) {
-    q.skip(queryObject.skip);
-  }
-  if (queryObject.limit) {
-    q.limit(queryObject.limit);
-  }
-  var documents = q.find(self._documents);
-  process.nextTick(function () {
-    callback(null, _.cloneDeep(documents));
-  });
-};
+      if (op === 'insert' && idx >= 0) {
+        return callback(new Error('Unique constraint!'));
+      }
 
-export default Collection;
+      // not stored before
+      if (idx === -1) {
+        this._documents.push(document);
+      } else {
+        this._documents[idx] = document;
+      }
+    }
+
+    this.emit('change', documents);
+
+    if (callback) {
+      callback(null, documents);
+    }
+  };
+}
