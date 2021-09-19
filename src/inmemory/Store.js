@@ -1,19 +1,22 @@
 import Collection from './Collection';
 
-var Store = function () {
-  this._collections = {};
-};
-
-Store.prototype.collection = function (collectionName, callback) {
-  var coll = this._collections[collectionName];
-  if (coll === undefined) {
-    coll = new Collection(collectionName);
-    this._collections[collectionName] = coll;
+export default class Store {
+  constructor() {
+    this._collections = {};
   }
-  if (callback) {
-    callback(coll);
-  }
-  return coll;
-};
 
-export default Store;
+  collection = (collectionName, callback) => {
+    let coll = this._collections[collectionName];
+
+    if (coll === undefined) {
+      coll = new Collection(collectionName);
+      this._collections[collectionName] = coll;
+    }
+
+    if (callback) {
+      callback(coll);
+    }
+
+    return coll;
+  };
+}
