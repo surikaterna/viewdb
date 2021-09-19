@@ -7,10 +7,10 @@
     "test": "test"
   },
   "scripts": {
-    "test": "mocha test --recursive",
-    "test.watch": "mocha test --recursive --watch",
-    "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- --recursive test -u exports -R spec",
-    "coverage-start": "istanbul cover node_modules/mocha/bin/_mocha test --recursive -- -u exports -R spec && start coverage/lcov-report/index.html",
+    "test": "jest",
+    "test.watch": "jest --watch",
+    "coverage": "jest --collectCoverage",
+    "coverage-start": "jest --collectCoverage && start coverage/lcov-report/index.html",
     "jshint": "jshint ./lib",
     "jscs": "jscs -p google ./lib"
   },
@@ -22,10 +22,8 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "istanbul": "^0.3.2",
-    "jshint": "^2.5.10",
-    "mocha": "^2.0.1",
-    "should": "^4.1.0"
+    "jest": "27.2.0",
+    "jshint": "^2.5.10"
   },
   "dependencies": {
     "bluebird": "^2.9.30",

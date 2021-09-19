@@ -1,5 +1,4 @@
 var Cursor = require('../lib/cursor');
-var should = require('should');
 var ViewDB = require('..');
 
 describe('Cursor', function () {
@@ -8,7 +7,7 @@ describe('Cursor', function () {
       callback(null, [1, 2, 3, 4]);
     });
     cursor.toArray(function (err, result) {
-      result.length.should.equal(4);
+      expect(result.length).toBe(4);
       done();
     });
   });
@@ -18,11 +17,11 @@ describe('Cursor', function () {
     });
     var calls = 0;
     cursor.forEach(function (result) {
-      result.should.be.ok;
+      expect(result).toBeTruthy();
       calls++;
     });
     setTimeout(function () {
-      calls.should.equal(4);
+      expect(calls).toBe(4);
       done();
     }, 0);
   });
@@ -33,7 +32,7 @@ describe('Cursor', function () {
       collection.insert({ a: 'a', id: i });
     }
     collection.find({ a: 'a' }).skip(5).toArray(function (err, res) {
-      res.length.should.equal(5);
+      expect(res.length).toBe(5);
       done();
     });
   });
@@ -44,8 +43,8 @@ describe('Cursor', function () {
       collection.insert({ a: 'a', id: i });
     }
     collection.find({ a: 'a' }).limit(9).toArray(function (err, res) {
-      res[8].id.should.equal(8);
-      res.length.should.equal(9);
+      expect(res[8].id).toBe(8);
+      expect(res.length).toBe(9);
       done();
     });
   });
@@ -56,7 +55,7 @@ describe('Cursor', function () {
       collection.insert({ a: 'a', id: i });
     }
     collection.find({}).sort({id: 1}).toArray(function (err, res) {
-      res[0].id.should.equal(0);
+      expect(res[0].id).toBe(0);
       done();
     });
   });
@@ -67,7 +66,7 @@ describe('Cursor', function () {
       collection.insert({ a: 'a', id: i });
     }
     collection.find({}).sort({id: -1}).toArray(function (err, res) {
-      res[0].id.should.equal(9);
+      expect(res[0].id).toBe(9);
       done();
     });
   });
@@ -78,8 +77,8 @@ describe('Cursor', function () {
       collection.insert({ a: 'a', id: i });
     }
     collection.find({ a: 'a' }).skip(8).limit(10).toArray(function (err, res) {
-      res[1].id.should.equal(9);
-      res.length.should.equal(2); // only 2 left after skipping 8/10
+      expect(res[1].id).toBe(9);
+      expect(res.length).toBe(2); // only 2 left after skipping 8/10
       done();
     });
   });

@@ -2,7 +2,7 @@
 
 ## Upgrade Guide
 
-* [ ] Replace Mocha, Should & Istanbul with Jest
+* [x] Replace Mocha, Should & Istanbul with Jest
 * [ ] Replace jscs & jshint with eslint & prettier
 * [ ] Upgrade dependencies
 * [ ] Update to modern class based JS with Babel
