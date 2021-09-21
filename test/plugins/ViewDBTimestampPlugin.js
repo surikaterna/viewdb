@@ -1,12 +1,10 @@
-import ViewDb from '../../src';
-import ViewDbTimestampPlugin from '../../src/plugins/ViewDBTimestampPlugin';
-import ViewDBVersioningPlugin from '../../src/plugins/ViewDBVersioningPlugin';
+import ViewDb, { TimestampPlugin, VersioningPlugin } from '../../src';
 
 describe('Viewdb timestamp plugin', function () {
   it('should add changeDateTime and createDateTime timestamp on insert', function (done) {
     var viewDb = new ViewDb();
-    new ViewDbTimestampPlugin(viewDb);
-    new ViewDBVersioningPlugin(viewDb);
+    new TimestampPlugin(viewDb);
+    new VersioningPlugin(viewDb);
     var obj = { id: '123' };
     var collection = viewDb.collection('test');
     var currentTime = (new Date().valueOf());
@@ -28,8 +26,8 @@ describe('Viewdb timestamp plugin', function () {
   });
   it('should add changeDateTime and createDateTime timestamp on bulk insert', function (done) {
     var viewDb = new ViewDb();
-    new ViewDbTimestampPlugin(viewDb);
-    new ViewDBVersioningPlugin(viewDb);
+    new TimestampPlugin(viewDb);
+    new VersioningPlugin(viewDb);
     var collection = viewDb.collection('test');
     var currentTime = (new Date().valueOf());
 
@@ -52,8 +50,8 @@ describe('Viewdb timestamp plugin', function () {
   });
   it('should update changeDateTime on builk save', function (done) {
     var viewDb = new ViewDb();
-    new ViewDbTimestampPlugin(viewDb);
-    new ViewDBVersioningPlugin(viewDb);
+    new TimestampPlugin(viewDb);
+    new VersioningPlugin(viewDb);
     var collection = viewDb.collection('test');
 
     collection.insert([{ _id: '123' }, { _id: '999' }]);
@@ -63,7 +61,12 @@ describe('Viewdb timestamp plugin', function () {
       expect(insertTime).toBeDefined();
       expect(insertTime).toBe(updateTime);
       setTimeout(function () {
-        collection.save([{ _id: '123', name: 'Pelle', createDateTime: insertTime, changeDateTime: insertTime }, { _id: '999', name: 'Kalle', createDateTime: insertTime, changeDateTime: insertTime }], function () {
+        collection.save([{
+          _id: '123',
+          name: 'Pelle',
+          createDateTime: insertTime,
+          changeDateTime: insertTime
+        }, { _id: '999', name: 'Kalle', createDateTime: insertTime, changeDateTime: insertTime }], function () {
           collection.find({}).toArray(function (err, objects) {
             objects.forEach(function (object) {
               expect(object.createDateTime).toBe(insertTime);
@@ -79,8 +82,8 @@ describe('Viewdb timestamp plugin', function () {
   });
   it('should update changeDateTime on save', function (done) {
     var viewDb = new ViewDb();
-    new ViewDbTimestampPlugin(viewDb);
-    new ViewDBVersioningPlugin(viewDb);
+    new TimestampPlugin(viewDb);
+    new VersioningPlugin(viewDb);
     var obj = { id: '123' };
     var insertTime;
     var collection = viewDb.collection('test');
@@ -106,8 +109,8 @@ describe('Viewdb timestamp plugin', function () {
 
   it('should skip changing timestamp with skipTimestamp option on save', function (done) {
     var viewDb = new ViewDb();
-    new ViewDbTimestampPlugin(viewDb);
-    new ViewDBVersioningPlugin(viewDb);
+    new TimestampPlugin(viewDb);
+    new VersioningPlugin(viewDb);
     var obj = { id: '123' };
     var insertTime;
     var collection = viewDb.collection('test');
@@ -134,8 +137,8 @@ describe('Viewdb timestamp plugin', function () {
 
   it('should work together with version plugin', function (done) {
     var viewDb = new ViewDb();
-    new ViewDbTimestampPlugin(viewDb);
-    new ViewDBVersioningPlugin(viewDb);
+    new TimestampPlugin(viewDb);
+    new VersioningPlugin(viewDb);
     var obj = { id: '123' };
     var collection = viewDb.collection('test');
     collection.insert(obj);

@@ -1,5 +1,4 @@
-import Cursor from '../src/Cursor';
-import ViewDB from '../src';
+import ViewDB, { Cursor } from '../src';
 
 describe('Cursor', function () {
   it('#toArray', function (done) {
@@ -54,7 +53,7 @@ describe('Cursor', function () {
     for (var i = 0; i < 10; i++) {
       collection.insert({ a: 'a', id: i });
     }
-    collection.find({}).sort({id: 1}).toArray(function (err, res) {
+    collection.find({}).sort({ id: 1 }).toArray(function (err, res) {
       expect(res[0].id).toBe(0);
       done();
     });
@@ -65,7 +64,7 @@ describe('Cursor', function () {
     for (var i = 0; i < 10; i++) {
       collection.insert({ a: 'a', id: i });
     }
-    collection.find({}).sort({id: -1}).toArray(function (err, res) {
+    collection.find({}).sort({ id: -1 }).toArray(function (err, res) {
       expect(res[0].id).toBe(9);
       done();
     });

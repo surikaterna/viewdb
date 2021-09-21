@@ -1,80 +1,89 @@
-import _ from 'lodash';
+import { forEach, isFunction } from 'lodash';
 import Observe from './Observer';
 
-var Cursor = function (collection, query, options, getDocuments) {
-  this._collection = collection;
-  this._query = query;
-  this._options = options;
-  this._getDocuments = getDocuments;
-  this._isObserving = false;
-};
+export default class Cursor {
+  constructor(collection, query, options, getDocuments) {
+    this._collection = collection;
+    this._query = query;
+    this._options = options;
+    this._getDocuments = getDocuments;
+    this._isObserving = false;
+  }
 
-Cursor.prototype.forEach = function (callback, thiz) {
-  var docs = this._getDocuments(this._query, function (err, result) {
-    _.forEach(result, function (n) {
-      callback(result);
+  count = function (applySkipLimit, callback) {
+    if (isFunction(applySkipLimit)) {
+      callback = applySkipLimit;
+      applySkipLimit = false;
+    }
+
+    const query = { query: this._query.query };
+    if (applySkipLimit) {
+      if (this._query.skip) {
+        query.skip = this._query.skip;
+      }
+
+      if (this._query.limit) {
+        query.limit = this._query.limit;
+      }
+    }
+
+    this._getDocuments(query, (err, res) => {
+      callback(err, res && res.length);
     });
-  });
-};
+  };
 
-Cursor.prototype.toArray = function (callback) {
-  var docs = this._getDocuments(this._query, callback);
-};
+  forEach = (callback) => {
+    this._getDocuments(this._query, (err, result) => {
+      forEach(result, () => {
+        callback(result);
+      });
+    });
+  };
 
-Cursor.prototype.observe = function (options) {
-  this._isObserving = true;
-  return new Observe(this._query, this._options, this._collection, options);
-};
+  limit = (limit) => {
+    this._query.limit = limit;
 
-Cursor.prototype.skip = function (skip) {
-  this._query.skip = skip;
-  if (this._isObserving) {
-    this._refresh();
-  }
-  return this;
-};
-
-Cursor.prototype.limit = function (limit) {
-  this._query.limit = limit;
-  if (this._isObserving) {
-    this._refresh();
-  }
-  return this;
-};
-
-Cursor.prototype.sort = function (sort) {
-  this._query.sort = sort;
-  if (this._isObserving) {
-    this._refresh();
-  }
-  return this;
-};
-
-Cursor.prototype._refresh = function () {
-  this._collection.emit('change', {});
-};
-
-Cursor.prototype.rewind = function (options) {
-  //NOOP
-};
-
-Cursor.prototype.count = function (applySkipLimit, callback) {
-  if (_.isFunction(applySkipLimit)) {
-    callback = applySkipLimit;
-    applySkipLimit = false;
-  }
-  var query = { query: this._query.query };
-  if (applySkipLimit) {
-    if (this._query.skip) {
-      query.skip = this._query.skip;
+    if (this._isObserving) {
+      this._refresh();
     }
-    if (this._query.limit) {
-      query.limit = this._query.limit;
-    }
-  }
-  this._getDocuments(query, function (err, res) {
-    callback(err, res && res.length);
-  });
-};
 
-export default Cursor;
+    return this;
+  };
+
+  observe = (options) => {
+    this._isObserving = true;
+    return new Observe(this._query, this._options, this._collection, options);
+  };
+
+  rewind = (options) => {
+    //NOOP
+  };
+
+  skip = (skip) => {
+    this._query.skip = skip;
+
+    if (this._isObserving) {
+      this._refresh();
+    }
+
+    return this;
+  };
+
+  sort = (sort) => {
+    this._query.sort = sort;
+
+    if (this._isObserving) {
+      this._refresh();
+    }
+
+    return this;
+  };
+
+  toArray = (callback) => {
+    this._getDocuments(this._query, callback);
+  };
+
+  _refresh = () => {
+    this._collection.emit('change', {});
+  };
+}
