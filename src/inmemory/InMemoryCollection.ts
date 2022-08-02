@@ -1,11 +1,10 @@
-import { cloneDeep, findIndex, has, isArray, isFunction, isObject, pullAll } from 'lodash';
 import { EventEmitter } from 'events';
 // @ts-expect-error
 import Kuery from 'kuery';
+import { cloneDeep, findIndex, has, isArray, isFunction, isObject, pullAll } from 'lodash';
 import { v4 as uuid } from 'uuid';
+import { BaseDocument, Collection, FindOptions, Query, SortQuery } from '../Collection';
 import Cursor from '../Cursor';
-
-type Query = Record<string, any>;
 
 interface CollectionCountCallback {
   (error: null, count: number): void;
@@ -27,7 +26,6 @@ type CreateIndexCallback = Function;
 type EnsureIndexOptions = Record<string, any>;
 type EnsureIndexCallback = Function;
 type InsertOptions = Record<string, any>;
-type FindOptions = Record<string, any>;
 type InsertCallback = Function;
 type RemoveOptions = Record<string, any>;
 type RemoveCallback = Function;
@@ -38,12 +36,7 @@ type WriteOptions = Record<string, any>;
 type WriteCallback = Function;
 type GetDocumentsCallback = Function;
 
-export interface BaseDocument {
-  _id?: string;
-  id?: string;
-}
-
-export default class Collection<Document extends BaseDocument = Record<string, any>> extends EventEmitter {
+export default class InMemoryCollection<Document extends BaseDocument = Record<string, any>> extends EventEmitter implements Collection<Document> {
   private documents: Array<Document>;
   private readonly name: string;
 
@@ -52,6 +45,10 @@ export default class Collection<Document extends BaseDocument = Record<string, a
 
     this.documents = [];
     this.name = collectionName;
+  }
+
+  findAndModify(query: Query, sort: SortQuery | null, update: Query, options: { [x: string]: any; }, cb: Function): void {
+    throw new Error('findAndModify not supported!');
   }
 
   count = (callback: CollectionCountCallback) => {
@@ -75,7 +72,7 @@ export default class Collection<Document extends BaseDocument = Record<string, a
   };
 
   find = (query: Query, options: FindOptions) => {
-    return new Cursor(this, { query: query }, options, this._getDocuments);
+    return new Cursor(this, {query: query}, options, this._getDocuments);
   };
 
   insert = (documents: Array<Document>, options: InsertOptions, callback: InsertCallback) => {
@@ -140,7 +137,7 @@ export default class Collection<Document extends BaseDocument = Record<string, a
         document._id = document.id || uuid();
       }
 
-      const idx = findIndex<BaseDocument>(this.documents, { _id: document._id });
+      const idx = findIndex<BaseDocument>(this.documents, {_id: document._id});
 
       if (op === 'insert' && idx >= 0) {
         return callback(new Error('Unique constraint!'));

@@ -19,6 +19,7 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "types": [
+      "node",
       "jest"
     ],
     "skipLibCheck": true

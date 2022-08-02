@@ -1,17 +1,21 @@
-import InMemoryStore from './inmemory/Store';
+import { BaseDocument, Collection } from './Collection';
+import { CollectionCallback, Store } from './Store';
+import InMemoryStore from './inmemory/InMemoryStore';
 
 export default class ViewDB {
-  constructor(store) {
-    this._store = store || new InMemoryStore();
+  private readonly store: Store;
+
+  constructor(store: Store) {
+    this.store = store || new InMemoryStore();
   }
 
-  collection = (collectionName, callback) => {
-    return this._store.collection(collectionName, callback);
+  collection = <Document extends BaseDocument = Record<string, any>>(collectionName: string, callback: CollectionCallback<Document>): Collection<Document> => {
+    return this.store.collection(collectionName, callback);
   };
 
-  open = async () => {
-    if (this._store.open) {
-      await this._store.open();
+  open = async (): Promise<ViewDB> => {
+    if (this.store.open) {
+      await this.store.open();
       return this;
     } else {
       return this;
