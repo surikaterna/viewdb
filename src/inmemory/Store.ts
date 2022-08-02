@@ -1,15 +1,21 @@
-import Collection from './Collection';
+import Collection, { BaseDocument } from './Collection';
+
+export interface CollectionCallback<Document extends BaseDocument = Record<string, any>> {
+  (collection: Collection<Document>): void;
+}
 
 export default class Store {
+  _collections: Record<string, Collection<any>>;
+
   constructor() {
     this._collections = {};
   }
 
-  collection = (collectionName, callback) => {
-    let coll = this._collections[collectionName];
+  collection = <Document extends BaseDocument = Record<string, any>>(collectionName: string, callback: CollectionCallback<Document>) => {
+    let coll: Collection<Document> | undefined = this._collections[collectionName];
 
     if (coll === undefined) {
-      coll = new Collection(collectionName);
+      coll = new Collection<Document>(collectionName);
       this._collections[collectionName] = coll;
     }
 

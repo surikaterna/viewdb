@@ -1,60 +1,102 @@
 import { cloneDeep, findIndex, has, isArray, isFunction, isObject, pullAll } from 'lodash';
 import { EventEmitter } from 'events';
+// @ts-expect-error
 import Kuery from 'kuery';
 import { v4 as uuid } from 'uuid';
 import Cursor from '../Cursor';
 
-export default class Collection extends EventEmitter {
-  constructor(collectionName) {
+type Query = Record<string, any>;
+
+interface CollectionCountCallback {
+  (error: null, count: number): void;
+}
+
+interface CollectionDropCallback {
+  (error: null): void;
+}
+
+interface QueryObject extends Record<string, any> {
+  query?: Record<string, any>;
+  limit?: number;
+  skip?: number;
+  sort?: Record<string, number>;
+}
+
+type CreateIndexOptions = Record<string, any>;
+type CreateIndexCallback = Function;
+type EnsureIndexOptions = Record<string, any>;
+type EnsureIndexCallback = Function;
+type InsertOptions = Record<string, any>;
+type FindOptions = Record<string, any>;
+type InsertCallback = Function;
+type RemoveOptions = Record<string, any>;
+type RemoveCallback = Function;
+type SaveOptions = Record<string, any>;
+type SaveCallback = Function;
+type WriteOperation = 'insert' | 'save';
+type WriteOptions = Record<string, any>;
+type WriteCallback = Function;
+type GetDocumentsCallback = Function;
+
+export interface BaseDocument {
+  _id?: string;
+  id?: string;
+}
+
+export default class Collection<Document extends BaseDocument = Record<string, any>> extends EventEmitter {
+  private documents: Array<Document>;
+  private readonly name: string;
+
+  constructor(collectionName: string) {
     super();
 
-    this._documents = [];
-    this._name = collectionName;
+    this.documents = [];
+    this.name = collectionName;
   }
 
-  count = (callback) => {
-    callback(null, this._documents.length);
+  count = (callback: CollectionCountCallback) => {
+    callback(null, this.documents.length);
   };
 
-  createIndex = (options, callback) => {
+  createIndex = (options: CreateIndexOptions, callback: CreateIndexCallback): void => {
     throw new Error('createIndex not supported!');
   };
 
-  drop = (callback) => {
-    this._documents = [];
+  drop = (callback?: CollectionDropCallback): void => {
+    this.documents = [];
 
     if (callback) {
       callback(null);
     }
   };
 
-  ensureIndex = (options, callback) => {
+  ensureIndex = (options: EnsureIndexOptions, callback: EnsureIndexCallback) => {
     throw new Error('ensureIndex not supported!');
   };
 
-  find = (query, options) => {
+  find = (query: Query, options: FindOptions) => {
     return new Cursor(this, { query: query }, options, this._getDocuments);
   };
 
-  insert = (documents, options, callback) => {
-    return this._write('insert', documents, options, callback);
+  insert = (documents: Array<Document>, options: InsertOptions, callback: InsertCallback) => {
+    return this.write('insert', documents, options, callback);
   };
 
-  remove = (query, options, callback) => {
+  remove = (query: Query, options: RemoveOptions, callback: RemoveCallback) => {
     const q = new Kuery(query);
-    const documents = q.find(this._documents);
-    this._documents = pullAll(this._documents, documents);
+    const documents = q.find(this.documents);
+    this.documents = pullAll(this.documents, documents);
 
     process.nextTick(function () {
       callback(null);
     });
   };
 
-  save = (documents, options, callback) => {
-    return this._write('save', documents, options, callback);
+  save = (documents: Array<Document>, options: SaveOptions, callback: SaveCallback) => {
+    return this.write('save', documents, options, callback);
   };
 
-  _getDocuments = (queryObject, callback) => {
+  _getDocuments = (queryObject: QueryObject, callback: GetDocumentsCallback) => {
     const query = queryObject.query || queryObject;
     const q = new Kuery(query);
 
@@ -70,15 +112,16 @@ export default class Collection extends EventEmitter {
       q.limit(queryObject.limit);
     }
 
-    const documents = q.find(this._documents);
+    const documents = q.find(this.documents);
     process.nextTick(() => {
       callback(null, cloneDeep(documents));
     });
   };
 
-  _write = (op, documents, options, callback) => {
+  private write = (op: WriteOperation, documents: Array<Document>, options: WriteOptions, callback: WriteCallback) => {
     if (isFunction(options)) {
       callback = options;
+      // @ts-expect-error
       options = undefined;
     }
 
@@ -94,10 +137,10 @@ export default class Collection extends EventEmitter {
       }
 
       if (!has(document, '_id')) {
-        document['_id'] = document['id'] || uuid();
+        document._id = document.id || uuid();
       }
 
-      const idx = findIndex(this._documents, { _id: document['_id'] });
+      const idx = findIndex<BaseDocument>(this.documents, { _id: document._id });
 
       if (op === 'insert' && idx >= 0) {
         return callback(new Error('Unique constraint!'));
@@ -105,9 +148,9 @@ export default class Collection extends EventEmitter {
 
       // not stored before
       if (idx === -1) {
-        this._documents.push(document);
+        this.documents.push(document);
       } else {
-        this._documents[idx] = document;
+        this.documents[idx] = document;
       }
     }
 
