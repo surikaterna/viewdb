@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import ViewDb from '../../src';
-import ViewDbVersioningPlugin from '../../src/plugins/ViewDBVersioningPlugin';
+import ViewDb from '..';
+import ViewDbVersioningPlugin from './ViewDBVersioningPlugin';
 
 describe('Viewdb versioning plugin', function () {
   it('should add version on insert', function (done) {

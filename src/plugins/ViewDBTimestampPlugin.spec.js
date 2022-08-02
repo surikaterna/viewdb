@@ -1,4 +1,4 @@
-import ViewDb, { TimestampPlugin, VersioningPlugin } from '../../src';
+import ViewDb, { TimestampPlugin, VersioningPlugin } from '..';
 
 describe('Viewdb timestamp plugin', function () {
   it('should add changeDateTime and createDateTime timestamp on insert', function (done) {

@@ -1,4 +1,4 @@
-import ViewDb from '../src';
+import ViewDb from '.';
 import _ from 'lodash';
 
 describe('Observe', function () {

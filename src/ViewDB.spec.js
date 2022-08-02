@@ -1,4 +1,4 @@
-import ViewDB from '../src';
+import ViewDB from '.';
 
 describe('ViewDB', function () {
   describe('#count', function () {

@@ -1,4 +1,4 @@
-import ViewDB, { Cursor } from '../src';
+import ViewDB, { Cursor } from '.';
 
 describe('Cursor', function () {
   it('#toArray', function (done) {
