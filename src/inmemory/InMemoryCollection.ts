@@ -3,34 +3,28 @@ import { EventEmitter } from 'events';
 import Kuery from 'kuery';
 import { cloneDeep, findIndex, has, isArray, isFunction, isObject, pullAll } from 'lodash';
 import { v4 as uuid } from 'uuid';
-import { BaseDocument, Collection, FindOptions, Query, SortQuery } from '../Collection';
+import {
+  BaseDocument,
+  Collection,
+  CollectionCountCallback,
+  CollectionDropCallback,
+  CreateIndexCallback,
+  CreateIndexOptions,
+  EnsureIndexCallback,
+  EnsureIndexOptions,
+  FindOptions,
+  InsertCallback,
+  InsertOptions,
+  Query,
+  QueryObject,
+  RemoveCallback,
+  RemoveOptions,
+  SaveCallback,
+  SaveOptions,
+  SortQuery
+} from '../Collection';
 import Cursor from '../Cursor';
 
-interface CollectionCountCallback {
-  (error: null, count: number): void;
-}
-
-interface CollectionDropCallback {
-  (error: null): void;
-}
-
-interface QueryObject extends Record<string, any> {
-  query?: Record<string, any>;
-  limit?: number;
-  skip?: number;
-  sort?: Record<string, number>;
-}
-
-type CreateIndexOptions = Record<string, any>;
-type CreateIndexCallback = Function;
-type EnsureIndexOptions = Record<string, any>;
-type EnsureIndexCallback = Function;
-type InsertOptions = Record<string, any>;
-type InsertCallback = Function;
-type RemoveOptions = Record<string, any>;
-type RemoveCallback = Function;
-type SaveOptions = Record<string, any>;
-type SaveCallback = Function;
 type WriteOperation = 'insert' | 'save';
 type WriteOptions = Record<string, any>;
 type WriteCallback = Function;
@@ -115,7 +109,7 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
     });
   };
 
-  private write = (op: WriteOperation, documents: Array<Document>, options: WriteOptions, callback: WriteCallback) => {
+  private write = (op: WriteOperation, documents: Array<Document>, options: WriteOptions, callback: WriteCallback): void => {
     if (isFunction(options)) {
       callback = options;
       // @ts-expect-error
