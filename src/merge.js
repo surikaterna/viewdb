@@ -2,24 +2,24 @@ import { forEach, isEqual, slice } from 'lodash';
 
 export default function merge(asis, tobe, options) {
   options = options || {};
-  var comparator = options.comparator || isEqual;
-  var comparatorId = options.comparatorId || comparator;
-  var list = slice(asis);
+  const comparator = options.comparator || isEqual;
+  const comparatorId = options.comparatorId || comparator;
+  const list = slice(asis);
   //check removed
   forEach(asis, function (e) {
-    var found = contains(tobe, e, comparatorId);
+    const found = contains(tobe, e, comparatorId);
     if (found === undefined) {
-      var index = list.indexOf(e);
+      const index = list.indexOf(e);
       list.splice(index, 1);
       if (options.removed) {
         options.removed(e, index);
       }
     }
   });
-  var indexInNew = -1;
+  let indexInNew = -1;
   forEach(tobe, function (e) {
     indexInNew++;
-    var found = contains(list, e, comparatorId);
+    const found = contains(list, e, comparatorId);
     //added
     if (found === undefined) {
       list.splice(indexInNew, 0, e);
@@ -28,7 +28,7 @@ export default function merge(asis, tobe, options) {
       }
     } else {
       //existed before
-      var indexInOld = list.indexOf(found);
+      const indexInOld = list.indexOf(found);
       if (indexInOld !== indexInNew) {
         //remove
         list.splice(indexInOld, 1);

@@ -7,6 +7,6 @@
 * [x] Upgrade dependencies
 * [ ] Update to modern class based JS with Babel
   * [x] Add babel transpilation
-  * [ ] Update to modern syntax
+  * [x] Update to modern syntax
   * [ ] Replace bluebird with native promises
 * [ ] Upgrade to TS
