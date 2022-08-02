@@ -7,6 +7,6 @@ module.exports = {
   ],
   testTimeout: 2000,
   transform: {
-    "^.+\\.[t|j]s$": "babel-jest"
+    "^.+\\.[t|j]s$": "@swc/jest"
   }
 };
