@@ -1,5 +1,5 @@
-import { BaseDocument } from '../Collection';
-import { CollectionCallback, Store } from '../Store';
+import { BaseDocument, Collection, CollectionCallback } from '../Collection';
+import { Store } from '../Store';
 import InMemoryCollection from './InMemoryCollection';
 
 export default class InMemoryStore implements Store {
@@ -9,7 +9,7 @@ export default class InMemoryStore implements Store {
     this._collections = {};
   }
 
-  collection = <Document extends BaseDocument = Record<string, any>>(collectionName: string, callback: CollectionCallback<Document>) => {
+  collection = <Document extends BaseDocument = Record<string, any>>(collectionName: string, callback: CollectionCallback<Document>): Collection<Document> => {
     let coll: InMemoryCollection<Document> | undefined = this._collections[collectionName];
 
     if (coll === undefined) {

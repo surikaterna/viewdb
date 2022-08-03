@@ -1,8 +1,20 @@
 import { defaults, get } from 'lodash';
+import { BaseDocument, Collection, Nullable, QueryObject } from './Collection';
+import { CursorOptions } from './Cursor';
 import merge from './merge';
 
-export default class Observer {
-  constructor(query, queryOptions, collection, options) {
+export interface ObserveOptions<Document extends BaseDocument = Record<string, any>> {
+  init?(documents?: Array<Document>): void;
+}
+
+export default class Observer<Document extends BaseDocument = Record<string, any>> {
+  private readonly _query: QueryObject;
+  private readonly _options: ObserveOptions<Document>;
+  private readonly _collection: Collection<Document>;
+  private _cache: Nullable<Array<Document> | undefined>;
+  private readonly _mergeOptions: ObserveOptions;
+
+  constructor(query: QueryObject, queryOptions: CursorOptions, collection: Collection<Document>, options: ObserveOptions<Document>) {
     this._query = query;
     this._options = options;
     this._collection = collection;
@@ -13,24 +25,22 @@ export default class Observer {
         comparatorId: indexedIdComparator
       },
       this._options
-    )
+    );
 
-    const listener = () => {
-      this.refresh();
-    };
-
-    collection.on('change', listener);
+    collection.on('change', this.listener);
     this.refresh(true);
-
-    return {
-      stop: () => {
-        this._cache = null;
-        collection.removeListener('change', listener);
-      }
-    };
   }
 
-  refresh = (initial) => {
+  stop = () => {
+    this._cache = null;
+    this._collection.removeListener('change', this.listener);
+  };
+
+  private listener = () => {
+    this.refresh();
+  };
+
+  private refresh = (initial?: boolean) => {
     this._collection._getDocuments(this._query, (err, result) => {
       if (initial && this._options.init) {
         this._cache = result;
@@ -38,16 +48,17 @@ export default class Observer {
       } else {
         const old = this._cache;
 
+        // TODO: Verify actual type of _cache, in case it's different from what's assumed
         this._cache = merge(
           old,
           result,
           this._mergeOptions
-        );
+        ) as Array<Document>;
       }
     });
   };
 }
 
-function indexedIdComparator (firstDocument, secondDocument) {
-  return get(firstDocument, '_id') === get(secondDocument, '_id')
+function indexedIdComparator<Document extends BaseDocument = Record<string, any>>(firstDocument: Document, secondDocument: Document): boolean {
+  return get(firstDocument, '_id') === get(secondDocument, '_id');
 }

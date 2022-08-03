@@ -13,6 +13,7 @@ import {
   EnsureIndexCallback,
   EnsureIndexOptions,
   FindOptions,
+  GetDocumentsCallback,
   InsertCallback,
   InsertOptions,
   Query,
@@ -28,7 +29,6 @@ import Cursor from '../Cursor';
 type WriteOperation = 'insert' | 'save';
 type WriteOptions = Record<string, any>;
 type WriteCallback = Function;
-type GetDocumentsCallback = Function;
 
 export default class InMemoryCollection<Document extends BaseDocument = Record<string, any>> extends EventEmitter implements Collection<Document> {
   private documents: Array<Document>;
@@ -65,8 +65,8 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
     throw new Error('ensureIndex not supported!');
   };
 
-  find = (query: Query, options: FindOptions) => {
-    return new Cursor(this, {query: query}, options, this._getDocuments);
+  find = (query: Query, options: FindOptions): Cursor<Document> => {
+    return new Cursor<Document>(this, {query: query}, options, this._getDocuments);
   };
 
   insert = (documents: Array<Document>, options: InsertOptions, callback: InsertCallback) => {
@@ -87,7 +87,7 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
     return this.write('save', documents, options, callback);
   };
 
-  _getDocuments = (queryObject: QueryObject, callback: GetDocumentsCallback) => {
+  _getDocuments = (queryObject: QueryObject, callback: GetDocumentsCallback<Document>): void => {
     const query = queryObject.query || queryObject;
     const q = new Kuery(query);
 

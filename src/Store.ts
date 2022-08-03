@@ -1,8 +1,4 @@
-import { BaseDocument, Collection } from './Collection';
-
-export interface CollectionCallback<Document extends BaseDocument = Record<string, any>> {
-  (collection: Collection<Document>): void;
-}
+import { BaseDocument, Collection, CollectionCallback } from './Collection';
 
 export interface Store {
   collection<Document extends BaseDocument = Record<string, any>>(collectionName: string, callback: CollectionCallback<Document>): Collection<Document>;

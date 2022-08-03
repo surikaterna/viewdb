@@ -1,8 +1,33 @@
 import { forEach, isFunction } from 'lodash';
-import Observe from './Observer';
+import {
+  BaseDocument,
+  Collection,
+  CollectionCountCallback,
+  GetDocumentsCallback,
+  GetDocumentsFunc,
+  QueryObject,
+  SortQuery
+} from './Collection';
+import Observe, { ObserveOptions } from './Observer';
 
-export default class Cursor {
-  constructor(collection, query, options, getDocuments) {
+export interface CursorForEachCallback<Document extends BaseDocument = Record<string, any>> {
+  (documents: Array<Document>): void;
+}
+
+export interface CursorRewindOptions {
+}
+
+export interface CursorOptions {
+}
+
+export default class Cursor<Document extends BaseDocument = Record<string, any>> {
+  private readonly _collection: Collection<Document>;
+  private readonly _query: QueryObject;
+  private readonly _options: CursorOptions;
+  private readonly _getDocuments: GetDocumentsFunc<Document>;
+  private _isObserving: boolean;
+
+  constructor(collection: Collection<Document>, query: QueryObject, options: CursorOptions, getDocuments: GetDocumentsFunc<Document>) {
     this._collection = collection;
     this._query = query;
     this._options = options;
@@ -10,13 +35,13 @@ export default class Cursor {
     this._isObserving = false;
   }
 
-  count = function (applySkipLimit, callback) {
+  count = (applySkipLimit: boolean, callback: CollectionCountCallback) => {
     if (isFunction(applySkipLimit)) {
       callback = applySkipLimit;
       applySkipLimit = false;
     }
 
-    const query = { query: this._query.query };
+    const query: QueryObject = {query: this._query.query};
     if (applySkipLimit) {
       if (this._query.skip) {
         query.skip = this._query.skip;
@@ -32,15 +57,15 @@ export default class Cursor {
     });
   };
 
-  forEach = (callback) => {
+  forEach = (callback: CursorForEachCallback<Document>) => {
     this._getDocuments(this._query, (err, result) => {
       forEach(result, () => {
-        callback(result);
+        callback(result as Array<Document>);
       });
     });
   };
 
-  limit = (limit) => {
+  limit = (limit: number) => {
     this._query.limit = limit;
 
     if (this._isObserving) {
@@ -50,16 +75,16 @@ export default class Cursor {
     return this;
   };
 
-  observe = (options) => {
+  observe = (options: ObserveOptions): Observe<Document> => {
     this._isObserving = true;
-    return new Observe(this._query, this._options, this._collection, options);
+    return new Observe<Document>(this._query, this._options, this._collection, options);
   };
 
-  rewind = (options) => {
+  rewind = (options?: CursorRewindOptions) => {
     //NOOP
   };
 
-  skip = (skip) => {
+  skip = (skip: number): Cursor<Document> => {
     this._query.skip = skip;
 
     if (this._isObserving) {
@@ -69,7 +94,7 @@ export default class Cursor {
     return this;
   };
 
-  sort = (sort) => {
+  sort = (sort: SortQuery): Cursor<Document> => {
     this._query.sort = sort;
 
     if (this._isObserving) {
@@ -79,7 +104,7 @@ export default class Cursor {
     return this;
   };
 
-  toArray = (callback) => {
+  toArray = (callback: GetDocumentsCallback<Document>): void => {
     this._getDocuments(this._query, callback);
   };
 
