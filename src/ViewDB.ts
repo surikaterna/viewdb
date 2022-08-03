@@ -1,5 +1,5 @@
-import { BaseDocument, Collection } from './Collection';
-import { CollectionCallback, Store } from './Store';
+import { BaseDocument, Collection, CollectionCallback } from './Collection';
+import { Store } from './Store';
 import InMemoryStore from './inmemory/InMemoryStore';
 
 export default class ViewDB {
