@@ -1,10 +1,21 @@
 import { forEach, isEqual, slice } from 'lodash';
+import { Nullable } from './Collection';
 
-export default function merge(asis, tobe, options) {
+export interface MergerOptions<Element> {
+  comparator: Function;
+  comparatorId: Function;
+  added?(element: Element, index: number): void;
+  changed?(currentElement: Element, newElement: Element, index: number): void;
+  init?(documents?: Array<Element>): void;
+  moved?(element: Element, oldIndex: number, newIndex: number): void;
+  removed?(element: Element, index: number): void;
+}
+
+export default function merge<Element>(asis: Nullable<Array<Element> | undefined>, tobe: Array<Element>, options: MergerOptions<Element>): Array<Element> {
   options = options || {};
   const comparator = options.comparator || isEqual;
   const comparatorId = options.comparatorId || comparator;
-  const list = slice(asis);
+  const list = slice(asis) as Array<Element>;
   //check removed
   forEach(asis, function (e) {
     const found = contains(tobe, e, comparatorId);
@@ -49,7 +60,7 @@ export default function merge(asis, tobe, options) {
   return list;
 }
 
-function contains(list, element, comparator) {
+function contains<Document>(list: Array<Document>, element: Document, comparator: Function): Document | undefined {
   for (let i in list) {
     const n = list[i];
 

@@ -1,20 +1,16 @@
 import { defaults, get } from 'lodash';
 import { BaseDocument, Collection, Nullable, QueryObject } from './Collection';
 import { CursorOptions } from './Cursor';
-import merge from './merge';
-
-export interface ObserveOptions<Document extends BaseDocument = Record<string, any>> {
-  init?(documents?: Array<Document>): void;
-}
+import merge, { MergerOptions } from './merge';
 
 export default class Observer<Document extends BaseDocument = Record<string, any>> {
   private readonly _query: QueryObject;
-  private readonly _options: ObserveOptions<Document>;
+  private readonly _options: MergerOptions<Document>;
   private readonly _collection: Collection<Document>;
   private _cache: Nullable<Array<Document> | undefined>;
-  private readonly _mergeOptions: ObserveOptions;
+  private readonly _mergeOptions: MergerOptions<Document>;
 
-  constructor(query: QueryObject, queryOptions: CursorOptions, collection: Collection<Document>, options: ObserveOptions<Document>) {
+  constructor(query: QueryObject, queryOptions: CursorOptions, collection: Collection<Document>, options: MergerOptions<Document>) {
     this._query = query;
     this._options = options;
     this._collection = collection;
@@ -46,14 +42,17 @@ export default class Observer<Document extends BaseDocument = Record<string, any
         this._cache = result;
         this._options.init(result);
       } else {
+        if (!result) {
+          return;
+        }
+
         const old = this._cache;
 
-        // TODO: Verify actual type of _cache, in case it's different from what's assumed
         this._cache = merge(
           old,
           result,
           this._mergeOptions
-        ) as Array<Document>;
+        );
       }
     });
   };
