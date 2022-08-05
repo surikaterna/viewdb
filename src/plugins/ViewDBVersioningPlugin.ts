@@ -1,15 +1,26 @@
-import { isArray, isUndefined } from 'lodash';
+import { isArray } from 'lodash';
+import ViewDB from '..';
+import { BaseDocument, Collection, SaveOptions } from '../Collection';
+import { addPlugin, addProperties } from '../plugins/Plugin';
 
 export default class ViewDBVersioningPlugin {
-  constructor(viewDb) {
+  constructor(viewDb: ViewDB) {
     mutateCollection(viewDb);
   }
 }
 
-function mutateCollection(viewDb) {
-  const oldCollection = viewDb.collection;
-  viewDb.collection = function () {
-    const collection = oldCollection.apply(this, arguments);
+interface WithVersion {
+  version: number;
+}
+
+interface WithVersioning {
+  versioning: boolean;
+}
+
+function mutateCollection(viewDb: ViewDB) {
+  const oldCollection = viewDb.collection<any>;
+  viewDb.collection = function (...args) {
+    const collection = addPlugin<ReturnType<typeof oldCollection>, WithVersioning>(oldCollection.apply(this, args));
     if (!collection.__plugins_versioning) {
       collection.__plugins_versioning = true;
 
@@ -21,7 +32,7 @@ function mutateCollection(viewDb) {
   };
 }
 
-function mutateFindAndModify(collection) {
+function mutateFindAndModify<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldFindAndModify = collection.findAndModify;
   collection.findAndModify = function (query, sort, update, options, cb) {
     if (!(options && options.skipVersioning)) {
@@ -34,39 +45,39 @@ function mutateFindAndModify(collection) {
       }
     }
 
-    oldFindAndModify.apply(collection, arguments);
+    oldFindAndModify.apply(this, [query, sort, update, options, cb]);
   };
 }
 
-function mutateInsert(collection) {
+function mutateInsert<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldInsert = collection.insert;
-  collection.insert = function (docs, options) {
+  collection.insert = function (docs, options, callback) {
     setVersions(docs, options);
-    oldInsert.apply(collection, arguments);
+    oldInsert.apply(this, [docs, options, callback]);
   };
 }
 
-function mutateSave(collection) {
+function mutateSave<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldSave = collection.save;
-  collection.save = function (docs, options) {
+  collection.save = function (docs, options, callback) {
     setVersions(docs, options);
-    oldSave.apply(this, arguments);
+    oldSave.apply(this, [docs, options, callback]);
   };
 }
 
-function setVersions(docs, options) {
+function setVersions<Document>(docs: Array<Document>, options: SaveOptions) {
   if (!(options && options.skipVersioning)) {
     if (!isArray(docs)) {
       docs = [docs];
     }
 
     for (let i = 0; i < docs.length; i++) {
-      const doc = docs[i];
+      const doc = addProperties<Document, WithVersion>(docs[i]);
       doc.version = getNewVersion(doc.version);
     }
   }
 }
 
-function getNewVersion(version) {
-  return isUndefined(version) ? 0 : version + 1;
+function getNewVersion(version?: number): number {
+  return !version ? 0 : version + 1;
 }

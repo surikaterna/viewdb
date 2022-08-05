@@ -1,15 +1,27 @@
 import { clone, isArray } from 'lodash';
+import ViewDB from '..';
+import { BaseDocument, Collection } from '../Collection';
+import { addPlugin, addProperties } from '../plugins/Plugin';
 
 export default class ViewDBTimestampPlugin {
-  constructor(viewDb) {
+  constructor(viewDb: ViewDB) {
     mutateCollection(viewDb);
   }
 }
 
-function mutateCollection(viewDb) {
-  const oldCollection = viewDb.collection;
-  viewDb.collection = function () {
-    const collection = oldCollection.apply(viewDb, arguments);
+interface WithTimeStamp {
+  timestamp: boolean;
+}
+
+interface WithDateTimeData {
+  createDateTime: number;
+  changeDateTime: number;
+}
+
+function mutateCollection(viewDb: ViewDB) {
+  const oldCollection = viewDb.collection<any>;
+  viewDb.collection = function (...args) {
+    const collection = addPlugin<ReturnType<typeof oldCollection>, WithTimeStamp>(oldCollection.apply(this, args));
 
     if (!collection.__plugins_timestamp) {
       collection.__plugins_timestamp = true;
@@ -23,7 +35,7 @@ function mutateCollection(viewDb) {
   };
 }
 
-function mutateFindAndModify(collection) {
+function mutateFindAndModify<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldFindAndModify = collection.findAndModify;
   collection.findAndModify = function (query, sort, update, options, cb) {
     const timestamp = new Date().valueOf();
@@ -45,9 +57,9 @@ function mutateFindAndModify(collection) {
   };
 }
 
-function mutateInsert(collection) {
+function mutateInsert<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldInsert = collection.insert;
-  collection.insert = function (docs, options) {
+  collection.insert = function (docs, options, callback) {
     if (!(options && options.skipTimestamp)) {
       if (!isArray(docs)) {
         docs = [docs];
@@ -56,19 +68,19 @@ function mutateInsert(collection) {
       const timestamp = new Date().valueOf();
 
       for (let i = 0; i < docs.length; i++) {
-        const doc = docs[i];
+        const doc = addProperties<Document, WithDateTimeData>(docs[i]);
         doc.createDateTime = timestamp;
         doc.changeDateTime = timestamp;
       }
     }
 
-    oldInsert.apply(collection, arguments);
+    oldInsert.apply(this, [docs, options, callback]);
   };
 }
 
-function mutateSave(collection) {
+function mutateSave<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldSave = collection.save;
-  collection.save = function (docs, options) {
+  collection.save = function (docs, options, callback) {
     let newDocs = docs;
 
     if (!(options && options.skipTimestamp)) {
@@ -79,7 +91,7 @@ function mutateSave(collection) {
       }
 
       for (let i = 0; i < newDocs.length; i++) {
-        const doc = newDocs[i];
+        const doc = addProperties<Document, WithDateTimeData>(newDocs[i]);
 
         if (!doc.createDateTime) {
           doc.createDateTime = timestamp;
@@ -89,6 +101,6 @@ function mutateSave(collection) {
       }
     }
 
-    oldSave.apply(collection, arguments);
+    oldSave.apply(this, [docs, options, callback]);
   };
 }
