@@ -45,7 +45,7 @@ describe('Viewdb timestamp plugin', function () {
               hasError = true;
             }
           });
-          hasError && done(new Error('Timestamp was not renewed')) || done();
+          hasError ? done(new Error('Timestamp was not renewed')) : done();
         });
       });
     });
