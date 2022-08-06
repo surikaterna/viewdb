@@ -109,7 +109,12 @@ export default class Cursor<Document extends BaseDocument = Record<string, any>>
     this._getDocuments(this._query, callback);
   };
 
-  private _refresh = () => {
+  /**
+   * Not intended to be used externally
+   *
+   * TODO: Remove _ prefix since this should probably be a public method
+   */
+  _refresh = () => {
     this._collection.emit('change', {});
   };
 }

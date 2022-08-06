@@ -1,4 +1,4 @@
-import { defaults, get } from 'lodash';
+import { defaults } from 'lodash';
 import { BaseDocument, Collection, Nullable, QueryObject } from './Collection';
 import { CursorOptions } from './Cursor';
 import merge, { MergerOptions } from './merge';
@@ -42,14 +42,14 @@ export default class Observer<Document extends BaseDocument = Record<string, any
 
   private refresh = (initial?: boolean) => {
     this._collection._getDocuments(this._query, (err, result) => {
-      if (!result) {
-        return;
-      }
-
       if (initial && this._options.init) {
         this._cache = result;
         this._options.init(result);
       } else {
+        if (!result) {
+          return;
+        }
+
         const old = this._cache;
 
         this._cache = merge(
@@ -62,6 +62,6 @@ export default class Observer<Document extends BaseDocument = Record<string, any
   };
 }
 
-function indexedIdComparator<Document extends BaseDocument = Record<string, any>>(firstDocument: Document, secondDocument: Document): boolean {
-  return get(firstDocument, '_id') === get(secondDocument, '_id');
+function indexedIdComparator<Document extends BaseDocument = Record<string, any>>(firstDocument?: Document, secondDocument?: Document): boolean {
+  return firstDocument?._id === secondDocument?._id;
 }
