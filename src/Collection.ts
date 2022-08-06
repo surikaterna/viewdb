@@ -125,6 +125,7 @@ export type WriteCallback<Document extends BaseDocument = Record<string, any>> =
 export type MaybeArray<T> = T | Array<T>;
 
 export interface Collection<Document extends BaseDocument = Record<string, any>> extends EventEmitter {
+  /** Not intended to be used externally, but required internally for the Observer */
   _getDocuments: GetDocumentsFunc<Document>;
 
   count(callback: CollectionCountCallback): void;
