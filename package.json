@@ -4,9 +4,6 @@
   "description": "",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "directories": {
-    "test": "test"
-  },
   "scripts": {
     "build": "rimraf lib && concurrently \"npm run build:src\" \"npm run build:types\"",
     "build:watch": "rimraf lib && concurrently \"npm run build:src:watch\" \"npm run build:types:watch\"",
@@ -27,7 +24,9 @@
     "url": "https://github.com/surikaterna/viewdb"
   },
   "keywords": [],
-  "author": "",
+  "author": {
+    "name": "Surikat"
+  },
   "license": "MIT",
   "devDependencies": {
     "@swc/cli": "^0.1.57",
