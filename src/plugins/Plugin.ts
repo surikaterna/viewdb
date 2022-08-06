@@ -4,5 +4,10 @@ export type WithPlugin<Type, Plugin> = Type & {
 
 export type WithProperties<Type, AdditionalProperties> = Type & AdditionalProperties;
 
-export declare function addPlugin<Type, Plugin>(obj: Type): WithPlugin<Type, Plugin>;
-export declare function addProperties<Type, AdditionalProperties>(obj: Type): WithProperties<Type, AdditionalProperties>;
+export function addPlugin<Type, Plugin>(obj: Type): WithPlugin<Type, Plugin> {
+  return obj as WithPlugin<Type, Plugin>;
+}
+
+export function addProperties<Type, AdditionalProperties>(obj: Type): WithProperties<Type, AdditionalProperties> {
+  return obj as WithProperties<Type, AdditionalProperties>;
+}

@@ -2,17 +2,19 @@ import { forEach, isEqual, slice } from 'lodash';
 import { Nullable } from './Collection';
 
 export interface MergerOptions<Element> {
-  comparator: Function;
-  comparatorId: Function;
+  comparator?: Function;
+  comparatorId?: Function;
+
   added?(element: Element, index: number): void;
+
   changed?(currentElement: Element, newElement: Element, index: number): void;
-  init?(documents?: Array<Element>): void;
+
   moved?(element: Element, oldIndex: number, newIndex: number): void;
+
   removed?(element: Element, index: number): void;
 }
 
-export default function merge<Element>(asis: Nullable<Array<Element> | undefined>, tobe: Array<Element>, options: MergerOptions<Element>): Array<Element> {
-  options = options || {};
+export default function merge<Element>(asis: Nullable<ArrayLike<Element> | undefined>, tobe: ArrayLike<Element>, options: MergerOptions<Element> = {}): Array<Element> {
   const comparator = options.comparator || isEqual;
   const comparatorId = options.comparatorId || comparator;
   const list = slice(asis) as Array<Element>;
@@ -60,7 +62,7 @@ export default function merge<Element>(asis: Nullable<Array<Element> | undefined
   return list;
 }
 
-function contains<Document>(list: Array<Document>, element: Document, comparator: Function): Document | undefined {
+function contains<Document>(list: ArrayLike<Document>, element: Document, comparator: Function): Document | undefined {
   for (let i in list) {
     const n = list[i];
 

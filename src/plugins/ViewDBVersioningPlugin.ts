@@ -1,6 +1,6 @@
 import { isArray } from 'lodash';
 import ViewDB from '..';
-import { BaseDocument, Collection, SaveOptions } from '../Collection';
+import { BaseDocument, Collection, MaybeArray, WriteOptions } from '../Collection';
 import { addPlugin, addProperties } from '../plugins/Plugin';
 
 export default class ViewDBVersioningPlugin {
@@ -65,7 +65,7 @@ function mutateSave<Document extends BaseDocument = Record<string, any>>(collect
   };
 }
 
-function setVersions<Document>(docs: Array<Document>, options: SaveOptions) {
+function setVersions<Document>(docs: MaybeArray<Document>, options?: WriteOptions) {
   if (!(options && options.skipVersioning)) {
     if (!isArray(docs)) {
       docs = [docs];
@@ -79,5 +79,5 @@ function setVersions<Document>(docs: Array<Document>, options: SaveOptions) {
 }
 
 function getNewVersion(version?: number): number {
-  return !version ? 0 : version + 1;
+  return version === undefined ? 0 : version + 1;
 }

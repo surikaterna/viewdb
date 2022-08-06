@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 // @ts-expect-error
 import Kuery from 'kuery';
-import { cloneDeep, findIndex, has, isArray, isFunction, isObject, pullAll } from 'lodash';
+import { cloneDeep, findIndex, has, isArray, isObject, pullAll } from 'lodash';
 import { v4 as uuid } from 'uuid';
 import {
   BaseDocument,
@@ -14,21 +14,18 @@ import {
   EnsureIndexOptions,
   FindOptions,
   GetDocumentsCallback,
-  InsertCallback,
-  InsertOptions,
   Query,
   QueryObject,
-  RemoveCallback,
-  RemoveOptions,
-  SaveCallback,
-  SaveOptions,
-  SortQuery
+  RemoveFunc,
+  SaveFunc,
+  SortQuery,
+  WriteCallback,
+  WriteFunc,
+  WriteOptions
 } from '../Collection';
 import Cursor from '../Cursor';
 
-type WriteOperation = 'insert' | 'save';
-type WriteOptions = Record<string, any>;
-type WriteCallback = Function;
+const checkIsWriteCallback = (options?: WriteCallback | WriteOptions): options is WriteCallback => typeof options === 'function';
 
 export default class InMemoryCollection<Document extends BaseDocument = Record<string, any>> extends EventEmitter implements Collection<Document> {
   private documents: Array<Document>;
@@ -55,35 +52,32 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
 
   drop = (callback?: CollectionDropCallback): void => {
     this.documents = [];
-
-    if (callback) {
-      callback(null);
-    }
+    callback?.(null);
   };
 
   ensureIndex = (options: EnsureIndexOptions, callback: EnsureIndexCallback) => {
     throw new Error('ensureIndex not supported!');
   };
 
-  find = (query: Query, options: FindOptions): Cursor<Document> => {
+  find = (query: Query, options?: FindOptions): Cursor<Document> => {
     return new Cursor<Document>(this, {query: query}, options, this._getDocuments);
   };
 
-  insert = (documents: Array<Document>, options: InsertOptions, callback: InsertCallback) => {
+  insert: SaveFunc<Document> = (documents, options, callback) => {
     return this.write('insert', documents, options, callback);
   };
 
-  remove = (query: Query, options: RemoveOptions, callback: RemoveCallback) => {
+  remove: RemoveFunc<Document> = (query, options, callback) => {
     const q = new Kuery(query);
     const documents = q.find(this.documents);
     this.documents = pullAll(this.documents, documents);
 
     process.nextTick(function () {
-      callback(null);
+      callback?.(null);
     });
   };
 
-  save = (documents: Array<Document>, options: SaveOptions, callback: SaveCallback) => {
+  save: SaveFunc<Document> = (documents, options, callback) => {
     return this.write('save', documents, options, callback);
   };
 
@@ -109,12 +103,10 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
     });
   };
 
-  private write = (op: WriteOperation, documents: Array<Document>, options: WriteOptions, callback: WriteCallback): void => {
-    if (isFunction(options)) {
-      callback = options;
-      // @ts-expect-error
-      options = undefined;
-    }
+  private write: WriteFunc<Document> = (op, documents, options, optionalCallback): void => {
+    const callback = checkIsWriteCallback(options)
+      ? options
+      : optionalCallback;
 
     if (!isArray(documents)) {
       documents = [documents];
@@ -124,7 +116,7 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
       const document = documents[i];
 
       if (!isObject(document)) {
-        return callback(new Error('Document must be object'));
+        return callback?.(new Error('Document must be object'));
       }
 
       if (!has(document, '_id')) {
@@ -134,7 +126,7 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
       const idx = findIndex<BaseDocument>(this.documents, {_id: document._id});
 
       if (op === 'insert' && idx >= 0) {
-        return callback(new Error('Unique constraint!'));
+        return callback?.(new Error('Unique constraint!'));
       }
 
       // not stored before
@@ -146,9 +138,6 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
     }
 
     this.emit('change', documents);
-
-    if (callback) {
-      callback(null, documents);
-    }
+    callback?.(null, documents);
   };
 }

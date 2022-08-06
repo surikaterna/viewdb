@@ -13,7 +13,7 @@ interface WithTimeStamp {
   timestamp: boolean;
 }
 
-interface WithDateTimeData {
+export interface WithDateTimeData {
   createDateTime: number;
   changeDateTime: number;
 }
@@ -60,7 +60,7 @@ function mutateFindAndModify<Document extends BaseDocument = Record<string, any>
 function mutateInsert<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldInsert = collection.insert;
   collection.insert = function (docs, options, callback) {
-    if (!(options && options.skipTimestamp)) {
+    if (!(options && 'skipTimestamp' in options)) {
       if (!isArray(docs)) {
         docs = [docs];
       }
@@ -81,14 +81,9 @@ function mutateInsert<Document extends BaseDocument = Record<string, any>>(colle
 function mutateSave<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldSave = collection.save;
   collection.save = function (docs, options, callback) {
-    let newDocs = docs;
-
-    if (!(options && options.skipTimestamp)) {
+    if (!(options && 'skipTimestamp' in options)) {
       const timestamp = new Date().valueOf();
-
-      if (!isArray(docs)) {
-        newDocs = [docs];
-      }
+      const newDocs = isArray(docs) ? docs : [docs];
 
       for (let i = 0; i < newDocs.length; i++) {
         const doc = addProperties<Document, WithDateTimeData>(newDocs[i]);

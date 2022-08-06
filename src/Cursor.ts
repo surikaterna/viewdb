@@ -5,10 +5,11 @@ import {
   CollectionCountCallback,
   GetDocumentsCallback,
   GetDocumentsFunc,
+  Nullable,
   QueryObject,
   SortQuery
 } from './Collection';
-import Observe, { ObserveOptions } from './Observer';
+import Observe, { ObserverOptions } from './Observer';
 
 export interface CursorForEachCallback<Document extends BaseDocument = Record<string, any>> {
   (documents: Array<Document>): void;
@@ -23,11 +24,11 @@ export interface CursorOptions {
 export default class Cursor<Document extends BaseDocument = Record<string, any>> {
   private readonly _collection: Collection<Document>;
   private readonly _query: QueryObject;
-  private readonly _options: CursorOptions;
+  private readonly _options?: Nullable<CursorOptions>;
   private readonly _getDocuments: GetDocumentsFunc<Document>;
   private _isObserving: boolean;
 
-  constructor(collection: Collection<Document>, query: QueryObject, options: CursorOptions, getDocuments: GetDocumentsFunc<Document>) {
+  constructor(collection: Collection<Document>, query: QueryObject, options: Nullable<CursorOptions> | undefined, getDocuments: GetDocumentsFunc<Document>) {
     this._collection = collection;
     this._query = query;
     this._options = options;
@@ -75,7 +76,7 @@ export default class Cursor<Document extends BaseDocument = Record<string, any>>
     return this;
   };
 
-  observe = (options: ObserveOptions): Observe<Document> => {
+  observe = (options: ObserverOptions<Document>): Observe<Document> => {
     this._isObserving = true;
     return new Observe<Document>(this._query, this._options, this._collection, options);
   };

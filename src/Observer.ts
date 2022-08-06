@@ -3,14 +3,18 @@ import { BaseDocument, Collection, Nullable, QueryObject } from './Collection';
 import { CursorOptions } from './Cursor';
 import merge, { MergerOptions } from './merge';
 
+export interface ObserverOptions<Document extends BaseDocument = Record<string, any>> extends MergerOptions<Document> {
+  init?(documents?: Array<Document>): void;
+}
+
 export default class Observer<Document extends BaseDocument = Record<string, any>> {
   private readonly _query: QueryObject;
-  private readonly _options: MergerOptions<Document>;
+  private readonly _options: ObserverOptions<Document>;
   private readonly _collection: Collection<Document>;
   private _cache: Nullable<Array<Document> | undefined>;
-  private readonly _mergeOptions: MergerOptions<Document>;
+  private readonly _mergeOptions: ObserverOptions<Document>;
 
-  constructor(query: QueryObject, queryOptions: CursorOptions, collection: Collection<Document>, options: MergerOptions<Document>) {
+  constructor(query: QueryObject, queryOptions: Nullable<CursorOptions> | undefined, collection: Collection<Document>, options: ObserverOptions<Document>) {
     this._query = query;
     this._options = options;
     this._collection = collection;
@@ -38,14 +42,14 @@ export default class Observer<Document extends BaseDocument = Record<string, any
 
   private refresh = (initial?: boolean) => {
     this._collection._getDocuments(this._query, (err, result) => {
+      if (!result) {
+        return;
+      }
+
       if (initial && this._options.init) {
         this._cache = result;
         this._options.init(result);
       } else {
-        if (!result) {
-          return;
-        }
-
         const old = this._cache;
 
         this._cache = merge(
