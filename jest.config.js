@@ -1,12 +1,15 @@
+/** @type { import('@jest/types').Config.InitialOptions } */
 module.exports = {
-  clearMocks: true,
-  coverageDirectory: "coverage",
-  coverageProvider: "v8",
-  testMatch: [
-    "**/?(*.)+(spec|test).[jt]s?(x)"
-  ],
-  testTimeout: 2000,
+  roots: ['<rootDir>/src'],
   transform: {
-    "^.+\\.[t|j]s$": "@swc/jest"
-  }
+    '^.+\\.[t|j]s$': '@swc/jest'
+  },
+  testMatch: [
+    '**/?(*.)+(spec|test).ts'
+  ],
+  moduleFileExtensions: ['ts', 'js'],
+  clearMocks: true,
+  coverageDirectory: 'coverage',
+  coverageProvider: 'v8',
+  testTimeout: 2000
 };
