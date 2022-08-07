@@ -11,8 +11,8 @@ a default in memory Store for easy testing.
 * [Components](#components)
     * [ViewDB](#viewdb-1)
         * [Plugins](#plugins)
-            * [ViewDBTimeStampPlugin](#viewdbtimestampplugin)
-            * [ViewDBVersioningPlugin](#viewdbversioningplugin)
+            * [TimeStampPlugin](#timestampplugin)
+            * [VersioningPlugin](#versioningplugin)
     * [Store](#store)
         * [Store Methods](#store-methods)
             * [collection](#collection)
@@ -102,10 +102,10 @@ userCollection.find({name: 'Jeff'}, (err, users) => {
 
 ViewDB can be extended by plugins to intercept data manipulation. Two plugins are included in this repository:
 
-* ViewDBTimeStampPlugin
-* ViewDBVersioningPlugin
+* TimeStampPlugin
+* VersioningPlugin
 
-##### ViewDBTimeStampPlugin
+##### TimeStampPlugin
 
 Intercepts the `save`, `insert` & `findAndModify` Collection methods with timestamps for creation and latest update. The
 time inserted is a unix timestamp in milliseconds. It provides the following changes.
@@ -131,7 +131,7 @@ const collection = viewDB.collection<User>('user');
 await collection.insert({ name: 'Jeff' });
 ```
 
-##### ViewDBVersioningPlugin
+##### VersioningPlugin
 
 Intercepts the `save`, `insert` & `findAndModify` Collection methods with an incremented version, unless
 the `skipVersioning` option is passed and set to `true`.
