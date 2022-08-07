@@ -28,10 +28,6 @@ export interface QueryObject extends Record<string, any> {
 }
 
 export interface GetDocumentsCallback<Document extends BaseDocument = Record<string, any>> {
-  (err: null, documents: Array<Document>): void;
-
-  (err: Error, documents: undefined): void;
-
   (err: Nullable<Error>, documents?: Array<Document>): void;
 }
 
@@ -90,23 +86,20 @@ interface WriteError {
 }
 
 export interface SaveFunc<Document extends BaseDocument = Record<string, any>> {
-  (documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback): void;
-
-  (documents: MaybeArray<Document>, callback: WriteCallback, options: undefined): void;
-
-  (documents: MaybeArray<Document>, callback: undefined, options: undefined): void;
-
-  (documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback, callback?: WriteCallback): void;
+  (
+    documents: MaybeArray<Document>,
+    options?: WriteOptions | WriteCallback<Document>,
+    callback?: WriteCallback<Document>
+  ): Promise<Array<Document>> | void;
 }
 
 export interface WriteFunc<Document extends BaseDocument = Record<string, any>> {
-  (op: WriteOperation, documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback): void;
-
-  (op: WriteOperation, documents: MaybeArray<Document>, callback: WriteCallback, options: undefined): void;
-
-  (op: WriteOperation, documents: MaybeArray<Document>, options: undefined, callback: undefined): void;
-
-  (op: WriteOperation, documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback, callback?: WriteCallback): void;
+  (
+    op: WriteOperation,
+    documents: MaybeArray<Document>,
+    options?: WriteOptions | WriteCallback<Document>,
+    callback?: WriteCallback<Document>
+  ): Promise<Array<Document>> | void;
 }
 
 export type Query = Record<string, any>;

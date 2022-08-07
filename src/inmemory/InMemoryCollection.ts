@@ -24,8 +24,9 @@ import {
   WriteOptions
 } from '../Collection';
 import Cursor from '../Cursor';
+import { maybePromise } from '../utils/promiseUtils';
 
-const checkIsWriteCallback = (options?: WriteCallback | WriteOptions): options is WriteCallback => typeof options === 'function';
+const checkIsWriteCallback = <Document>(options?: WriteCallback<Document> | WriteOptions): options is WriteCallback<Document> => typeof options === 'function';
 
 export default class InMemoryCollection<Document extends BaseDocument = Record<string, any>> extends EventEmitter implements Collection<Document> {
   private documents: Array<Document>;
@@ -104,41 +105,48 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
     });
   };
 
-  private write: WriteFunc<Document> = (op, documents, options, optionalCallback): void => {
-    const callback = checkIsWriteCallback(options)
+  private write: WriteFunc<Document> = (
+    op,
+    documents,
+    options,
+    optionalCallback
+  ) => {
+    const callback = checkIsWriteCallback<Document>(options)
       ? options
       : optionalCallback;
 
-    if (!isArray(documents)) {
-      documents = [documents];
-    }
-
-    for (let i = 0; i < documents.length; i++) {
-      const document = documents[i];
-
-      if (!isObject(document)) {
-        return callback?.(new Error('Document must be object'));
+    return maybePromise<Document, Array<Document>>(callback, (done) => {
+      if (!isArray(documents)) {
+        documents = [documents];
       }
 
-      if (!has(document, '_id')) {
-        document._id = document.id || uuid();
+      for (let i = 0; i < documents.length; i++) {
+        const document = documents[i];
+
+        if (!isObject(document)) {
+          return done(new Error('Document must be object'));
+        }
+
+        if (!has(document, '_id')) {
+          document._id = document.id || uuid();
+        }
+
+        const idx = findIndex<BaseDocument>(this.documents, {_id: document._id});
+
+        if (op === 'insert' && idx >= 0) {
+          return done(new Error('Unique constraint!'));
+        }
+
+        // not stored before
+        if (idx === -1) {
+          this.documents.push(document);
+        } else {
+          this.documents[idx] = document;
+        }
       }
 
-      const idx = findIndex<BaseDocument>(this.documents, {_id: document._id});
-
-      if (op === 'insert' && idx >= 0) {
-        return callback?.(new Error('Unique constraint!'));
-      }
-
-      // not stored before
-      if (idx === -1) {
-        this.documents.push(document);
-      } else {
-        this.documents[idx] = document;
-      }
-    }
-
-    this.emit('change', documents);
-    callback?.(null, documents);
+      this.emit('change', documents);
+      return done(null, documents);
+    });
   };
 }
