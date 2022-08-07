@@ -28,7 +28,7 @@ describe('Cursor', () => {
         expect(result?.length).toBe(10);
         done();
       });
-    })
+    });
 
     it('should return a Promise', async () => {
       const cursor = new Cursor(collection, {}, null, (query, callback) => {
@@ -37,7 +37,29 @@ describe('Cursor', () => {
 
       const docs = await cursor.toArray();
       expect(docs.length).toBe(10);
-    })
+    });
+  });
+
+  describe('#count', () => {
+    it('should work with callback', (done) => {
+      const cursor = new Cursor(collection, {}, null, (query, callback) => {
+        callback(null, documents);
+      });
+
+      cursor.count(false, (err, count) => {
+        expect(count).toBe(10);
+        done();
+      });
+    });
+
+    it('should return a Promise', async () => {
+      const cursor = new Cursor(collection, {}, null, (query, callback) => {
+        callback(null, documents);
+      });
+
+      const count = await cursor.count();
+      expect(count).toBe(10);
+    });
   });
 
   it('#forEach', (done) => {

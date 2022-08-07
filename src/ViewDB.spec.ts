@@ -10,22 +10,19 @@ describe('ViewDB', () => {
   });
 
   describe('#count', () => {
-    it('should return 0 for empty collection', (done) => {
-      collection.count((err, count) => {
-        expect(count).toBe(0);
-        done();
-      });
+    it('should return 0 for empty collection', async () => {
+      const count = await collection.count();
+      expect(count).toBe(0);
     });
   });
 
   describe('#insert', () => {
     it('should store a document and include it in count', (done) => {
-      collection.insert({a: 1}, (err) => {
+      collection.insert({a: 1}, async (err) => {
         expect(err).toBeNull();
-        collection.count((err, count) => {
-          expect(count).toBe(1);
-          done();
-        });
+        const count = await collection.count();
+        expect(count).toBe(1);
+        done();
       });
     });
 
@@ -53,11 +50,10 @@ describe('ViewDB', () => {
     });
 
     it('insert bulk should work', (done) => {
-      collection.insert([{a: 1}, {b: 2}], () => {
-        collection.count((err, res) => {
-          expect(res).toBe(2);
-          done();
-        });
+      collection.insert([{a: 1}, {b: 2}], async () => {
+        const count = await collection.count();
+        expect(count).toBe(2);
+        done();
       });
     });
   });
@@ -77,21 +73,19 @@ describe('ViewDB', () => {
 
     it('should add id on insert if missing', (done) => {
       collection.save({a: 1}, () => {
-        collection.save({b: 1}, () => {
-          collection.count((err, result) => {
-            expect(result).toBe(2);
-            done();
-          });
+        collection.save({b: 1}, async () => {
+          const count = await collection.count();
+          expect(count).toBe(2);
+          done();
         });
       });
     });
 
     it('should add document on save', (done) => {
-      collection.save({a: 1}, () => {
-        collection.count((err, count) => {
-          expect(count).toBe(1);
-          done();
-        });
+      collection.save({a: 1}, async () => {
+        const count = await collection.count();
+        expect(count).toBe(1);
+        done();
       });
     });
 
@@ -102,13 +96,12 @@ describe('ViewDB', () => {
         }
 
         docs[0]['b'] = 2;
-        collection.save(docs, (err, docs) => {
+        collection.save(docs, async (err, docs) => {
           expect(docs?.[0].b).toBe(2);
 
-          collection.count((err, count) => {
-            expect(count).toBe(1);
-            done();
-          });
+          const count = await collection.count();
+          expect(count).toBe(1);
+          done();
         });
       });
     });

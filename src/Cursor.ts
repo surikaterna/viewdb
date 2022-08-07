@@ -11,6 +11,16 @@ import {
 } from './Collection';
 import Observe, { ObserverOptions } from './Observer';
 
+export interface CursorCountFunc<Document extends BaseDocument = Record<string, any>> {
+  (applySkipLimit: boolean, callback: CollectionCountCallback): Promise<number>;
+
+  (callback: CollectionCountCallback, options: undefined): Promise<number>;
+
+  (applySkipLimit: undefined, callback: undefined): Promise<number>;
+
+  (applySkipLimit?: boolean | CollectionCountCallback, callback?: CollectionCountCallback): Promise<number>;
+}
+
 export interface CursorForEachCallback<Document extends BaseDocument = Record<string, any>> {
   (documents: Array<Document>): void;
 }
@@ -36,7 +46,7 @@ export default class Cursor<Document extends BaseDocument = Record<string, any>>
     this._isObserving = false;
   }
 
-  count = (applySkipLimit: boolean, callback: CollectionCountCallback) => {
+  count: CursorCountFunc<Document> = (applySkipLimit, callback) => new Promise<number>((resolve, reject) => {
     if (isFunction(applySkipLimit)) {
       callback = applySkipLimit;
       applySkipLimit = false;
@@ -54,9 +64,19 @@ export default class Cursor<Document extends BaseDocument = Record<string, any>>
     }
 
     this._getDocuments(query, (err, res) => {
-      callback(err, res && res.length);
+      callback?.(err, res?.length);
+
+      if (err) {
+        return reject(err);
+      }
+
+      if (!res) {
+        return reject(new Error('Failed getting documents without error.'));
+      }
+
+      return resolve(res.length);
     });
-  };
+  });
 
   forEach = (callback: CursorForEachCallback<Document>) => {
     this._getDocuments(this._query, (err, result) => {

@@ -42,9 +42,10 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
     throw new Error('findAndModify not supported!');
   }
 
-  count = (callback: CollectionCountCallback) => {
-    callback(null, this.documents.length);
-  };
+  count = (callback?: CollectionCountCallback): Promise<number> => new Promise((resolve) => {
+    callback?.(null, this.documents.length);
+    return resolve(this.documents.length);
+  });
 
   createIndex = (options: CreateIndexOptions, callback: CreateIndexCallback): void => {
     throw new Error('createIndex not supported!');

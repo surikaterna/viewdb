@@ -81,7 +81,7 @@ interface WriteResult {
 interface WriteConcernError extends WriteError {
   errInfo: {
     wTimeout: boolean;
-  }
+  };
 }
 
 interface WriteError {
@@ -128,7 +128,7 @@ export interface Collection<Document extends BaseDocument = Record<string, any>>
   /** Not intended to be used externally, but required internally for the Observer */
   _getDocuments: GetDocumentsFunc<Document>;
 
-  count(callback: CollectionCountCallback): void;
+  count(callback?: CollectionCountCallback): Promise<number>;
 
   createIndex(options: CreateIndexOptions, callback: CreateIndexCallback): void;
 
