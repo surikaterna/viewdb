@@ -105,6 +105,7 @@ export default class Cursor<Document extends BaseDocument = Record<string, any>>
     return this;
   };
 
+  // TODO: Make async?
   toArray = (callback: GetDocumentsCallback<Document>): void => {
     this._getDocuments(this._query, callback);
   };
