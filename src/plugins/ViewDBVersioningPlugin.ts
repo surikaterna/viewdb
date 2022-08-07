@@ -19,8 +19,8 @@ interface WithVersioning {
 
 function mutateCollection(viewDb: ViewDB) {
   const oldCollection = viewDb.collection<any>;
-  viewDb.collection = function (...args) {
-    const collection = addPlugin<ReturnType<typeof oldCollection>, WithVersioning>(oldCollection.apply(this, args));
+  viewDb.collection = (...args) => {
+    const collection = addPlugin<ReturnType<typeof oldCollection>, WithVersioning>(oldCollection.apply(viewDb, args));
     if (!collection.__plugins_versioning) {
       collection.__plugins_versioning = true;
 
@@ -34,7 +34,7 @@ function mutateCollection(viewDb: ViewDB) {
 
 function mutateFindAndModify<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldFindAndModify = collection.findAndModify;
-  collection.findAndModify = function (query, sort, update, options, cb) {
+  collection.findAndModify = (query, sort, update, options, cb) => {
     if (!(options && options.skipVersioning)) {
       const inc = update.$inc || {};
       inc.version = 1;
@@ -45,23 +45,23 @@ function mutateFindAndModify<Document extends BaseDocument = Record<string, any>
       }
     }
 
-    oldFindAndModify.apply(this, [query, sort, update, options, cb]);
+    oldFindAndModify.apply(collection, [query, sort, update, options, cb]);
   };
 }
 
 function mutateInsert<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldInsert = collection.insert;
-  collection.insert = function (docs, options, callback) {
+  collection.insert = (docs, options, callback) => {
     setVersions(docs, options);
-    oldInsert.apply(this, [docs, options, callback]);
+    oldInsert.apply(collection, [docs, options, callback]);
   };
 }
 
 function mutateSave<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldSave = collection.save;
-  collection.save = function (docs, options, callback) {
+  collection.save = (docs, options, callback) => {
     setVersions(docs, options);
-    oldSave.apply(this, [docs, options, callback]);
+    oldSave.apply(collection, [docs, options, callback]);
   };
 }
 
@@ -78,6 +78,4 @@ function setVersions<Document>(docs: MaybeArray<Document>, options?: WriteOption
   }
 }
 
-function getNewVersion(version?: number): number {
-  return version === undefined ? 0 : version + 1;
-}
+const getNewVersion = (version?: number): number => version === undefined ? 0 : version + 1;

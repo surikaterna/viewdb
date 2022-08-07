@@ -20,8 +20,8 @@ export interface WithDateTimeData {
 
 function mutateCollection(viewDb: ViewDB) {
   const oldCollection = viewDb.collection<any>;
-  viewDb.collection = function (...args) {
-    const collection = addPlugin<ReturnType<typeof oldCollection>, WithTimeStamp>(oldCollection.apply(this, args));
+  viewDb.collection = (...args) => {
+    const collection = addPlugin<ReturnType<typeof oldCollection>, WithTimeStamp>(oldCollection.apply(viewDb, args));
 
     if (!collection.__plugins_timestamp) {
       collection.__plugins_timestamp = true;
@@ -37,7 +37,7 @@ function mutateCollection(viewDb: ViewDB) {
 
 function mutateFindAndModify<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldFindAndModify = collection.findAndModify;
-  collection.findAndModify = function (query, sort, update, options, cb) {
+  collection.findAndModify = (query, sort, update, options, cb) => {
     const timestamp = new Date().valueOf();
     const clonedUpdate = clone(update);
     const setOnInsert = clonedUpdate.$setOnInsert || {};
@@ -53,13 +53,13 @@ function mutateFindAndModify<Document extends BaseDocument = Record<string, any>
     }
 
     clonedUpdate.$set = set;
-    oldFindAndModify.apply(this, [query, sort, clonedUpdate, options, cb]);
+    oldFindAndModify.apply(collection, [query, sort, clonedUpdate, options, cb]);
   };
 }
 
 function mutateInsert<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldInsert = collection.insert;
-  collection.insert = function (docs, options, callback) {
+  collection.insert = (docs, options, callback) => {
     if (!(options && 'skipTimestamp' in options)) {
       if (!isArray(docs)) {
         docs = [docs];
@@ -74,13 +74,13 @@ function mutateInsert<Document extends BaseDocument = Record<string, any>>(colle
       }
     }
 
-    oldInsert.apply(this, [docs, options, callback]);
+    oldInsert.apply(collection, [docs, options, callback]);
   };
 }
 
 function mutateSave<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldSave = collection.save;
-  collection.save = function (docs, options, callback) {
+  collection.save = (docs, options, callback) => {
     if (!(options && 'skipTimestamp' in options)) {
       const timestamp = new Date().valueOf();
       const newDocs = isArray(docs) ? docs : [docs];
@@ -96,6 +96,6 @@ function mutateSave<Document extends BaseDocument = Record<string, any>>(collect
       }
     }
 
-    oldSave.apply(this, [docs, options, callback]);
+    oldSave.apply(collection, [docs, options, callback]);
   };
 }

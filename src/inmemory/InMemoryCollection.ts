@@ -72,7 +72,7 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
     const documents = q.find(this.documents);
     this.documents = pullAll(this.documents, documents);
 
-    process.nextTick(function () {
+    process.nextTick(() => {
       callback?.(null);
     });
   };

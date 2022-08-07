@@ -19,7 +19,7 @@ export default function merge<Element>(asis: Nullable<ArrayLike<Element> | undef
   const comparatorId = options.comparatorId || comparator;
   const list = slice(asis) as Array<Element>;
   //check removed
-  forEach(asis, function (e) {
+  forEach(asis, (e) => {
     const found = contains(tobe, e, comparatorId);
     if (found === undefined) {
       const index = list.indexOf(e);
@@ -30,7 +30,7 @@ export default function merge<Element>(asis: Nullable<ArrayLike<Element> | undef
     }
   });
   let indexInNew = -1;
-  forEach(tobe, function (e) {
+  forEach(tobe, (e) => {
     indexInNew++;
     const found = contains(list, e, comparatorId);
     //added
