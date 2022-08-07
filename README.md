@@ -10,37 +10,37 @@ a default in memory Store for easy testing.
 * [Usage](#usage-example)
 * [Components](#components)
     * [ViewDB](#viewdb-1)
-      * [Plugins](#plugins)
-        * [ViewDBTimeStampPlugin](#viewdbtimestampplugin)
-        * [ViewDBVersioningPlugin](#viewdbversioningplugin)
+        * [Plugins](#plugins)
+            * [ViewDBTimeStampPlugin](#viewdbtimestampplugin)
+            * [ViewDBVersioningPlugin](#viewdbversioningplugin)
     * [Store](#store)
-      * [Store Methods](#store-methods)
-        * [collection](#collection)
-      * [InMemoryStore](#inmemorystore)
+        * [Store Methods](#store-methods)
+            * [collection](#collection)
+        * [InMemoryStore](#inmemorystore)
     * [Collection](#collection-1)
-      * [Collection Methods](#collection-methods)
-        * [count](#count)
-        * [createIndex](#createindex)
-        * [drop](#drop)
-        * [ensureIndex](#ensureindex)
-        * [find](#find)
-        * [findAndModify](#findandmodify)
-        * [insert](#insert)
-        * [remove](#remove)
-        * [save](#save)
-      * [InMemoryCollection](#inmemorycollection)
+        * [Collection Methods](#collection-methods)
+            * [count](#count)
+            * [createIndex](#createindex)
+            * [drop](#drop)
+            * [ensureIndex](#ensureindex)
+            * [find](#find)
+            * [findAndModify](#findandmodify)
+            * [insert](#insert)
+            * [remove](#remove)
+            * [save](#save)
+        * [InMemoryCollection](#inmemorycollection)
     * [Cursor](#cursor)
-      * [Cursor Methods](#cursor-methods)
-        * [count](#count-1)
-        * [forEach](#foreach)
-        * [limit](#limit)
-        * [observe](#observe)
-        * [skip](#skip)
-        * [sort](#sort)
-        * [toArray](#toarray)
+        * [Cursor Methods](#cursor-methods)
+            * [count](#count-1)
+            * [forEach](#foreach)
+            * [limit](#limit)
+            * [observe](#observe)
+            * [skip](#skip)
+            * [sort](#sort)
+            * [toArray](#toarray)
     * [Observer](#observer)
-      * [Observer Methods](#observer-methods)
-        * [stop](#stop)
+        * [Observer Methods](#observer-methods)
+            * [stop](#stop)
     * [Merger](#merger)
 
 ## Purpose
@@ -66,7 +66,7 @@ import { processUsers, User, usersData } from './users';
 const viewDB = new ViewDB();
 const userCollection = viewDB.collection<User>('user');
 userCollection.insert(usersData, () => {
-  userCollection.find({ name: 'Jeff' }, (err, users) => {
+  userCollection.find({name: 'Jeff'}, (err, users) => {
     if (err ?? users.length === 0) {
       return;
     }
@@ -89,7 +89,7 @@ const viewDB = new ViewDB(mongoDBStore);
 await viewDB.open();
 
 const userCollection = viewDB.collection<User>('user');
-userCollection.find({ name: 'Jeff' }, (err, users) => {
+userCollection.find({name: 'Jeff'}, (err, users) => {
   if (err ?? users.length === 0) {
     return;
   }
@@ -107,23 +107,54 @@ ViewDB can be extended by plugins to intercept data manipulation. Two plugins ar
 
 ##### ViewDBTimeStampPlugin
 
-Intercepts the `save`, `insert` & `findAndModify` Collection methods with timestamps for creation and latest update. The time inserted is a unix timestamp in milliseconds. It provides the following changes.
+Intercepts the `save`, `insert` & `findAndModify` Collection methods with timestamps for creation and latest update. The
+time inserted is a unix timestamp in milliseconds. It provides the following changes.
 
-When _inserting_ documents without providing a `skipTimestamp` option, the inserted documents will get a `createDateTime` and a `changeDateTime` property will be added to the documents.
+When _inserting_ documents without providing a `skipTimestamp` option, the inserted documents will get
+a `createDateTime` and a `changeDateTime` property will be added to the documents.
 
-When _saving_ documents without providing a `skipTimestamp` option, the inserted documents will get an updated `changeDateTime` and a `changeDateTime` value. If there is no `createDateTime` property on the document, it will be added as well.
+When _saving_ documents without providing a `skipTimestamp` option, the inserted documents will get an
+updated `changeDateTime` and a `changeDateTime` value. If there is no `createDateTime` property on the document, it will
+be added as well.
 
 When _finding and modifying_ an existing document, the `changeDateTime` value will be update to the current time.
 
+```ts
+const viewDB = new ViewDB();
+
+// Apply the plugin to the ViewDB Store
+new TimeStampPlugin(viewDB);
+
+const collection = viewDB.collection<User>('user');
+
+// User data for Jeff will get `createDateTime` and `changeDateTime` properties
+await collection.insert({ name: 'Jeff' });
+```
+
 ##### ViewDBVersioningPlugin
 
-Intercepts the `save`, `insert` & `findAndModify` Collection methods with an incremented version, unless the `skipVersioning` option is passed and set to `true`.
+Intercepts the `save`, `insert` & `findAndModify` Collection methods with an incremented version, unless
+the `skipVersioning` option is passed and set to `true`.
 
-Note that when _finding and modifying_ existing documents, if `version` is explicitly set in the `update` query, that value will be replaced with the incremented version.
+Note that when _finding and modifying_ existing documents, if `version` is explicitly set in the `update` query, that
+value will be replaced with the incremented version.
+
+```ts
+const viewDB = new ViewDB();
+
+// Apply the plugin to the ViewDB Store
+new VersioningPlugin(viewDB);
+
+const collection = viewDB.collection<User>('user');
+
+// User data for Jeff will get a `version` property
+await collection.insert({ name: 'Jeff' });
+```
 
 ### Store
 
-Responsible for retrieving a Collection of documents. If the store needs some setup to be ready, it shall provide an `open` method to that.
+Responsible for retrieving a Collection of documents. If the store needs some setup to be ready, it shall provide
+an `open` method to that.
 
 #### Store Methods
 
@@ -137,7 +168,8 @@ Establish a connection to the persistence store.
 
 #### InMemoryStore
 
-A basic implementation of a Store, which keeps a record of the [in memory collections](#InMemoryCollection) by name in memory.
+A basic implementation of a Store, which keeps a record of the [in memory collections](#InMemoryCollection) by name in
+memory.
 
 ### Collection
 
@@ -155,7 +187,7 @@ Creates an `index` to be used when looking up data.
 
 ##### drop
 
-Clear all data in the collection. 
+Clear all data in the collection.
 
 ##### ensureIndex
 
@@ -167,7 +199,8 @@ Retrieve a list of documents from the collection matching the query.
 
 ##### findAndModify
 
-Retrieve a list of documents from the collection matching the query, and update the resulting documents based on the update query.
+Retrieve a list of documents from the collection matching the query, and update the resulting documents based on the
+update query.
 
 ##### insert
 
@@ -189,45 +222,129 @@ A basic implementation of a Collection managing the data in memory.
 
 A result set of the queried Collection. Contains methods to operate on the result set.
 
+Used through the [Collection.find](#find) method, but a Cursor can be constructed manually.
+
+```ts
+const collection = viewDB.collection<User>('user');
+const queryObj = {
+  query: {}
+};
+const cursorOptions = null;
+const getDocuments = (query: QueryObject, callback: GetDocumentsCallback<User>): void => {
+  // Logic for retreving documents based on query and passing them to the callback
+};
+
+const cursor = new Cursor<User>(collection, queryObj, cursorOptions, getDocuments);
+```
+
 #### Cursor Methods
 
 ##### count
 
 Get the amount of matches for the cursor.
 
+```ts
+// Promise API
+await count = collection.find({}).count();
+
+// Callback API
+collection.find({}).count((err, count) => {
+});
+```
+
 ##### forEach
 
 Iterate through the matched documents and run the callback for each document.
+
+```ts
+await count = collection.find({}).forEach((doc) => {
+});
+```
 
 ##### limit
 
 Limit the amount of documents to be retrieved.
 
+```ts
+// Get maximum 5 documents
+await docs = collection.find({}).limit(5).toArray();
+```
+
 ##### observe
 
 Retrieves an Observer listening for changes for the documents matched in the Cursor.
+
+```ts
+const observeOptions: ObserverOptions<User> = {
+  added: (user: User, index: number): void => {
+    // Called when a user matching the cursor has been inserted to the collection
+  },
+  changed: (currentUser: User, newUser: User, index: number): void => {
+    // Called when a user matching the cursor has been updated in the collection
+  },
+  moved: (user: User, oldIndex: number, newIndex: number): void => {
+    // Called when a user matching the cursor has been moved to another position
+  },
+  removed: (user: User, index: number): void => {
+    // Called when a user matching the cursor has been removed from the collection
+  }
+};
+
+const observer = collection.find({}).observe(observeOptions);
+```
 
 ##### skip
 
 Amounts of documents in the Cursor that should be skipped.
 
+```ts
+// Get documents starting from the 6th match
+await docs = collection.find({}).skip(5).toArray();
+```
+
 ##### sort
 
 Sort the resulting documents based on a query.
+
+```ts
+// Get documents sorted by creation time in descending order
+await docs = collection.find({}).sort({createDateTime: -1}).toArray();
+```
 
 ##### toArray
 
 Retrieve the list of documents matching the query.
 
+```ts
+// Promise API
+await docs = collection.find({}).toArray();
+
+// Callback API
+collection.find({}).find((err, docs) => {
+});
+```
+
 ### Observer
 
-Observe changes to documents for a Cursor.
+Observe changes to documents for a Cursor. With provide information about initial data, added, changed, moved & removed
+data.
+
+Used through the [Collection.observe](#observe) method, but an Observer can be constructed manually.
+
+```ts
+const observer = new Observe<User>(query, cursorOptions, collection, observerOptions);
+```
 
 #### Observer Methods
 
 ##### stop
 
 Stop listening to changes matching the query.
+
+```ts
+const observer = collection.find({}).observe(observeOptions);
+observer.stop();
+```
 
 ### Merger
 
