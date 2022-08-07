@@ -62,12 +62,11 @@ describe('Observe', () => {
     let skip = 0;
     cursor.limit(1);
 
-    const checkOnThirdCall = after(3, () => {
-      cursor.toArray((err, res) => {
-        expect(res?.length).toBe(0);
-        handle.stop();
-        done();
-      });
+    const checkOnThirdCall = after(3, async () => {
+      const docs = await cursor.toArray();
+      expect(docs.length).toBe(0);
+      handle.stop();
+      done();
     });
 
     const handle = cursor.observe({

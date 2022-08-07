@@ -18,15 +18,26 @@ describe('Cursor', () => {
     });
   });
 
-  it('#toArray', (done) => {
-    const cursor = new Cursor(collection, {}, null, (query, callback) => {
-      callback(null, documents);
-    });
+  describe('#toArray', () => {
+    it('should work with callback', (done) => {
+      const cursor = new Cursor(collection, {}, null, (query, callback) => {
+        callback(null, documents);
+      });
 
-    cursor.toArray((err, result) => {
-      expect(result?.length).toBe(10);
-      done();
-    });
+      cursor.toArray((err, result) => {
+        expect(result?.length).toBe(10);
+        done();
+      });
+    })
+
+    it('should return a Promise', async () => {
+      const cursor = new Cursor(collection, {}, null, (query, callback) => {
+        callback(null, documents);
+      });
+
+      const docs = await cursor.toArray();
+      expect(docs.length).toBe(10);
+    })
   });
 
   it('#forEach', (done) => {
@@ -44,40 +55,30 @@ describe('Cursor', () => {
     done();
   });
 
-  it('#skip', (done) => {
-    collection.find({a: 'a'}).skip(5).toArray((err, res) => {
-      expect(res?.length).toBe(5);
-      done();
-    });
+  it('#skip', async () => {
+    const docs = await collection.find({a: 'a'}).skip(5).toArray();
+    expect(docs.length).toBe(5);
   });
 
-  it('#limit', (done) => {
-    collection.find({a: 'a'}).limit(9).toArray((err, res) => {
-      expect(res?.[8].id).toBe('8');
-      expect(res?.length).toBe(9);
-      done();
-    });
+  it('#limit', async () => {
+    const docs = await collection.find({a: 'a'}).limit(9).toArray();
+    expect(docs[8].id).toBe('8');
+    expect(docs.length).toBe(9);
   });
 
-  it('#sort', (done) => {
-    collection.find({}).sort({id: 1}).toArray((err, res) => {
-      expect(res?.[0].id).toBe('0');
-      done();
-    });
+  it('#sort', async () => {
+    const docs = await collection.find({}).sort({id: 1}).toArray();
+    expect(docs[0].id).toBe('0');
   });
 
-  it('#sort desc', (done) => {
-    collection.find({}).sort({id: -1}).toArray((err, res) => {
-      expect(res?.[0].id).toBe('9');
-      done();
-    });
+  it('#sort desc', async () => {
+    const docs = await collection.find({}).sort({id: -1}).toArray();
+    expect(docs[0].id).toBe('9');
   });
 
-  it('#skip/limit', (done) => {
-    collection.find({a: 'a'}).skip(8).limit(10).toArray((err, res) => {
-      expect(res?.[1].id).toBe('9');
-      expect(res?.length).toBe(2); // only 2 left after skipping 8/10
-      done();
-    });
+  it('#skip/limit', async () => {
+    const docs = await collection.find({a: 'a'}).skip(8).limit(10).toArray();
+    expect(docs[1].id).toBe('9');
+    expect(docs.length).toBe(2); // only 2 left after skipping 8/10
   });
 });

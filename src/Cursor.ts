@@ -105,10 +105,21 @@ export default class Cursor<Document extends BaseDocument = Record<string, any>>
     return this;
   };
 
-  // TODO: Make async?
-  toArray = (callback: GetDocumentsCallback<Document>): void => {
-    this._getDocuments(this._query, callback);
-  };
+  toArray = (callback?: GetDocumentsCallback<Document>): Promise<Array<Document>> => new Promise((resolve, reject) => {
+    this._getDocuments(this._query, (err, documents) => {
+      callback?.(err, documents);
+
+      if (err) {
+        return reject(err);
+      }
+
+      if (!documents) {
+        return reject(new Error('Failed getting documents without error.'));
+      }
+
+      return resolve(documents);
+    });
+  });
 
   /**
    * Not intended to be used externally

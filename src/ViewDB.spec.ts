@@ -30,11 +30,10 @@ describe('ViewDB', () => {
     });
 
     it('should add id on insert if missing', (done) => {
-      collection.insert({a: 1}, () => {
-        collection.find({a: 1}).toArray((err, res ) => {
-          expect(res?.[0]._id).toBeDefined();
-          done();
-        });
+      collection.insert({a: 1}, async () => {
+        const docs = await collection.find({a: 1}).toArray();
+        expect(docs[0]._id).toBeDefined();
+        done();
       });
     });
     it('should fail at storing a previously stored document', (done) => {
@@ -66,13 +65,12 @@ describe('ViewDB', () => {
   describe('#save', () => {
     it('should save multiple', (done) => {
       collection.insert([{_id: 1, a: 1}, {_id: 2, b: 2}], () => {
-        collection.save([{_id: 1, a: 10}, {_id: 2, b: 20}], () => {
-          collection.find({}).toArray((err, res ) => {
-            expect(res?.length).toBe(2);
-            expect(res?.[0].a).toBe(10);
-            expect(res?.[1].b).toBe(20);
-            done();
-          });
+        collection.save([{_id: 1, a: 10}, {_id: 2, b: 20}], async () => {
+          const docs = await collection.find({}).toArray();
+          expect(docs?.length).toBe(2);
+          expect(docs?.[0].a).toBe(10);
+          expect(docs?.[1].b).toBe(20);
+          done();
         });
       });
     });
@@ -98,7 +96,7 @@ describe('ViewDB', () => {
     });
 
     it('should merge if id exists', (done) => {
-      collection.save({a: 1}, (err, docs ) => {
+      collection.save({a: 1}, (err, docs) => {
         if (!docs) {
           return done(new Error('Did not receive saved documents'));
         }
@@ -118,35 +116,32 @@ describe('ViewDB', () => {
 
   describe('#find', () => {
     it('find all documents', (done) => {
-      collection.insert({a: 1}, () => {
-        collection.find({}).toArray((err, docs ) => {
-          expect(docs?.length).toBe(1);
-          expect(docs?.[0].a).toBe(1);
-          done();
-        });
+      collection.insert({a: 1}, async () => {
+        const docs = await collection.find({}).toArray();
+        expect(docs.length).toBe(1);
+        expect(docs[0].a).toBe(1);
+        done();
       });
     });
 
     it('find one document', (done) => {
-      collection.insert({a: 1}, (err, docs ) => {
-        if (!docs) {
+      collection.insert({a: 1}, async (err, insertedDocs) => {
+        if (!insertedDocs) {
           return done(new Error('Did not receive inserted documents'));
         }
 
-        collection.find({_id: docs[0]._id}).toArray((err, docs ) => {
-          expect(docs?.length).toBe(1);
-          expect(docs?.[0].a).toBe(1);
-          done();
-        });
+        const savedDocs = await collection.find({_id: insertedDocs[0]._id}).toArray();
+        expect(savedDocs.length).toBe(1);
+        expect(savedDocs[0].a).toBe(1);
+        done();
       });
     });
 
     it('should return empty collection if query does not match', (done) => {
-      collection.insert({a: 1}, () => {
-        collection.find({_id: 5}).toArray((err, docs) => {
-          expect(docs?.length).toBe(0);
-          done();
-        });
+      collection.insert({a: 1}, async () => {
+        const docs = await collection.find({_id: 5}).toArray();
+        expect(docs.length).toBe(0);
+        done();
       });
     });
   });
@@ -154,22 +149,20 @@ describe('ViewDB', () => {
   describe('#remove', () => {
     it('should remove one document matching a query', (done) => {
       collection.insert({a: 1, name: 'hello'}, () => {
-        collection.remove({name: 'hello'}, null, () => {
-          collection.find({}).toArray((err, res) => {
-            expect(res?.length).toBe(0);
-            done();
-          });
+        collection.remove({name: 'hello'}, null, async () => {
+          const docs = await collection.find({}).toArray();
+          expect(docs.length).toBe(0);
+          done();
         });
       });
     });
 
     it('should not do anything when no documents are matched against the query', (done) => {
       collection.insert({a: 1, name: 'hello'}, () => {
-        collection.remove({name: 'world'}, null, () => {
-          collection.find({}).toArray((err, res) => {
-            expect(res?.length).toBe(1);
-            done();
-          });
+        collection.remove({name: 'world'}, null, async () => {
+          const docs = await collection.find({}).toArray();
+          expect(docs?.length).toBe(1);
+          done();
         });
       });
     });
@@ -177,16 +170,12 @@ describe('ViewDB', () => {
 
   describe('#drop', () => {
     it('should remove all documents', (done) => {
-      const store = new ViewDB();
-      store.open().then(() => {
-        store.collection('dollhouse').insert({_id: 'echo'}, (err, docs) => {
-          expect(docs?.length).toBe(1);
-          store.collection('dollhouse').drop(() => {
-            store.collection('dollhouse').find({}).toArray((err, docs) => {
-              expect(docs?.length).toBe(0);
-              done();
-            });
-          });
+      collection.insert({_id: 'echo'}, (err, docs) => {
+        expect(docs?.length).toBe(1);
+        collection.drop(async () => {
+          const docs = await collection.find({}).toArray();
+          expect(docs?.length).toBe(0);
+          done();
         });
       });
     });

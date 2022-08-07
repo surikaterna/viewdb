@@ -1,6 +1,8 @@
 import ViewDB from '..';
 import ViewDb, { Collection, TimestampPlugin, VersioningPlugin } from '..';
 
+const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
 describe('ViewDB timestamp plugin', () => {
   let viewDb: ViewDB;
   let collection: Collection;
@@ -17,30 +19,25 @@ describe('ViewDB timestamp plugin', () => {
 
     collection = viewDb.collection('test');
     currentTime = new Date().valueOf();
-    doc123 = { id: doc123Id };
-    doc999 = { id: doc999Id };
+    doc123 = {id: doc123Id};
+    doc999 = {id: doc999Id};
   });
 
   it('should add changeDateTime and createDateTime timestamp on insert', (done) => {
     // wait 5ms until update operation to check for lastModified updated
     setTimeout(() => {
-      collection.insert(doc123, () => {
-        collection.find({ id: doc123Id }).toArray((err, docs) => {
-          if (!docs) {
-            return done(new Error('Did not receive inserted documents'));
-          }
+      collection.insert(doc123, async () => {
+        const docs = await collection.find({id: doc123Id}).toArray();
+        const {createDateTime, changeDateTime} = docs[0];
 
-          const { createDateTime, changeDateTime } = docs[0]
+        expect(createDateTime).toBeDefined();
+        expect(createDateTime).toBe(changeDateTime);
 
-          expect(createDateTime).toBeDefined();
-          expect(createDateTime).toBe(changeDateTime);
-
-          if (currentTime < createDateTime) {
-            done();
-          } else {
-            done(new Error('Timestamp was not renewed'));
-          }
-        });
+        if (currentTime < createDateTime) {
+          done();
+        } else {
+          done(new Error('Timestamp was not renewed'));
+        }
       });
     }, 5);
   });
@@ -48,106 +45,80 @@ describe('ViewDB timestamp plugin', () => {
   it('should add changeDateTime and createDateTime timestamp on bulk insert', (done) => {
     // wait 5ms until update operation to check for lastModified updated
     setTimeout(() => {
-      collection.insert([doc123, doc999], () => {
-        collection.find({}).toArray((err, docs) => {
-          if (!docs) {
-            return done(new Error('Did not receive inserted documents'));
-          }
+      collection.insert([doc123, doc999], async () => {
+        const docs = await collection.find({}).toArray();
 
-          docs.forEach(({ createDateTime, changeDateTime }) => {
-            expect(createDateTime).toBeDefined();
-            expect(changeDateTime).toBeGreaterThan(currentTime);
-          });
-
-          done();
+        docs.forEach(({createDateTime, changeDateTime}) => {
+          expect(createDateTime).toBeDefined();
+          expect(changeDateTime).toBeGreaterThan(currentTime);
         });
+
+        done();
       });
     }, 5);
   });
 
   it('should update changeDateTime on bulk save', (done) => {
-    collection.insert([doc123, doc999], () => {
-      collection.find({}).toArray((err, docs) => {
-        if (!docs) {
-          return done(new Error('Did not receive inserted documents'));
-        }
+    collection.insert([doc123, doc999], async () => {
+      const insertedDocs = await collection.find({}).toArray();
+      const {createDateTime: insertCreateDateTime, changeDateTime: insertChangeDateTime} = insertedDocs[0];
 
-        const { createDateTime: insertCreateDateTime, changeDateTime: insertChangeDateTime } = docs[0]
-        expect(insertCreateDateTime).toBeDefined();
-        expect(insertCreateDateTime).toBe(insertChangeDateTime);
+      expect(insertCreateDateTime).toBeDefined();
+      expect(insertCreateDateTime).toBe(insertChangeDateTime);
 
-        setTimeout(() => {
-          collection.save([
-            { _id: doc123Id, name: 'Pelle', createDateTime: insertCreateDateTime, changeDateTime: insertChangeDateTime },
-            { _id: doc999Id, name: 'Kalle', createDateTime: insertCreateDateTime, changeDateTime: insertChangeDateTime }
-          ], () => {
-            collection.find({}).toArray((err, docs) => {
-              if (!docs) {
-                return done(new Error('Did not receive saved documents'));
-              }
+      // wait 5ms until update operation to check for changeDateTime updated
+      await wait(5);
+      collection.save([
+        {_id: doc123Id, name: 'Pelle', createDateTime: insertCreateDateTime, changeDateTime: insertChangeDateTime},
+        {_id: doc999Id, name: 'Kalle', createDateTime: insertCreateDateTime, changeDateTime: insertChangeDateTime}
+      ], async () => {
+        const savedDocs = await collection.find({}).toArray();
 
-              docs.forEach(({ createDateTime, changeDateTime }) => {
-                expect(createDateTime).toBe(insertCreateDateTime);
-                expect(changeDateTime).toBeGreaterThan(insertCreateDateTime);
-              });
+        savedDocs.forEach(({createDateTime, changeDateTime}) => {
+          expect(createDateTime).toBe(insertCreateDateTime);
+          expect(changeDateTime).toBeGreaterThan(insertCreateDateTime);
+        });
 
-              done();
-            });
-          });
-        }, 5);
+        done();
       });
     });
   });
 
   it('should update changeDateTime on save', (done) => {
-    collection.insert(doc123);
-    collection.find({ id: doc123Id }).toArray((err, docs) => {
-      if (!docs) {
-        return done(new Error('Did not receive inserted document'));
-      }
-
-      const insertTime = docs[0].createDateTime;
+    collection.insert(doc123, async () => {
+      const insertedDocs = await collection.find({id: doc123Id}).toArray();
+      const insertTime = insertedDocs[0].createDateTime;
 
       // wait 5ms until update operation to check for changeDateTime updated
-      setTimeout(() => {
-        doc123.name = 'Pelle';
-        collection.save(doc123, () => {
-          collection.find({ id: doc123Id }).toArray((err, docs) => {
-            if (!docs) {
-              return done(new Error('Did not receive saved document'));
-            }
+      await wait(5);
+      doc123.name = 'Pelle';
+      collection.save(doc123, async () => {
+        const savedDocs = await collection.find({id: doc123Id}).toArray();
+        const {createDateTime, changeDateTime} = savedDocs[0];
 
-            const { createDateTime, changeDateTime } = docs[0];
-            expect(createDateTime).toBe(insertTime);
-            expect(changeDateTime).toBeGreaterThan(insertTime);
-            done();
-          });
-        });
-      }, 5);
+        expect(createDateTime).toBe(insertTime);
+        expect(changeDateTime).toBeGreaterThan(insertTime);
+        done();
+      });
     });
   });
 
   it('should skip changing timestamp with skipTimestamp option on save', (done) => {
-    collection.insert(doc123);
-    collection.find({id: '123'}).toArray((err, docs) => {
-      const insertTime = docs?.[0]?.createDateTime;
+    collection.insert(doc123, async () => {
+      const insertedDocs = await collection.find({id: '123'}).toArray();
+      const insertTime = insertedDocs[0].createDateTime;
 
       // wait 5ms until update operation to check for changeDateTime updated
-      setTimeout(() => {
-        doc123.name = 'Pelle';
-        collection.save(doc123, {skipTimestamp: true}, () => {
-          collection.find({id: doc123Id}).toArray((err, docs) => {
-            if (!docs) {
-              return done(new Error('Did not receive saved document'));
-            }
+      await wait(5);
+      doc123.name = 'Pelle';
+      collection.save(doc123, {skipTimestamp: true}, async () => {
+        const savedDocs = await collection.find({id: doc123Id}).toArray();
+        const {createDateTime, changeDateTime} = savedDocs[0];
 
-            const { createDateTime, changeDateTime } = docs[0];
-            expect(createDateTime).toBe(insertTime);
-            expect(changeDateTime).toBe(insertTime);
-            done();
-          });
-        });
-      }, 5);
+        expect(createDateTime).toBe(insertTime);
+        expect(changeDateTime).toBe(insertTime);
+        done();
+      });
     });
   });
 
@@ -155,19 +126,15 @@ describe('ViewDB timestamp plugin', () => {
     collection.insert(doc123, () => {
       doc123.name = 'Pelle';
       doc123.version = undefined;
-      collection.save(doc123, () => {
-        collection.find({id: '123'}).toArray((err, docs) => {
-          if (!docs) {
-            return done(new Error('Did not receive saved document'));
-          }
+      collection.save(doc123, async () => {
+        const docs = await collection.find({id: '123'}).toArray();
+        const {name, version, createDateTime, changeDateTime} = docs[0];
 
-          const { name, version, createDateTime, changeDateTime } = docs[0];
-          expect(version).toBe(0);
-          expect(name).toBe('Pelle');
-          expect(createDateTime).toBeDefined();
-          expect(changeDateTime).toBeDefined();
-          done();
-        });
+        expect(version).toBe(0);
+        expect(name).toBe('Pelle');
+        expect(createDateTime).toBeDefined();
+        expect(changeDateTime).toBeDefined();
+        done();
       });
     });
   });
