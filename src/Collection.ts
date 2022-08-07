@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
-import { Callback } from './utils/promiseUtils';
 import { Cursor } from '.';
+import { Callback } from './utils/promiseUtils';
 
 export type Nullable<T> = T | null;
 
@@ -34,10 +34,6 @@ export interface GetDocumentsFunc<Document extends BaseDocument = Record<string,
   (query: QueryObject, callback: GetDocumentsCallback<Document>): void;
 }
 
-export interface RemoveFunc<Document extends BaseDocument = Record<string, any>> {
-  (query: Query, options?: Nullable<RemoveOptions | RemoveJustOne>, callback?: RemoveCallback): void;
-}
-
 export interface RemoveOptions {
   justOne?: boolean;
   writeConcern?: WriteConcern;
@@ -55,7 +51,7 @@ interface Collation {
   backwards?: boolean;
 }
 
-type RemoveJustOne = boolean;
+export type RemoveJustOne = boolean;
 
 interface WriteConcern {
   w?: number | 'majority';
@@ -63,11 +59,11 @@ interface WriteConcern {
   wtimeout?: number;
 }
 
-interface RemoveCallback {
+export interface RemoveCallback {
   (err: Nullable<Error>, result?: WriteResult): void;
 }
 
-interface WriteResult {
+export interface WriteResult {
   nRemoved: number;
   writeConcernError?: WriteConcernError;
   writeError?: WriteError;
@@ -82,23 +78,6 @@ interface WriteConcernError extends WriteError {
 interface WriteError {
   code: number;
   errmsg: string;
-}
-
-export interface SaveFunc<Document extends BaseDocument = Record<string, any>> {
-  (
-    documents: MaybeArray<Document>,
-    options?: WriteOptions | WriteCallback<Document>,
-    callback?: WriteCallback<Document>
-  ): Promise<Array<Document>> | void;
-}
-
-export interface WriteFunc<Document extends BaseDocument = Record<string, any>> {
-  (
-    op: WriteOperation,
-    documents: MaybeArray<Document>,
-    options?: WriteOptions | WriteCallback<Document>,
-    callback?: WriteCallback<Document>
-  ): Promise<Array<Document>> | void;
 }
 
 export type Query = Record<string, any>;
@@ -126,7 +105,7 @@ export interface Collection<Document extends BaseDocument = Record<string, any>>
 
   createIndex(options: CreateIndexOptions, callback: CreateIndexCallback): void;
 
-  drop(callback?: CollectionDropCallback): void;
+  drop(): boolean;
 
   ensureIndex(options: EnsureIndexOptions, callback: EnsureIndexCallback): void;
 
@@ -134,9 +113,20 @@ export interface Collection<Document extends BaseDocument = Record<string, any>>
 
   findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: FindAndModifyOptions, cb: FindAndModifyCallback): void;
 
-  insert: SaveFunc<Document>;
+  insert(documents: MaybeArray<Document>): Promise<Array<Document>>;
+  insert(documents: MaybeArray<Document>, callback: WriteCallback<Document>): void;
+  insert(documents: MaybeArray<Document>, options: WriteOptions): Promise<Array<Document>>;
+  insert(documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback<Document>): void;
+  insert(documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, callback?: WriteCallback<Document>): Promise<Array<Document>> | void;
 
-  remove: RemoveFunc<Document>;
+  remove(query: Query): Promise<WriteResult>;
+  remove(query: Query, options: Nullable<RemoveOptions | RemoveJustOne>): Promise<WriteResult>;
+  remove(query: Query, options: Nullable<RemoveOptions | RemoveJustOne>, callback: RemoveCallback): void;
+  remove(query: Query, options?: Nullable<RemoveOptions | RemoveJustOne>, callback?: RemoveCallback): Promise<WriteResult> | void;
 
-  save: SaveFunc<Document>;
+  save(documents: MaybeArray<Document>): Promise<Array<Document>>;
+  save(documents: MaybeArray<Document>, callback: WriteCallback<Document>): void;
+  save(documents: MaybeArray<Document>, options: WriteOptions): Promise<Array<Document>>;
+  save(documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback<Document>): void;
+  save(documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, callback?: WriteCallback<Document>): Promise<Array<Document>> | void;
 }

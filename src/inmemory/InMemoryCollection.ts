@@ -7,21 +7,24 @@ import {
   BaseDocument,
   Collection,
   CollectionCountCallback,
-  CollectionDropCallback,
   CreateIndexCallback,
   CreateIndexOptions,
   EnsureIndexCallback,
   EnsureIndexOptions,
   FindOptions,
   GetDocumentsCallback,
+  MaybeArray,
+  Nullable,
   Query,
   QueryObject,
-  RemoveFunc,
-  SaveFunc,
+  RemoveCallback,
+  RemoveJustOne,
+  RemoveOptions,
   SortQuery,
   WriteCallback,
-  WriteFunc,
-  WriteOptions
+  WriteOperation,
+  WriteOptions,
+  WriteResult
 } from '../Collection';
 import Cursor from '../Cursor';
 import { maybePromise } from '../utils/promiseUtils';
@@ -55,10 +58,10 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
     throw new Error('createIndex not supported!');
   };
 
-  drop = (callback?: CollectionDropCallback): void => {
+  drop(): boolean {
     this.documents = [];
-    callback?.(null);
-  };
+    return true;
+  }
 
   ensureIndex = (options: EnsureIndexOptions, callback: EnsureIndexCallback) => {
     throw new Error('ensureIndex not supported!');
@@ -68,21 +71,36 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
     return new Cursor<Document>(this, {query: query}, options, this._getDocuments);
   };
 
-  insert: SaveFunc<Document> = (documents, options, callback) => {
+  insert(documents: MaybeArray<Document>): Promise<Array<Document>>;
+  insert(documents: MaybeArray<Document>, callback: WriteCallback<Document>): void;
+  insert(documents: MaybeArray<Document>, options: WriteOptions): Promise<Array<Document>>;
+  insert(documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback<Document>): void;
+  insert(documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, callback?: WriteCallback<Document>): Promise<Array<Document>> | void {
     return this.write('insert', documents, options, callback);
   };
 
-  remove: RemoveFunc<Document> = (query, options, callback) => {
-    const q = new Kuery(query);
-    const documents = q.find(this.documents);
-    this.documents = pullAll(this.documents, documents);
+  remove(query: Query): Promise<WriteResult>;
+  remove(query: Query, options: Nullable<RemoveOptions | RemoveJustOne>): Promise<WriteResult>;
+  remove(query: Query, options: Nullable<RemoveOptions | RemoveJustOne>, callback: RemoveCallback): void;
+  remove(query: Query, options?: Nullable<RemoveOptions | RemoveJustOne>, callback?: RemoveCallback): Promise<WriteResult> | void {
+    return maybePromise(callback, (done) => {
+      const q = new Kuery(query);
+      const documents = q.find(this.documents) as Array<Document>;
+      this.documents = pullAll(this.documents, documents);
 
-    process.nextTick(() => {
-      callback?.(null);
+      process.nextTick(() => {
+        done(null, {
+          nRemoved: documents.length
+        });
+      });
     });
   };
 
-  save: SaveFunc<Document> = (documents, options, callback) => {
+  save(documents: MaybeArray<Document>): Promise<Array<Document>>;
+  save(documents: MaybeArray<Document>, options: WriteOptions): Promise<Array<Document>>;
+  save(documents: MaybeArray<Document>, callback: WriteCallback<Document>): void;
+  save(documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback<Document>): void;
+  save(documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, callback?: WriteCallback<Document>): Promise<Array<Document>> | void {
     return this.write('save', documents, options, callback);
   };
 
@@ -108,12 +126,7 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
     });
   };
 
-  private write: WriteFunc<Document> = (
-    op,
-    documents,
-    options,
-    optionalCallback
-  ) => {
+  private write(op: WriteOperation, documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, optionalCallback?: WriteCallback<Document>): Promise<Array<Document>> | void {
     const callback = checkIsWriteCallback<Document>(options)
       ? options
       : optionalCallback;

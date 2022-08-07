@@ -1,5 +1,5 @@
 import { isArray } from 'lodash';
-import ViewDB from '..';
+import ViewDB, { WriteCallback } from '..';
 import { BaseDocument, Collection, MaybeArray, WriteOptions } from '../Collection';
 import { addPlugin, addProperties } from '../plugins/Plugin';
 
@@ -45,34 +45,46 @@ function mutateFindAndModify<Document extends BaseDocument = Record<string, any>
       }
     }
 
-    oldFindAndModify.apply(collection, [query, sort, update, options, cb]);
+    return oldFindAndModify.apply(collection, [query, sort, update, options, cb]);
   };
 }
 
 function mutateInsert<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldInsert = collection.insert;
-  collection.insert = (docs, options, callback) => {
-    setVersions(docs, options);
-    oldInsert.apply(collection, [docs, options, callback]);
-  };
+
+  function insert(documents: MaybeArray<Document>): Promise<Array<Document>>;
+  function insert(documents: MaybeArray<Document>, callback: WriteCallback<Document>): void;
+  function insert(documents: MaybeArray<Document>, options: WriteOptions): Promise<Array<Document>>;
+  function insert(documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback<Document>): void;
+  function insert(documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, callback?: WriteCallback<Document>): Promise<Array<Document>> | void {
+    setVersions(documents, options);
+    return oldInsert.apply(collection, [documents, options, callback]);
+  }
+
+  collection.insert = insert;
 }
 
 function mutateSave<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldSave = collection.save;
-  collection.save = (docs, options, callback) => {
-    setVersions(docs, options);
-    oldSave.apply(collection, [docs, options, callback]);
-  };
+
+  function save(documents: MaybeArray<Document>): Promise<Array<Document>>;
+  function save(documents: MaybeArray<Document>, callback: WriteCallback<Document>): void;
+  function save(documents: MaybeArray<Document>, options: WriteOptions): Promise<Array<Document>>;
+  function save(documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback<Document>): void;
+  function save(documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, callback?: WriteCallback<Document>): Promise<Array<Document>> | void {
+    setVersions(documents, options);
+    return oldSave.apply(collection, [documents, options, callback]);
+  }
+
+  collection.save = save;
 }
 
 function setVersions<Document>(docs: MaybeArray<Document>, options?: WriteOptions) {
   if (!(options && options.skipVersioning)) {
-    if (!isArray(docs)) {
-      docs = [docs];
-    }
+    const docArray = isArray(docs) ? docs : [docs];
 
-    for (let i = 0; i < docs.length; i++) {
-      const doc = addProperties<Document, WithVersion>(docs[i]);
+    for (let i = 0; i < docArray.length; i++) {
+      const doc = addProperties<Document, WithVersion>(docArray[i]);
       doc.version = getNewVersion(doc.version);
     }
   }

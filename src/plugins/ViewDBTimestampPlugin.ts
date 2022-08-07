@@ -1,5 +1,5 @@
 import { clone, isArray } from 'lodash';
-import ViewDB from '..';
+import ViewDB, { MaybeArray, WriteCallback, WriteOptions } from '..';
 import { BaseDocument, Collection } from '../Collection';
 import { addPlugin, addProperties } from '../plugins/Plugin';
 
@@ -59,31 +59,43 @@ function mutateFindAndModify<Document extends BaseDocument = Record<string, any>
 
 function mutateInsert<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldInsert = collection.insert;
-  collection.insert = (docs, options, callback) => {
+
+  function insert(documents: MaybeArray<Document>): Promise<Array<Document>>;
+  function insert(documents: MaybeArray<Document>, callback: WriteCallback<Document>): void;
+  function insert(documents: MaybeArray<Document>, options: WriteOptions): Promise<Array<Document>>;
+  function insert(documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback<Document>): void;
+  function insert(documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, callback?: WriteCallback<Document>): Promise<Array<Document>> | void {
     if (!(options && 'skipTimestamp' in options)) {
-      if (!isArray(docs)) {
-        docs = [docs];
+      if (!isArray(documents)) {
+        documents = [documents];
       }
 
       const timestamp = new Date().valueOf();
 
-      for (let i = 0; i < docs.length; i++) {
-        const doc = addProperties<Document, WithDateTimeData>(docs[i]);
+      for (let i = 0; i < documents.length; i++) {
+        const doc = addProperties<Document, WithDateTimeData>(documents[i]);
         doc.createDateTime = timestamp;
         doc.changeDateTime = timestamp;
       }
     }
 
-    oldInsert.apply(collection, [docs, options, callback]);
-  };
+    oldInsert.apply(collection, [documents, options, callback]);
+  }
+
+  collection.insert = insert
 }
 
 function mutateSave<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldSave = collection.save;
-  collection.save = (docs, options, callback) => {
+
+  function save(documents: MaybeArray<Document>): Promise<Array<Document>>;
+  function save(documents: MaybeArray<Document>, callback: WriteCallback<Document>): void;
+  function save(documents: MaybeArray<Document>, options: WriteOptions): Promise<Array<Document>>;
+  function save(documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback<Document>): void;
+  function save(documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, callback?: WriteCallback<Document>): Promise<Array<Document>> | void {
     if (!(options && 'skipTimestamp' in options)) {
       const timestamp = new Date().valueOf();
-      const newDocs = isArray(docs) ? docs : [docs];
+      const newDocs = isArray(documents) ? documents : [documents];
 
       for (let i = 0; i < newDocs.length; i++) {
         const doc = addProperties<Document, WithDateTimeData>(newDocs[i]);
@@ -96,6 +108,8 @@ function mutateSave<Document extends BaseDocument = Record<string, any>>(collect
       }
     }
 
-    oldSave.apply(collection, [docs, options, callback]);
-  };
+    oldSave.apply(collection, [documents, options, callback]);
+  }
+
+  collection.save = save;
 }

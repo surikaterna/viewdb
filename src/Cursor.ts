@@ -70,6 +70,7 @@ export default class Cursor<Document extends BaseDocument = Record<string, any>>
     });
   };
 
+  // TODO: Should call the callback with each document, not with the list every time
   forEach = (callback: CursorForEachCallback<Document>) => {
     this._getDocuments(this._query, (err, result) => {
       forEach(result, () => {

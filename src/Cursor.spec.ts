@@ -5,7 +5,7 @@ describe('Cursor', () => {
   let collection: Collection;
   const documents: Array<Record<string, any>> = [];
 
-  beforeAll((done) => {
+  beforeAll(async () => {
     db = new ViewDB();
     collection = db.collection('documents');
 
@@ -13,9 +13,7 @@ describe('Cursor', () => {
       documents.push({id: i.toString(), a: 'a'});
     }
 
-    collection.insert(documents, () => {
-      done();
-    });
+    await collection.insert(documents);
   });
 
   describe('#toArray', () => {
