@@ -6,4 +6,5 @@ export { default as merge } from './merge';
 export { default as Observe } from './Observer';
 export * from './Store';
 export * from './plugins';
+export * from './utils/promiseUtils';
 export { default, default as ViewDB } from './ViewDB';

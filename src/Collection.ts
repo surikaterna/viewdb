@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { Callback } from './utils/promiseUtils';
 import { Cursor } from '.';
 
 export type Nullable<T> = T | null;
@@ -12,9 +13,7 @@ export interface CollectionCallback<Document extends BaseDocument = Record<strin
   (collection: Collection<Document>): void;
 }
 
-export interface CollectionCountCallback {
-  (error: Nullable<Error>, count?: number): void;
-}
+export type CollectionCountCallback = Callback<number>;
 
 export interface CollectionDropCallback {
   (error: null): void;
@@ -121,7 +120,9 @@ export interface Collection<Document extends BaseDocument = Record<string, any>>
   /** Not intended to be used externally, but required internally for the Observer */
   _getDocuments: GetDocumentsFunc<Document>;
 
-  count(callback?: CollectionCountCallback): Promise<number>;
+  count(): Promise<number>;
+  count(callback: CollectionCountCallback): void;
+  count(callback?: CollectionCountCallback): Promise<number> | void;
 
   createIndex(options: CreateIndexOptions, callback: CreateIndexCallback): void;
 

@@ -10,26 +10,14 @@ import {
   SortQuery
 } from './Collection';
 import Observe, { ObserverOptions } from './Observer';
-
-export interface CursorCountFunc<Document extends BaseDocument = Record<string, any>> {
-  (applySkipLimit: boolean, callback: CollectionCountCallback): Promise<number>;
-
-  (callback: CollectionCountCallback, options: undefined): Promise<number>;
-
-  (applySkipLimit: undefined, callback: undefined): Promise<number>;
-
-  (applySkipLimit?: boolean | CollectionCountCallback, callback?: CollectionCountCallback): Promise<number>;
-}
+import { maybePromise } from './utils/promiseUtils';
 
 export interface CursorForEachCallback<Document extends BaseDocument = Record<string, any>> {
   (documents: Array<Document>): void;
 }
 
-export interface CursorRewindOptions {
-}
-
-export interface CursorOptions {
-}
+export type CursorRewindOptions = Record<string, any>;
+export type CursorOptions = Record<string, any>;
 
 export default class Cursor<Document extends BaseDocument = Record<string, any>> {
   private readonly _collection: Collection<Document>;
@@ -46,37 +34,41 @@ export default class Cursor<Document extends BaseDocument = Record<string, any>>
     this._isObserving = false;
   }
 
-  count: CursorCountFunc<Document> = (applySkipLimit, callback) => new Promise<number>((resolve, reject) => {
+  count(): Promise<number>;
+  count(applySkipLimit: boolean): Promise<number>;
+  count(callback: CollectionCountCallback): void;
+  count(applySkipLimit: boolean, callback: CollectionCountCallback): void;
+  count(applySkipLimit?: boolean | CollectionCountCallback, callback?: CollectionCountCallback): Promise<number> | void {
     if (isFunction(applySkipLimit)) {
       callback = applySkipLimit;
       applySkipLimit = false;
     }
 
-    const query: QueryObject = {query: this._query.query};
-    if (applySkipLimit) {
-      if (this._query.skip) {
-        query.skip = this._query.skip;
+    return maybePromise<number, number>(callback, (done) => {
+      const query: QueryObject = {query: this._query.query};
+      if (applySkipLimit) {
+        if (this._query.skip) {
+          query.skip = this._query.skip;
+        }
+
+        if (this._query.limit) {
+          query.limit = this._query.limit;
+        }
       }
 
-      if (this._query.limit) {
-        query.limit = this._query.limit;
-      }
-    }
+      this._getDocuments(query, (err, res) => {
+        if (err) {
+          return done(err);
+        }
 
-    this._getDocuments(query, (err, res) => {
-      callback?.(err, res?.length);
+        if (!res) {
+          return done(new Error('Failed getting documents without error.'));
+        }
 
-      if (err) {
-        return reject(err);
-      }
-
-      if (!res) {
-        return reject(new Error('Failed getting documents without error.'));
-      }
-
-      return resolve(res.length);
+        return done(null, res.length);
+      });
     });
-  });
+  };
 
   forEach = (callback: CursorForEachCallback<Document>) => {
     this._getDocuments(this._query, (err, result) => {
@@ -125,21 +117,24 @@ export default class Cursor<Document extends BaseDocument = Record<string, any>>
     return this;
   };
 
-  toArray = (callback?: GetDocumentsCallback<Document>): Promise<Array<Document>> => new Promise((resolve, reject) => {
-    this._getDocuments(this._query, (err, documents) => {
-      callback?.(err, documents);
+  toArray(): Promise<Array<Document>>;
+  toArray(callback: GetDocumentsCallback<Document>): void;
+  toArray(callback?: GetDocumentsCallback<Document>): Promise<Array<Document>> | void;
+  toArray(callback?: GetDocumentsCallback<Document>): Promise<Array<Document>> | void {
+    return maybePromise(callback, (done) => {
+      this._getDocuments(this._query, (err, documents) => {
+        if (err) {
+          return done(err);
+        }
 
-      if (err) {
-        return reject(err);
-      }
+        if (!documents) {
+          return done(new Error('Failed getting documents without error.'));
+        }
 
-      if (!documents) {
-        return reject(new Error('Failed getting documents without error.'));
-      }
-
-      return resolve(documents);
+        return done(null, documents);
+      });
     });
-  });
+  }
 
   /**
    * Not intended to be used externally
