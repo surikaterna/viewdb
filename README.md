@@ -1,7 +1,7 @@
 ViewDB
 ======
 
-[ViewDB](https://github.com/surikaterna/viewdb) is an ODM for TypeScript & JavaScript. It can be configured with a
+[ViewDB](https://github.com/surikaterna/viewdb) is an database for TypeScript & JavaScript. It can be configured with a
 custom Store in order to provide support for different persistence sources, such as MongoDB or IndexedDB, but comes with
 a default in memory Store for easy testing.
 
@@ -10,6 +10,7 @@ a default in memory Store for easy testing.
 * [Usage](#usage-example)
 * [Components](#components)
     * [ViewDB](#viewdb-1)
+        * [ViewDB Methods](#viewdb-methods)
         * [Plugins](#plugins)
             * [TimeStampPlugin](#timestampplugin)
             * [VersioningPlugin](#versioningplugin)
@@ -156,20 +157,12 @@ await collection.insert({ name: 'Jeff' });
 Responsible for retrieving a Collection of documents. If the store needs some setup to be ready, it shall provide
 an `open` method to that.
 
-#### Store Methods
-
-<h5 id="store-collection">collection</h5>
-
-Get a Collection in the Store matching the provided name.
-
-##### open
-
-Establish a connection to the persistence store.
+Used through the [ViewDB](#viewdb-1) methods.
 
 #### InMemoryStore
 
 A basic implementation of a Store, which keeps a record of the [in memory collections](#InMemoryCollection) by name in
-memory.
+memory. Used if no Store is provided as an argument to the ViewDB constructor.
 
 ### Collection
 
@@ -181,38 +174,110 @@ Responsible for managing the data.
 
 Retrieve the current amount of documents in the collection.
 
+```ts
+// Async
+const count = await collection.count();
+
+// Callback
+collection.count((err, count) => {
+});
+```
+
 ##### createIndex
 
 Creates an `index` to be used when looking up data.
+
+```ts
+// Async
+const result = await collection.createIndex({ 'contactMeans.identifier': 1 });
+
+// Callback
+collection.createIndex({ 'contactMeans.identifier': 1 }, null, (err, result) => {
+});
+```
 
 ##### drop
 
 Clear all data in the collection.
 
+```ts
+// Whether the collection was successfully dropped
+const isSuccess = collection.drop();
+```
+
 ##### ensureIndex
 
 Creates an `index` for the collection unless it already exists.
 
+```ts
+// Async
+const result = await collection.ensureIndex({ 'contactMeans.identifier': 1 });
+
+// Callback
+collection.ensureIndex({ 'contactMeans.identifier': 1 }, null, (err, result) => {
+});
+```
+
 ##### find
 
 Retrieve a list of documents from the collection matching the query.
+
+```ts
+await cursor = collection.find({});
+```
 
 ##### findAndModify
 
 Retrieve a list of documents from the collection matching the query, and update the resulting documents based on the
 update query.
 
+```ts
+// Promise
+const result = await collection.findAndModify(query, null, update);
+
+// Callback
+collection.findAndModify(query, null, update, options, (err, res) => {
+});
+```
+
 ##### insert
 
 Insert new documents into the collection.
+
+```ts
+// Promise API
+await insertedDocs = await collection.insert(newDocs);
+
+// Callback API
+collection.insert(newDocs, (err, insertedDocs) => {
+});
+```
 
 ##### remove
 
 Remove documents matching the query from the collection.
 
+```ts
+// Promise API
+const result = await collection.remove({ name: 'Jeff' });
+
+// Callback API
+collection.remove({ name: 'Jeff' }, null, (err, result) => {
+});
+```
+
 ##### save
 
 Replace the documents in the collection matching the provided documents by `_id`.
+
+```ts
+// Promise API
+await savedDocs = await collection.save(updatedDocs);
+
+// Callback API
+collection.save(updatedDocs, (err, savedDocs) => {
+});
+```
 
 #### InMemoryCollection
 
@@ -245,10 +310,10 @@ Get the amount of matches for the cursor.
 
 ```ts
 // Promise API
-await count = collection.find({}).count();
+await count = await cursor.count();
 
 // Callback API
-collection.find({}).count((err, count) => {
+cursor.count((err, count) => {
 });
 ```
 
@@ -257,7 +322,7 @@ collection.find({}).count((err, count) => {
 Iterate through the matched documents and run the callback for each document.
 
 ```ts
-await count = collection.find({}).forEach((doc) => {
+await count = cursor.forEach((doc) => {
 });
 ```
 
@@ -267,7 +332,7 @@ Limit the amount of documents to be retrieved.
 
 ```ts
 // Get maximum 5 documents
-await docs = collection.find({}).limit(5).toArray();
+await docs = cursor.limit(5).toArray();
 ```
 
 ##### observe
@@ -290,7 +355,7 @@ const observeOptions: ObserverOptions<User> = {
   }
 };
 
-const observer = collection.find({}).observe(observeOptions);
+const observer = cursor.observe(observeOptions);
 ```
 
 ##### skip
@@ -299,7 +364,7 @@ Amounts of documents in the Cursor that should be skipped.
 
 ```ts
 // Get documents starting from the 6th match
-await docs = collection.find({}).skip(5).toArray();
+await docs = cursor.skip(5).toArray();
 ```
 
 ##### sort
@@ -308,7 +373,7 @@ Sort the resulting documents based on a query.
 
 ```ts
 // Get documents sorted by creation time in descending order
-await docs = collection.find({}).sort({createDateTime: -1}).toArray();
+await docs = cursor.sort({createDateTime: -1}).toArray();
 ```
 
 ##### toArray
@@ -317,10 +382,10 @@ Retrieve the list of documents matching the query.
 
 ```ts
 // Promise API
-await docs = collection.find({}).toArray();
+await docs = cursor.toArray();
 
 // Callback API
-collection.find({}).find((err, docs) => {
+cursor.toArray((err, docs) => {
 });
 ```
 

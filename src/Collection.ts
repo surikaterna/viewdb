@@ -81,14 +81,34 @@ interface WriteError {
 }
 
 export type Query = Record<string, any>;
+export type CreateIndexFieldOrSpec = string | CreateIndexArraySpec | CreateIndexObjectSpec;
+
+export type CreateIndexArraySpec = Array<string | CreateIndexNameOrderTuple | CreateIndexObjectSpec>;
+export type CreateIndexNameOrderTuple = [string, number];
+export type CreateIndexObjectSpec = Record<string | number, string | number>;
+
 export type CreateIndexOptions = Record<string, any>;
-export type CreateIndexCallback = Function;
-export type EnsureIndexOptions = Record<string, any>;
-export type EnsureIndexCallback = Function;
+export type CreateIndexCallback = Callback<CreateIndexResult>;
+export type CreateIndexResult = Record<string, any>;
 export type FindOptions = Record<string, any>;
 export type SortQuery = Record<string, number>;
-export type FindAndModifyOptions = Record<string, any>;
-export type FindAndModifyCallback = Function;
+
+export interface FindAndModifyOptions extends Record<string, any> {
+  upsert?: boolean;
+  skipVersioning?: boolean;
+}
+
+export type FindAndModifyCallback<Document extends BaseDocument = Record<string, any>> = Callback<FindAndModifyResult<Document>>;
+
+export interface FindAndModifyResult<Document extends object = Record<string, any>> {
+  ok: 0 | 1;
+  value: Nullable<Document>;
+  lastErrorObject?: {
+    updatedExisting: boolean;
+    upserted: unknown;
+  };
+}
+
 export type WriteOperation = 'insert' | 'save';
 export type WriteOptions = Record<string, any>;
 export type WriteCallback<Document extends BaseDocument = Record<string, any>> = GetDocumentsCallback<Document>;
@@ -103,15 +123,24 @@ export interface Collection<Document extends BaseDocument = Record<string, any>>
   count(callback: CollectionCountCallback): void;
   count(callback?: CollectionCountCallback): Promise<number> | void;
 
-  createIndex(options: CreateIndexOptions, callback: CreateIndexCallback): void;
+  createIndex(fieldOrSpec: CreateIndexFieldOrSpec): Promise<CreateIndexResult>;
+  createIndex(fieldOrSpec: CreateIndexFieldOrSpec, options: CreateIndexOptions): Promise<CreateIndexResult>;
+  createIndex(fieldOrSpec: CreateIndexFieldOrSpec, options: Nullable<CreateIndexOptions>, callback: CreateIndexCallback): void;
+  createIndex(fieldOrSpec: CreateIndexFieldOrSpec, options?: Nullable<CreateIndexOptions>, callback?: CreateIndexCallback): Promise<CreateIndexResult> | void;
 
   drop(): boolean;
 
-  ensureIndex(options: EnsureIndexOptions, callback: EnsureIndexCallback): void;
+  ensureIndex(fieldOrSpec: CreateIndexFieldOrSpec): Promise<CreateIndexResult>;
+  ensureIndex(fieldOrSpec: CreateIndexFieldOrSpec, options: CreateIndexOptions): Promise<CreateIndexResult>;
+  ensureIndex(fieldOrSpec: CreateIndexFieldOrSpec, options: Nullable<CreateIndexOptions>, callback: CreateIndexCallback): void;
+  ensureIndex(fieldOrSpec: CreateIndexFieldOrSpec, options?: Nullable<CreateIndexOptions>, callback?: CreateIndexCallback): Promise<CreateIndexResult> | void;
 
   find(query: Query, options?: FindOptions): Cursor<Document>;
 
-  findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: FindAndModifyOptions, cb: FindAndModifyCallback): void;
+  findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query): Promise<FindAndModifyResult<Document>>;
+  findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: FindAndModifyOptions): Promise<FindAndModifyResult<Document>>;
+  findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: Nullable<FindAndModifyOptions>, cb: FindAndModifyCallback<Document>): void;
+  findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options?: Nullable<FindAndModifyOptions>, cb?: FindAndModifyCallback<Document>): Promise<FindAndModifyResult<Document>> | void;
 
   insert(documents: MaybeArray<Document>): Promise<Array<Document>>;
   insert(documents: MaybeArray<Document>, callback: WriteCallback<Document>): void;

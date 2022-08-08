@@ -8,9 +8,12 @@ import {
   Collection,
   CollectionCountCallback,
   CreateIndexCallback,
+  CreateIndexFieldOrSpec,
   CreateIndexOptions,
-  EnsureIndexCallback,
-  EnsureIndexOptions,
+  CreateIndexResult,
+  FindAndModifyCallback,
+  FindAndModifyOptions,
+  FindAndModifyResult,
   FindOptions,
   GetDocumentsCallback,
   MaybeArray,
@@ -42,8 +45,13 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
     this.name = collectionName;
   }
 
-  findAndModify(query: Query, sort: SortQuery | null, update: Query, options: { [x: string]: any; }, cb: Function): void {
-    throw new Error('findAndModify not supported!');
+  findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query): Promise<FindAndModifyResult<Document>>;
+  findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: FindAndModifyOptions): Promise<FindAndModifyResult<Document>>;
+  findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: Nullable<FindAndModifyOptions>, cb: FindAndModifyCallback<Document>): void;
+  findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options?: Nullable<FindAndModifyOptions>, cb?: FindAndModifyCallback<Document>): Promise<FindAndModifyResult<Document>> | void {
+    return maybePromise(cb, (done) => {
+      done(new Error('findAndModify not supported!'));
+    });
   }
 
   count(): Promise<number>;
@@ -54,18 +62,28 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
     });
   }
 
-  createIndex = (options: CreateIndexOptions, callback: CreateIndexCallback): void => {
-    throw new Error('createIndex not supported!');
-  };
+  createIndex(fieldOrSpec: CreateIndexFieldOrSpec): Promise<CreateIndexResult>;
+  createIndex(fieldOrSpec: CreateIndexFieldOrSpec, options: CreateIndexOptions): Promise<CreateIndexResult>;
+  createIndex(fieldOrSpec: CreateIndexFieldOrSpec, options: Nullable<CreateIndexOptions>, callback: CreateIndexCallback): void;
+  createIndex(fieldOrSpec: CreateIndexFieldOrSpec, options?: Nullable<CreateIndexOptions>, callback?: CreateIndexCallback): Promise<CreateIndexResult> | void {
+    return maybePromise(callback, (done) => {
+      done(new Error('createIndex not supported!'));
+    });
+  }
 
   drop(): boolean {
     this.documents = [];
     return true;
   }
 
-  ensureIndex = (options: EnsureIndexOptions, callback: EnsureIndexCallback) => {
-    throw new Error('ensureIndex not supported!');
-  };
+  ensureIndex(fieldOrSpec: CreateIndexFieldOrSpec): Promise<CreateIndexResult>;
+  ensureIndex(fieldOrSpec: CreateIndexFieldOrSpec, options: CreateIndexOptions): Promise<CreateIndexResult>;
+  ensureIndex(fieldOrSpec: CreateIndexFieldOrSpec, options: Nullable<CreateIndexOptions>, callback: CreateIndexCallback): void;
+  ensureIndex(fieldOrSpec: CreateIndexFieldOrSpec, options?: Nullable<CreateIndexOptions>, callback?: CreateIndexCallback): Promise<CreateIndexResult> | void {
+    return maybePromise(callback, (done) => {
+      done(new Error('ensureIndex not supported!'));
+    });
+  }
 
   find = (query: Query, options?: FindOptions): Cursor<Document> => {
     return new Cursor<Document>(this, {query: query}, options, this._getDocuments);
