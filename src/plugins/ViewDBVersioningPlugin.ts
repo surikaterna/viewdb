@@ -1,5 +1,13 @@
 import { isArray } from 'lodash';
-import ViewDB, { WriteCallback } from '..';
+import ViewDB, {
+  FindAndModifyCallback,
+  FindAndModifyOptions,
+  FindAndModifyResult,
+  Nullable,
+  Query,
+  SortQuery,
+  WriteCallback
+} from '..';
 import { BaseDocument, Collection, MaybeArray, WriteOptions } from '../Collection';
 import { addPlugin, addProperties } from '../plugins/Plugin';
 
@@ -34,7 +42,11 @@ function mutateCollection(viewDb: ViewDB) {
 
 function mutateFindAndModify<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldFindAndModify = collection.findAndModify;
-  collection.findAndModify = (query, sort, update, options, cb) => {
+
+  function findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query): Promise<FindAndModifyResult<Document>>;
+  function findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: FindAndModifyOptions): Promise<FindAndModifyResult<Document>>;
+  function findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: Nullable<FindAndModifyOptions>, cb: FindAndModifyCallback<Document>): void;
+  function findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options?: Nullable<FindAndModifyOptions>, cb?: FindAndModifyCallback<Document>): Promise<FindAndModifyResult<Document>> | void {
     if (!(options && options.skipVersioning)) {
       const inc = update.$inc || {};
       inc.version = 1;
@@ -46,7 +58,9 @@ function mutateFindAndModify<Document extends BaseDocument = Record<string, any>
     }
 
     return oldFindAndModify.apply(collection, [query, sort, update, options, cb]);
-  };
+  }
+
+  collection.findAndModify = findAndModify;
 }
 
 function mutateInsert<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {

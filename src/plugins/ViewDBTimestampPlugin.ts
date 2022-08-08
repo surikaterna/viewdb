@@ -1,5 +1,15 @@
 import { clone, isArray } from 'lodash';
-import ViewDB, { MaybeArray, WriteCallback, WriteOptions } from '..';
+import ViewDB, {
+  FindAndModifyCallback,
+  FindAndModifyOptions,
+  FindAndModifyResult,
+  MaybeArray,
+  Nullable,
+  Query,
+  SortQuery,
+  WriteCallback,
+  WriteOptions
+} from '..';
 import { BaseDocument, Collection } from '../Collection';
 import { addPlugin, addProperties } from '../plugins/Plugin';
 
@@ -37,7 +47,11 @@ function mutateCollection(viewDb: ViewDB) {
 
 function mutateFindAndModify<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
   const oldFindAndModify = collection.findAndModify;
-  collection.findAndModify = (query, sort, update, options, cb) => {
+
+  function findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query): Promise<FindAndModifyResult<Document>>;
+  function findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: FindAndModifyOptions): Promise<FindAndModifyResult<Document>>;
+  function findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: Nullable<FindAndModifyOptions>, cb: FindAndModifyCallback<Document>): void;
+  function findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options?: Nullable<FindAndModifyOptions>, cb?: FindAndModifyCallback<Document>): Promise<FindAndModifyResult<Document>> | void {
     const timestamp = new Date().valueOf();
     const clonedUpdate = clone(update);
     const setOnInsert = clonedUpdate.$setOnInsert || {};
@@ -49,12 +63,14 @@ function mutateFindAndModify<Document extends BaseDocument = Record<string, any>
 
     // if consumer tries to $set createDateTime it will lead to conflict. remove it
     if (set.createDateTime) {
-      delete set.createDateTime;
-    }
+    delete set.createDateTime;
+  }
 
-    clonedUpdate.$set = set;
-    oldFindAndModify.apply(collection, [query, sort, clonedUpdate, options, cb]);
-  };
+  clonedUpdate.$set = set;
+  oldFindAndModify.apply(collection, [query, sort, clonedUpdate, options, cb]);
+  }
+
+  collection.findAndModify = findAndModify
 }
 
 function mutateInsert<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
