@@ -50,8 +50,20 @@ function mutateFindAndModify<Document extends BaseDocument = Record<string, any>
 
   function findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query): Promise<FindAndModifyResult<Document>>;
   function findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: FindAndModifyOptions): Promise<FindAndModifyResult<Document>>;
-  function findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: Nullable<FindAndModifyOptions>, cb: FindAndModifyCallback<Document>): void;
-  function findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options?: Nullable<FindAndModifyOptions>, cb?: FindAndModifyCallback<Document>): Promise<FindAndModifyResult<Document>> | void {
+  function findAndModify(
+    query: Query,
+    sort: Nullable<SortQuery>,
+    update: Query,
+    options: Nullable<FindAndModifyOptions>,
+    cb: FindAndModifyCallback<Document>
+  ): void;
+  function findAndModify(
+    query: Query,
+    sort: Nullable<SortQuery>,
+    update: Query,
+    options?: Nullable<FindAndModifyOptions>,
+    cb?: FindAndModifyCallback<Document>
+  ): Promise<FindAndModifyResult<Document>> | void {
     const timestamp = new Date().valueOf();
     const clonedUpdate = clone(update);
     const setOnInsert = clonedUpdate.$setOnInsert || {};
@@ -63,14 +75,14 @@ function mutateFindAndModify<Document extends BaseDocument = Record<string, any>
 
     // if consumer tries to $set createDateTime it will lead to conflict. remove it
     if (set.createDateTime) {
-    delete set.createDateTime;
+      delete set.createDateTime;
+    }
+
+    clonedUpdate.$set = set;
+    oldFindAndModify.apply(collection, [query, sort, clonedUpdate, options, cb]);
   }
 
-  clonedUpdate.$set = set;
-  oldFindAndModify.apply(collection, [query, sort, clonedUpdate, options, cb]);
-  }
-
-  collection.findAndModify = findAndModify
+  collection.findAndModify = findAndModify;
 }
 
 function mutateInsert<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
@@ -80,7 +92,11 @@ function mutateInsert<Document extends BaseDocument = Record<string, any>>(colle
   function insert(documents: MaybeArray<Document>, callback: WriteCallback<Document>): void;
   function insert(documents: MaybeArray<Document>, options: WriteOptions): Promise<Array<Document>>;
   function insert(documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback<Document>): void;
-  function insert(documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, callback?: WriteCallback<Document>): Promise<Array<Document>> | void {
+  function insert(
+    documents: MaybeArray<Document>,
+    options?: WriteOptions | WriteCallback<Document>,
+    callback?: WriteCallback<Document>
+  ): Promise<Array<Document>> | void {
     if (!(options && 'skipTimestamp' in options)) {
       if (!isArray(documents)) {
         documents = [documents];
@@ -98,7 +114,7 @@ function mutateInsert<Document extends BaseDocument = Record<string, any>>(colle
     oldInsert.apply(collection, [documents, options, callback]);
   }
 
-  collection.insert = insert
+  collection.insert = insert;
 }
 
 function mutateSave<Document extends BaseDocument = Record<string, any>>(collection: Collection<Document>) {
@@ -108,7 +124,11 @@ function mutateSave<Document extends BaseDocument = Record<string, any>>(collect
   function save(documents: MaybeArray<Document>, callback: WriteCallback<Document>): void;
   function save(documents: MaybeArray<Document>, options: WriteOptions): Promise<Array<Document>>;
   function save(documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback<Document>): void;
-  function save(documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, callback?: WriteCallback<Document>): Promise<Array<Document>> | void {
+  function save(
+    documents: MaybeArray<Document>,
+    options?: WriteOptions | WriteCallback<Document>,
+    callback?: WriteCallback<Document>
+  ): Promise<Array<Document>> | void {
     if (!(options && 'skipTimestamp' in options)) {
       const timestamp = new Date().valueOf();
       const newDocs = isArray(documents) ? documents : [documents];

@@ -1,13 +1,5 @@
 import { isArray } from 'lodash';
-import ViewDB, {
-  FindAndModifyCallback,
-  FindAndModifyOptions,
-  FindAndModifyResult,
-  Nullable,
-  Query,
-  SortQuery,
-  WriteCallback
-} from '..';
+import ViewDB, { FindAndModifyCallback, FindAndModifyOptions, FindAndModifyResult, Nullable, Query, SortQuery, WriteCallback } from '..';
 import { BaseDocument, Collection, MaybeArray, WriteOptions } from '../Collection';
 import { addPlugin, addProperties } from '../plugins/Plugin';
 
@@ -45,8 +37,20 @@ function mutateFindAndModify<Document extends BaseDocument = Record<string, any>
 
   function findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query): Promise<FindAndModifyResult<Document>>;
   function findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: FindAndModifyOptions): Promise<FindAndModifyResult<Document>>;
-  function findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: Nullable<FindAndModifyOptions>, cb: FindAndModifyCallback<Document>): void;
-  function findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options?: Nullable<FindAndModifyOptions>, cb?: FindAndModifyCallback<Document>): Promise<FindAndModifyResult<Document>> | void {
+  function findAndModify(
+    query: Query,
+    sort: Nullable<SortQuery>,
+    update: Query,
+    options: Nullable<FindAndModifyOptions>,
+    cb: FindAndModifyCallback<Document>
+  ): void;
+  function findAndModify(
+    query: Query,
+    sort: Nullable<SortQuery>,
+    update: Query,
+    options?: Nullable<FindAndModifyOptions>,
+    cb?: FindAndModifyCallback<Document>
+  ): Promise<FindAndModifyResult<Document>> | void {
     if (!(options && options.skipVersioning)) {
       const inc = update.$inc || {};
       inc.version = 1;
@@ -70,7 +74,11 @@ function mutateInsert<Document extends BaseDocument = Record<string, any>>(colle
   function insert(documents: MaybeArray<Document>, callback: WriteCallback<Document>): void;
   function insert(documents: MaybeArray<Document>, options: WriteOptions): Promise<Array<Document>>;
   function insert(documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback<Document>): void;
-  function insert(documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, callback?: WriteCallback<Document>): Promise<Array<Document>> | void {
+  function insert(
+    documents: MaybeArray<Document>,
+    options?: WriteOptions | WriteCallback<Document>,
+    callback?: WriteCallback<Document>
+  ): Promise<Array<Document>> | void {
     setVersions(documents, options);
     return oldInsert.apply(collection, [documents, options, callback]);
   }
@@ -85,7 +93,11 @@ function mutateSave<Document extends BaseDocument = Record<string, any>>(collect
   function save(documents: MaybeArray<Document>, callback: WriteCallback<Document>): void;
   function save(documents: MaybeArray<Document>, options: WriteOptions): Promise<Array<Document>>;
   function save(documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback<Document>): void;
-  function save(documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, callback?: WriteCallback<Document>): Promise<Array<Document>> | void {
+  function save(
+    documents: MaybeArray<Document>,
+    options?: WriteOptions | WriteCallback<Document>,
+    callback?: WriteCallback<Document>
+  ): Promise<Array<Document>> | void {
     setVersions(documents, options);
     return oldSave.apply(collection, [documents, options, callback]);
   }
@@ -104,4 +116,4 @@ function setVersions<Document>(docs: MaybeArray<Document>, options?: WriteOption
   }
 }
 
-const getNewVersion = (version?: number): number => version === undefined ? 0 : version + 1;
+const getNewVersion = (version?: number): number => (version === undefined ? 0 : version + 1);

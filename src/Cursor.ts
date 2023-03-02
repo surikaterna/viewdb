@@ -1,14 +1,5 @@
 import { forEach, isFunction } from 'lodash';
-import {
-  BaseDocument,
-  Collection,
-  CollectionCountCallback,
-  GetDocumentsCallback,
-  GetDocumentsFunc,
-  Nullable,
-  QueryObject,
-  SortQuery
-} from './Collection';
+import { BaseDocument, Collection, CollectionCountCallback, GetDocumentsCallback, GetDocumentsFunc, Nullable, QueryObject, SortQuery } from './Collection';
 import Observe, { ObserverOptions } from './Observer';
 import { maybePromise } from './utils/promiseUtils';
 
@@ -45,7 +36,7 @@ export default class Cursor<Document extends BaseDocument = Record<string, any>>
     }
 
     return maybePromise<number, number>(callback, (done) => {
-      const query: QueryObject = {query: this._query.query};
+      const query: QueryObject = { query: this._query.query };
       if (applySkipLimit) {
         if (this._query.skip) {
           query.skip = this._query.skip;
@@ -68,7 +59,7 @@ export default class Cursor<Document extends BaseDocument = Record<string, any>>
         return done(null, res.length);
       });
     });
-  };
+  }
 
   // TODO: Should call the callback with each document, not with the list every time
   forEach = (callback: CursorForEachCallback<Document>) => {

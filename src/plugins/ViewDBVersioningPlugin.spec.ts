@@ -17,19 +17,19 @@ describe('ViewDB versioning plugin', () => {
 
     collection = viewDb.collection('test');
     currentTime = new Date().valueOf();
-    doc123 = {id: doc123Id};
-    doc999 = {id: doc999Id};
+    doc123 = { id: doc123Id };
+    doc999 = { id: doc999Id };
   });
 
   it('should add version on insert', async () => {
     const collection = viewDb.collection('test');
     await collection.insert(doc123);
-    const docs = await collection.find({id: doc123Id}).toArray();
+    const docs = await collection.find({ id: doc123Id }).toArray();
     expect(docs[0].version).toBe(0);
   });
 
   it('should add version on bulk insert', async () => {
-    await collection.insert([{id: doc123Id}, {id: doc999Id}]);
+    await collection.insert([{ id: doc123Id }, { id: doc999Id }]);
     const docs = await collection.find({}).toArray();
     expect(docs[0].version).toBe(0);
     expect(docs[1].version).toBe(0);
@@ -40,14 +40,17 @@ describe('ViewDB versioning plugin', () => {
     doc123.name = 'Pelle';
     await collection.save(doc123);
 
-    const docs = await collection.find({id: doc123Id}).toArray();
+    const docs = await collection.find({ id: doc123Id }).toArray();
     const doc = docs[0];
     expect(doc.version).toBe(1);
     expect(doc.name).toBe('Pelle');
   });
 
   it('should increase version on bulk save', async () => {
-    await collection.insert([{_id: doc123Id, version: 10}, {_id: doc999Id, version: 101}]);
+    await collection.insert([
+      { _id: doc123Id, version: 10 },
+      { _id: doc999Id, version: 101 }
+    ]);
     const insertedDocs = await collection.find({}).toArray();
 
     forEach(insertedDocs, (doc, index) => {
@@ -83,8 +86,8 @@ describe('ViewDB versioning plugin', () => {
     expect(insertedDocs[0].version).toBe(0);
 
     doc123.name = 'Pelle';
-    await collection.save(doc123, {skipVersioning: true});
-    const docs = await collection.find({id: doc123Id}).toArray();
+    await collection.save(doc123, { skipVersioning: true });
+    const docs = await collection.find({ id: doc123Id }).toArray();
     const doc = docs[0];
 
     expect(doc.version).toBe(0);
@@ -96,7 +99,7 @@ describe('ViewDB versioning plugin', () => {
       doc123.name = 'Pelle';
       doc123.version = undefined;
       collection.save(doc123, async () => {
-        const docs = await collection.find({id: doc123Id}).toArray();
+        const docs = await collection.find({ id: doc123Id }).toArray();
         const doc = docs[0];
         expect(doc.version).toBe(0);
         expect(doc.name).toBe('Pelle');

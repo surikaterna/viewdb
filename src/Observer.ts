@@ -52,11 +52,7 @@ export default class Observer<Document extends BaseDocument = Record<string, any
 
         const old = this._cache;
 
-        this._cache = merge(
-          old,
-          result,
-          this._mergeOptions
-        );
+        this._cache = merge(old, result, this._mergeOptions);
       }
     });
   };

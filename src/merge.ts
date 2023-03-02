@@ -14,7 +14,11 @@ export interface MergerOptions<Element> {
   removed?(element: Element, index: number): void;
 }
 
-export default function merge<Element>(asis: Nullable<ArrayLike<Element> | undefined>, tobe: ArrayLike<Element>, options: MergerOptions<Element> = {}): Array<Element> {
+export default function merge<Element>(
+  asis: Nullable<ArrayLike<Element> | undefined>,
+  tobe: ArrayLike<Element>,
+  options: MergerOptions<Element> = {}
+): Array<Element> {
   const comparator = options.comparator || isEqual;
   const comparatorId = options.comparatorId || comparator;
   const list = slice(asis) as Array<Element>;

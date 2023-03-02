@@ -140,13 +140,23 @@ export interface Collection<Document extends BaseDocument = Record<string, any>>
   findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query): Promise<FindAndModifyResult<Document>>;
   findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: FindAndModifyOptions): Promise<FindAndModifyResult<Document>>;
   findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: Nullable<FindAndModifyOptions>, cb: FindAndModifyCallback<Document>): void;
-  findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options?: Nullable<FindAndModifyOptions>, cb?: FindAndModifyCallback<Document>): Promise<FindAndModifyResult<Document>> | void;
+  findAndModify(
+    query: Query,
+    sort: Nullable<SortQuery>,
+    update: Query,
+    options?: Nullable<FindAndModifyOptions>,
+    cb?: FindAndModifyCallback<Document>
+  ): Promise<FindAndModifyResult<Document>> | void;
 
   insert(documents: MaybeArray<Document>): Promise<Array<Document>>;
   insert(documents: MaybeArray<Document>, callback: WriteCallback<Document>): void;
   insert(documents: MaybeArray<Document>, options: WriteOptions): Promise<Array<Document>>;
   insert(documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback<Document>): void;
-  insert(documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, callback?: WriteCallback<Document>): Promise<Array<Document>> | void;
+  insert(
+    documents: MaybeArray<Document>,
+    options?: WriteOptions | WriteCallback<Document>,
+    callback?: WriteCallback<Document>
+  ): Promise<Array<Document>> | void;
 
   remove(query: Query): Promise<WriteResult>;
   remove(query: Query, options: Nullable<RemoveOptions | RemoveJustOne>): Promise<WriteResult>;

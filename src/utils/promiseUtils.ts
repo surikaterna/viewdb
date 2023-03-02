@@ -7,12 +7,8 @@ export interface Callback<T, R = T> {
 /**
  * Will return a Promise if callback is undefined, and void if a callback is provided.
  */
-export function maybePromise<T, R = T>(
-  callback: Callback<T, R> | undefined,
-  wrapper: (fn: Callback<T, R>) => void
-): Promise<R> | void {
-  let fallbackCallback: Callback<T, R> = callback ?? (() => {
-  });
+export function maybePromise<T, R = T>(callback: Callback<T, R> | undefined, wrapper: (fn: Callback<T, R>) => void): Promise<R> | void {
+  let fallbackCallback: Callback<T, R> = callback ?? (() => {});
   let result: Promise<R> | void;
 
   if (typeof callback !== 'function') {

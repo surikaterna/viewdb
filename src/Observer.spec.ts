@@ -20,12 +20,12 @@ describe('Observe', () => {
         done();
       }
     });
-    collection.insert({_id: 'echo'});
+    collection.insert({ _id: 'echo' });
   });
 
   it('#observe with query and insert', (done) => {
-    collection.insert({_id: 'echo'}, () => {
-      const cursor = collection.find({_id: 'echo2'});
+    collection.insert({ _id: 'echo' }, () => {
+      const cursor = collection.find({ _id: 'echo2' });
       const handle = cursor.observe({
         added: (doc) => {
           expect(doc._id).toBe('echo2');
@@ -33,12 +33,12 @@ describe('Observe', () => {
           done();
         }
       });
-      collection.insert({_id: 'echo2'});
+      collection.insert({ _id: 'echo2' });
     });
   });
 
   it('#observe with query and update', (done) => {
-    const cursor = collection.find({_id: 'echo'});
+    const cursor = collection.find({ _id: 'echo' });
     const handle = cursor.observe({
       added: (doc) => {
         expect(doc.age).toBe(10);
@@ -52,8 +52,8 @@ describe('Observe', () => {
       }
     });
 
-    collection.insert({_id: 'echo', age: 10}, () => {
-      collection.save({_id: 'echo', age: 100});
+    collection.insert({ _id: 'echo', age: 10 }, () => {
+      collection.save({ _id: 'echo', age: 100 });
     });
   });
 
@@ -76,9 +76,9 @@ describe('Observe', () => {
       }
     });
 
-    collection.insert({_id: 'echo'});
-    collection.insert({_id: 'echo2'});
-    collection.insert({_id: 'echo3'});
+    collection.insert({ _id: 'echo' });
+    collection.insert({ _id: 'echo2' });
+    collection.insert({ _id: 'echo3' });
   });
 
   it('#observe with no results', (done) => {
@@ -93,7 +93,7 @@ describe('Observe', () => {
   });
 
   it('#observe with init after one insert', (done) => {
-    collection.insert({_id: 'echo'}, () => {
+    collection.insert({ _id: 'echo' }, () => {
       const cursor = collection.find({});
       const handle = cursor.observe({
         init: (coll) => {
@@ -118,6 +118,6 @@ describe('Observe', () => {
       }
     });
 
-    collection.insert({_id: 'echo'});
+    collection.insert({ _id: 'echo' });
   });
 });

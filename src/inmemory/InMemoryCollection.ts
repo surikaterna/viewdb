@@ -48,7 +48,13 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
   findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query): Promise<FindAndModifyResult<Document>>;
   findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: FindAndModifyOptions): Promise<FindAndModifyResult<Document>>;
   findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options: Nullable<FindAndModifyOptions>, cb: FindAndModifyCallback<Document>): void;
-  findAndModify(query: Query, sort: Nullable<SortQuery>, update: Query, options?: Nullable<FindAndModifyOptions>, cb?: FindAndModifyCallback<Document>): Promise<FindAndModifyResult<Document>> | void {
+  findAndModify(
+    query: Query,
+    sort: Nullable<SortQuery>,
+    update: Query,
+    options?: Nullable<FindAndModifyOptions>,
+    cb?: FindAndModifyCallback<Document>
+  ): Promise<FindAndModifyResult<Document>> | void {
     return maybePromise(cb, (done) => {
       done(new Error('findAndModify not supported!'));
     });
@@ -86,16 +92,20 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
   }
 
   find = (query: Query, options?: FindOptions): Cursor<Document> => {
-    return new Cursor<Document>(this, {query: query}, options, this._getDocuments);
+    return new Cursor<Document>(this, { query: query }, options, this._getDocuments);
   };
 
   insert(documents: MaybeArray<Document>): Promise<Array<Document>>;
   insert(documents: MaybeArray<Document>, callback: WriteCallback<Document>): void;
   insert(documents: MaybeArray<Document>, options: WriteOptions): Promise<Array<Document>>;
   insert(documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback<Document>): void;
-  insert(documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, callback?: WriteCallback<Document>): Promise<Array<Document>> | void {
+  insert(
+    documents: MaybeArray<Document>,
+    options?: WriteOptions | WriteCallback<Document>,
+    callback?: WriteCallback<Document>
+  ): Promise<Array<Document>> | void {
     return this.write('insert', documents, options, callback);
-  };
+  }
 
   remove(query: Query): Promise<WriteResult>;
   remove(query: Query, options: Nullable<RemoveOptions | RemoveJustOne>): Promise<WriteResult>;
@@ -112,7 +122,7 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
         });
       });
     });
-  };
+  }
 
   save(documents: MaybeArray<Document>): Promise<Array<Document>>;
   save(documents: MaybeArray<Document>, options: WriteOptions): Promise<Array<Document>>;
@@ -120,7 +130,7 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
   save(documents: MaybeArray<Document>, options: WriteOptions, callback: WriteCallback<Document>): void;
   save(documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, callback?: WriteCallback<Document>): Promise<Array<Document>> | void {
     return this.write('save', documents, options, callback);
-  };
+  }
 
   _getDocuments = (queryObject: QueryObject, callback: GetDocumentsCallback<Document>): void => {
     const query = queryObject.query || queryObject;
@@ -144,10 +154,13 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
     });
   };
 
-  private write(op: WriteOperation, documents: MaybeArray<Document>, options?: WriteOptions | WriteCallback<Document>, optionalCallback?: WriteCallback<Document>): Promise<Array<Document>> | void {
-    const callback = checkIsWriteCallback<Document>(options)
-      ? options
-      : optionalCallback;
+  private write(
+    op: WriteOperation,
+    documents: MaybeArray<Document>,
+    options?: WriteOptions | WriteCallback<Document>,
+    optionalCallback?: WriteCallback<Document>
+  ): Promise<Array<Document>> | void {
+    const callback = checkIsWriteCallback<Document>(options) ? options : optionalCallback;
 
     return maybePromise<Document, Array<Document>>(callback, (done) => {
       if (!isArray(documents)) {
@@ -165,7 +178,7 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
           document._id = document.id || uuid();
         }
 
-        const idx = findIndex<BaseDocument>(this.documents, {_id: document._id});
+        const idx = findIndex<BaseDocument>(this.documents, { _id: document._id });
 
         if (op === 'insert' && idx >= 0) {
           return done(new Error('Unique constraint!'));
@@ -182,5 +195,5 @@ export default class InMemoryCollection<Document extends BaseDocument = Record<s
       this.emit('change', documents);
       return done(null, documents);
     });
-  };
+  }
 }
