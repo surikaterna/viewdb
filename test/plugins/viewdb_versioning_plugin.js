@@ -3,8 +3,8 @@ var _ = require('lodash');
 var ViewDb = require('../..');
 var ViewDbVersioningPlugin = require('../..').plugins.VersioningPlugin;
 
-describe('Viewdb versioning plugin', function () {
-  it('should add version on insert', function (done) {
+describe('Viewdb versioning plugin', () => {
+  it('should add version on insert', done => {
     var viewDb = new ViewDb();
     new ViewDbVersioningPlugin(viewDb);
     var obj = { id: '123' };
@@ -19,7 +19,7 @@ describe('Viewdb versioning plugin', function () {
       done();
     });
   });
-  it('should add version on builk insert', function (done) {
+  it('should add version on builk insert', done => {
     var viewDb = new ViewDb();
     new ViewDbVersioningPlugin(viewDb);
 
@@ -32,7 +32,7 @@ describe('Viewdb versioning plugin', function () {
       done();
     });
   });
-  it('should increase version on save', function (done) {
+  it('should increase version on save', done => {
     var viewDb = new ViewDb();
     new ViewDbVersioningPlugin(viewDb);
     var obj = { id: '123' };
@@ -50,7 +50,7 @@ describe('Viewdb versioning plugin', function () {
     });
   });
 
-  it('should increase version on bulk save', function (done) {
+  it('should increase version on bulk save', done => {
     var viewDb = new ViewDb();
     new ViewDbVersioningPlugin(viewDb);
 
@@ -71,24 +71,27 @@ describe('Viewdb versioning plugin', function () {
       });
     });
   });
-  it('should skip changing version with skipVersioning option on save', function (done) {
-    var viewDb = new ViewDb();
-    new ViewDbVersioningPlugin(viewDb);
-    var obj = { id: '123' };
+  it(
+    'should skip changing version with skipVersioning option on save',
+    done => {
+      var viewDb = new ViewDb();
+      new ViewDbVersioningPlugin(viewDb);
+      var obj = { id: '123' };
 
-    var collection = viewDb.collection('test');
-    collection.insert(obj);
-    obj.name = 'Pelle';
-    collection.save(obj, {skipVersioning: true});
+      var collection = viewDb.collection('test');
+      collection.insert(obj);
+      obj.name = 'Pelle';
+      collection.save(obj, {skipVersioning: true});
 
-    collection.find({ id: '123' }).toArray(function (err, objects) {
-      var object = objects[0];
-      expect(object.version).toBe(0); // still version 0
-      expect(object.name).toBe('Pelle');
-      done();
-    });
-  });  
-  it('should add version on save', function (done) {
+      collection.find({ id: '123' }).toArray(function (err, objects) {
+        var object = objects[0];
+        expect(object.version).toBe(0); // still version 0
+        expect(object.name).toBe('Pelle');
+        done();
+      });
+    }
+  );  
+  it('should add version on save', done => {
     var viewDb = new ViewDb();
     new ViewDbVersioningPlugin(viewDb);
     var obj = { id: '123' };

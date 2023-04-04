@@ -1,9 +1,9 @@
 var ViewDB = require('..');
 
 
-describe('ViewDB', function () {
-  describe('#count', function () {
-    it('should return 0 for empty collection', function (done) {
+describe('ViewDB', () => {
+  describe('#count', () => {
+    it('should return 0 for empty collection', done => {
       var db = new ViewDB();
       var collection = db.collection('documents');
       // Perform a total count command
@@ -13,8 +13,8 @@ describe('ViewDB', function () {
       });
     });
   });
-  describe('#insert', function () {
-    it('should store a document and include it in count', function (done) {
+  describe('#insert', () => {
+    it('should store a document and include it in count', done => {
       var db = new ViewDB();
       var collection = db.collection('documents');
       collection.insert({ a: 1 }, function (err, ids) {
@@ -28,7 +28,7 @@ describe('ViewDB', function () {
         });
       });
     });
-    it('should add id on insert if missing', function (done) {
+    it('should add id on insert if missing', done => {
       var db = new ViewDB();
       var collection = db.collection('documents');
       collection.insert({ a: 1 }, function (err, ids) {
@@ -38,7 +38,7 @@ describe('ViewDB', function () {
         });
       });
     });
-    it('should fail at storing a previously stored document', function (done) {
+    it('should fail at storing a previously stored document', done => {
       var db = new ViewDB();
       var collection = db.collection('documents');
       collection.insert({ '_id': 1, a: 1 });
@@ -48,7 +48,7 @@ describe('ViewDB', function () {
       });
     });
 
-    it('should fail at storing an empty document', function (done) {
+    it('should fail at storing an empty document', done => {
       var db = new ViewDB();
       var collection = db.collection('documents');
       collection.insert(1, function (err, ids) {
@@ -56,7 +56,7 @@ describe('ViewDB', function () {
         done();
       });
     });
-    it('#insert bulk should work', function (done) {
+    it('#insert bulk should work', done => {
       var db = new ViewDB();
       var collection = db.collection('documents');
       collection.insert([{ a: 1 }, { b: 2 }], function (err, ids) {
@@ -67,8 +67,8 @@ describe('ViewDB', function () {
       });
     });
   });
-  describe('#save', function () {
-    it('should save multiple', function (done) {
+  describe('#save', () => {
+    it('should save multiple', done => {
       var db = new ViewDB();
       var collection = db.collection('documents');
       collection.insert([{ _id: 1, a: 1 }, { _id: 2, b: 2 }], function () {
@@ -82,7 +82,7 @@ describe('ViewDB', function () {
         });
       });
     });
-    it('should add id on insert if missing', function (done) {
+    it('should add id on insert if missing', done => {
       var db = new ViewDB();
       var collection = db.collection('documents');
       collection.save({ a: 1 });
@@ -92,7 +92,7 @@ describe('ViewDB', function () {
         done();
       })
     });
-    it('should add document on save', function (done) {
+    it('should add document on save', done => {
       var db = new ViewDB();
       var collection = db.collection('documents');
       collection.save({ a: 1 }, function (err, ids) {
@@ -104,7 +104,7 @@ describe('ViewDB', function () {
         //done();
       });
     });
-    it('should merge if id exists', function (done) {
+    it('should merge if id exists', done => {
       var db = new ViewDB();
       var collection = db.collection('documents');
       collection.save({ a: 1 }, function (err, docs) {
@@ -119,8 +119,8 @@ describe('ViewDB', function () {
       });
     });
   });
-  describe('#find', function () {
-    it('find all documents', function (done) {
+  describe('#find', () => {
+    it('find all documents', done => {
       var db = new ViewDB();
       var collection = db.collection('documents');
       collection.insert({ a: 1 }, function (err, ids) {
@@ -131,7 +131,7 @@ describe('ViewDB', function () {
         });
       });
     });
-    it('find one document', function (done) {
+    it('find one document', done => {
       var db = new ViewDB();
       var collection = db.collection('documents');
       collection.insert({ a: 1 }, function (err, ids) {
@@ -142,19 +142,22 @@ describe('ViewDB', function () {
         });
       });
     });
-    it('should return empty collection if query does not match', function (done) {
-      var db = new ViewDB();
-      var collection = db.collection('documents');
-      collection.insert({ a: 1 }, function (err, ids) {
-        collection.find({ _id: 5 }).toArray(function (err, docs) {
-          expect(docs.length).toBe(0);
-          done();
+    it(
+      'should return empty collection if query does not match',
+      done => {
+        var db = new ViewDB();
+        var collection = db.collection('documents');
+        collection.insert({ a: 1 }, function (err, ids) {
+          collection.find({ _id: 5 }).toArray(function (err, docs) {
+            expect(docs.length).toBe(0);
+            done();
+          });
         });
-      });
-    });
+      }
+    );
   });
-  describe('#remove', function () {
-    it('should remove one document matching a query', function (done) {
+  describe('#remove', () => {
+    it('should remove one document matching a query', done => {
       var db = new ViewDB();
       var collection = db.collection('documents');
       collection.insert({ a: 1, name: 'hello' }, function (err, ids) {
@@ -167,21 +170,24 @@ describe('ViewDB', function () {
       });
     })
 
-    it('shouldnt do anything when no documents are matched against the query', function (done) {
-      var db = new ViewDB();
-      var collection = db.collection('documents');
-      collection.insert({ a: 1, name: 'hello' }, function (err, ids) {
-        collection.remove({ name: 'world' }, null, function (err, docs) {
-          collection.find({}).toArray(function (err, res) {
-            expect(res.length).toBe(1);
-            done();
-          });
-        })
-      });
-    });
+    it(
+      'shouldnt do anything when no documents are matched against the query',
+      done => {
+        var db = new ViewDB();
+        var collection = db.collection('documents');
+        collection.insert({ a: 1, name: 'hello' }, function (err, ids) {
+          collection.remove({ name: 'world' }, null, function (err, docs) {
+            collection.find({}).toArray(function (err, res) {
+              expect(res.length).toBe(1);
+              done();
+            });
+          })
+        });
+      }
+    );
   });
-  describe('#drop', function () {
-    it('should remove all documents', function (done) {
+  describe('#drop', () => {
+    it('should remove all documents', done => {
       var store = new ViewDB();
       store.open().then(function () {
         store.collection('dollhouse').insert({ _id: 'echo' });

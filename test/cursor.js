@@ -1,8 +1,8 @@
 var Cursor = require('../lib/cursor');
 var ViewDB = require('..');
 
-describe('Cursor', function () {
-  it('#toArray', function (done) {
+describe('Cursor', () => {
+  it('#toArray', done => {
     var cursor = new Cursor(null, {}, null, function (query, callback) {
       callback(null, [1, 2, 3, 4]);
     });
@@ -11,7 +11,7 @@ describe('Cursor', function () {
       done();
     });
   });
-  it('#forEach', function (done) {
+  it('#forEach', done => {
     var cursor = new Cursor(null, {}, null, function (query, callback) {
       callback(null, [1, 2, 3, 4]);
     });
@@ -25,7 +25,7 @@ describe('Cursor', function () {
       done();
     }, 0);
   });
-  it('#skip', function (done) {
+  it('#skip', done => {
     var db = new ViewDB();
     var collection = db.collection('documents');
     for (var i = 0; i < 10; i++) {
@@ -36,7 +36,7 @@ describe('Cursor', function () {
       done();
     });
   });
-  it('#limit', function (done) {
+  it('#limit', done => {
     var db = new ViewDB();
     var collection = db.collection('documents');
     for (var i = 0; i < 10; i++) {
@@ -48,7 +48,7 @@ describe('Cursor', function () {
       done();
     });
   });
-  it('#sort', function (done) {
+  it('#sort', done => {
     var db = new ViewDB();
     var collection = db.collection('documents');
     for (var i = 0; i < 10; i++) {
@@ -59,7 +59,7 @@ describe('Cursor', function () {
       done();
     });
   });
-  it('#sort desc', function (done) {
+  it('#sort desc', done => {
     var db = new ViewDB();
     var collection = db.collection('documents');
     for (var i = 0; i < 10; i++) {
@@ -70,7 +70,7 @@ describe('Cursor', function () {
       done();
     });
   });
-  it('#skip/limit', function (done) {
+  it('#skip/limit', done => {
     var db = new ViewDB();
     var collection = db.collection('documents');
     for (var i = 0; i < 10; i++) {
