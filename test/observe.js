@@ -2,7 +2,7 @@ var ViewDb = require('..');
 var _ = require('lodash');
 
 describe('Observe', () => {
-  it('#observe with insert', done => {
+  it('#observe with insert', (done) => {
     var store = new ViewDb();
     store.open().then(function () {
       var cursor = store.collection('dollhouse').find({});
@@ -16,7 +16,7 @@ describe('Observe', () => {
       store.collection('dollhouse').insert({ _id: 'echo' });
     });
   });
-  it('#observe with query and insert', done => {
+  it('#observe with query and insert', (done) => {
     var store = new ViewDb();
     store.open().then(function () {
       store.collection('dollhouse').insert({ _id: 'echo' });
@@ -30,7 +30,7 @@ describe('Observe', () => {
       store.collection('dollhouse').insert({ _id: 'echo2' });
     });
   });
-  it('#observe with query and update', done => {
+  it('#observe with query and update', (done) => {
     var store = new ViewDb();
     store.open().then(function () {
       var cursor = store.collection('dollhouse').find({ _id: 'echo' });
@@ -38,7 +38,8 @@ describe('Observe', () => {
         added: function (x) {
           expect(x.age).toBe(10);
           expect(x._id).toBe('echo');
-        }, changed: function (o, n) {
+        },
+        changed: function (o, n) {
           expect(o.age).toBe(10);
           expect(n.age).toBe(100);
           handle.stop();
@@ -51,7 +52,7 @@ describe('Observe', () => {
       });
     });
   });
-  it('#observe with query and skip', done => {
+  it('#observe with query and skip', (done) => {
     var store = new ViewDb();
     store.open().then(function () {
       store.collection('dollhouse').insert({ _id: 'echo' });
@@ -65,7 +66,7 @@ describe('Observe', () => {
           expect(res.length).toBe(0);
           handle.stop();
           done();
-        })
+        });
       });
       var handle = cursor.observe({
         added: function (x) {
@@ -75,7 +76,7 @@ describe('Observe', () => {
       });
     });
   });
-  it('#observe with no results', done => {
+  it('#observe with no results', (done) => {
     var store = new ViewDb();
     store.open().then(function () {
       var cursor = store.collection('dollhouse').find({});
@@ -88,7 +89,7 @@ describe('Observe', () => {
       });
     });
   });
-  it('#observe with init after one insert', done => {
+  it('#observe with init after one insert', (done) => {
     var store = new ViewDb();
     store.collection('dollhouse').insert({ _id: 'echo' }, function () {
       store.open().then(function () {
@@ -103,7 +104,7 @@ describe('Observe', () => {
       });
     });
   });
-  it('#observe with one insert after init', done => {
+  it('#observe with one insert after init', (done) => {
     var store = new ViewDb();
     store.open().then(function () {
       var cursor = store.collection('dollhouse').find({});

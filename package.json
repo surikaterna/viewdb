@@ -11,6 +11,7 @@
     "test.watch": "jest test --watch",
     "coverage": "jest test --collectCoverage",
     "coverage-start": "npm run coverage && start coverage/lcov-report/index.html",
+    "format": "prettier --write lib test",
     "jshint": "jshint ./lib",
     "jscs": "jscs -p google ./lib"
   },
@@ -24,7 +25,9 @@
   "devDependencies": {
     "es-jest": "^2.1.0",
     "jest": "^29.5.0",
-    "jshint": "^2.5.10"
+    "jshint": "^2.5.10",
+    "prettier": "^2.8.7",
+    "prettier-config-surikaterna": "^1.0.1"
   },
   "dependencies": {
     "bluebird": "^2.9.30",
