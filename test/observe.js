@@ -21,7 +21,7 @@ describe('Observe', () => {
     store.open().then(function () {
       store.collection('dollhouse').insert({ _id: 'echo' });
       var cursor = store.collection('dollhouse').find({ _id: 'echo2' });
-      var handle = cursor.observe({
+      cursor.observe({
         added: function (x) {
           expect(x._id).toBe('echo2');
           done();
@@ -69,7 +69,7 @@ describe('Observe', () => {
         });
       });
       var handle = cursor.observe({
-        added: function (x) {
+        added: function () {
           cursor.skip(++skip);
           realDone();
         }

@@ -37,7 +37,6 @@ describe('Viewdb timestamp plugin', () => {
     setTimeout(function () {
       collection.insert([{ _id: '123' }, { _id: '999' }], function () {
         collection.find({}).toArray(function (err, objects) {
-          var object = objects[0];
           var hasError = false;
           objects.forEach(function (object) {
             expect(object.createDateTime).exists;

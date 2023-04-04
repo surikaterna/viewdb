@@ -16,7 +16,7 @@ describe('ViewDB', () => {
     it('should store a document and include it in count', (done) => {
       var db = new ViewDB();
       var collection = db.collection('documents');
-      collection.insert({ a: 1 }, function (err, ids) {
+      collection.insert({ a: 1 }, function (err) {
         expect(err).toBeFalsy();
         // Perform a total count command
         collection.count(function (err, count) {
@@ -30,7 +30,7 @@ describe('ViewDB', () => {
     it('should add id on insert if missing', (done) => {
       var db = new ViewDB();
       var collection = db.collection('documents');
-      collection.insert({ a: 1 }, function (err, ids) {
+      collection.insert({ a: 1 }, function () {
         collection.find({ a: 1 }).toArray(function (err, res) {
           expect(res[0]._id).toBeDefined();
           done();
@@ -41,7 +41,7 @@ describe('ViewDB', () => {
       var db = new ViewDB();
       var collection = db.collection('documents');
       collection.insert({ _id: 1, a: 1 });
-      collection.insert({ _id: 1, a: 2 }, function (err, ids) {
+      collection.insert({ _id: 1, a: 2 }, function (err) {
         expect(err).toBeDefined();
         done();
       });
@@ -50,7 +50,7 @@ describe('ViewDB', () => {
     it('should fail at storing an empty document', (done) => {
       var db = new ViewDB();
       var collection = db.collection('documents');
-      collection.insert(1, function (err, ids) {
+      collection.insert(1, function (err) {
         expect(err).toBeDefined();
         done();
       });
@@ -58,7 +58,7 @@ describe('ViewDB', () => {
     it('#insert bulk should work', (done) => {
       var db = new ViewDB();
       var collection = db.collection('documents');
-      collection.insert([{ a: 1 }, { b: 2 }], function (err, ids) {
+      collection.insert([{ a: 1 }, { b: 2 }], function () {
         collection.count(function (err, res) {
           expect(res).toBe(2);
         });
@@ -106,7 +106,7 @@ describe('ViewDB', () => {
     it('should add document on save', (done) => {
       var db = new ViewDB();
       var collection = db.collection('documents');
-      collection.save({ a: 1 }, function (err, ids) {
+      collection.save({ a: 1 }, function () {
         collection.count(function (err, count) {
           expect(count).toBe(1);
           done();
@@ -120,7 +120,7 @@ describe('ViewDB', () => {
       var collection = db.collection('documents');
       collection.save({ a: 1 }, function (err, docs) {
         docs[0]['b'] = 2;
-        collection.save(docs, function (err, ids) {
+        collection.save(docs, function () {
           collection.count(function (err, count) {
             expect(count).toBe(1);
             done();
@@ -133,7 +133,7 @@ describe('ViewDB', () => {
     it('find all documents', (done) => {
       var db = new ViewDB();
       var collection = db.collection('documents');
-      collection.insert({ a: 1 }, function (err, ids) {
+      collection.insert({ a: 1 }, function () {
         collection.find({}).toArray(function (err, docs) {
           expect(docs.length).toBe(1);
           expect(docs[0].a).toBe(1);
@@ -155,7 +155,7 @@ describe('ViewDB', () => {
     it('should return empty collection if query does not match', (done) => {
       var db = new ViewDB();
       var collection = db.collection('documents');
-      collection.insert({ a: 1 }, function (err, ids) {
+      collection.insert({ a: 1 }, function () {
         collection.find({ _id: 5 }).toArray(function (err, docs) {
           expect(docs.length).toBe(0);
           done();
@@ -167,8 +167,8 @@ describe('ViewDB', () => {
     it('should remove one document matching a query', (done) => {
       var db = new ViewDB();
       var collection = db.collection('documents');
-      collection.insert({ a: 1, name: 'hello' }, function (err, ids) {
-        collection.remove({ name: 'hello' }, null, function (err, docs) {
+      collection.insert({ a: 1, name: 'hello' }, function () {
+        collection.remove({ name: 'hello' }, null, function () {
           collection.find({}).toArray(function (err, res) {
             expect(res.length).toBe(0);
             done();
@@ -180,8 +180,8 @@ describe('ViewDB', () => {
     it('shouldnt do anything when no documents are matched against the query', (done) => {
       var db = new ViewDB();
       var collection = db.collection('documents');
-      collection.insert({ a: 1, name: 'hello' }, function (err, ids) {
-        collection.remove({ name: 'world' }, null, function (err, docs) {
+      collection.insert({ a: 1, name: 'hello' }, function () {
+        collection.remove({ name: 'world' }, null, function () {
           collection.find({}).toArray(function (err, res) {
             expect(res.length).toBe(1);
             done();

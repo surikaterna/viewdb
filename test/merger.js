@@ -1,25 +1,6 @@
 var _ = require('lodash');
 var merge = require('../lib/merger');
 
-var logger = {
-  added: function () {
-    console.log('added: ');
-    console.log(arguments);
-  },
-  removed: function () {
-    console.log('removed: ');
-    console.log(arguments);
-  },
-  changed: function () {
-    console.log('changed: ');
-    console.log(arguments);
-  },
-  moved: function () {
-    console.log('moved: ');
-    console.log(arguments);
-  }
-};
-
 describe('Merger', () => {
   it('#merge with remove element', (done) => {
     var l1 = [{ a: 1 }, 'b', 'd'];
@@ -82,7 +63,7 @@ describe('Merger', () => {
         expect(e).toBe('c');
         done();
       },
-      removed: function (e) {
+      removed: function () {
         done(new Error('should not be called'));
       }
     });
@@ -97,7 +78,7 @@ describe('Merger', () => {
         expect(_.isEqual(e, { c: 1 })).toBe(true);
         done();
       },
-      removed: function (e) {
+      removed: function () {
         done(new Error('should not be called'));
       }
     });
@@ -108,10 +89,10 @@ describe('Merger', () => {
     var l2 = [{ a: 1 }, { c: 1 }, 'b'];
     var moved = [];
     var res = merge(l1, l2, {
-      added: function (e) {
+      added: function () {
         done(new Error('should not be called'));
       },
-      removed: function (e) {
+      removed: function () {
         done(new Error('should not be called'));
       },
       moved: function (e, oldIndex, newIndex) {
@@ -128,13 +109,13 @@ describe('Merger', () => {
     var l1 = [{ _id: 1, a: 'Hello' }];
     var l2 = [{ _id: 1, a: 'Hej' }];
     var res = merge(l1, l2, {
-      added: function (e) {
+      added: function () {
         done(new Error('should not be called'));
       },
-      removed: function (e) {
+      removed: function () {
         done(new Error('should not be called'));
       },
-      moved: function (e, oldIndex, newIndex) {
+      moved: function () {
         done(new Error('should not be called'));
       },
       changed: function (o, n, index) {},
