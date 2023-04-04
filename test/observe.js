@@ -1,5 +1,3 @@
-var should = require('should');
-
 var ViewDb = require('..');
 var _ = require('lodash');
 
@@ -10,7 +8,7 @@ describe('Observe', function () {
       var cursor = store.collection('dollhouse').find({});
       var handle = cursor.observe({
         added: function (x) {
-          x._id.should.equal('echo');
+          expect(x._id).toBe('echo');
           handle.stop();
           done();
         }
@@ -25,7 +23,7 @@ describe('Observe', function () {
       var cursor = store.collection('dollhouse').find({ _id: 'echo2' });
       var handle = cursor.observe({
         added: function (x) {
-          x._id.should.equal('echo2');
+          expect(x._id).toBe('echo2');
           done();
         }
       });
@@ -38,11 +36,11 @@ describe('Observe', function () {
       var cursor = store.collection('dollhouse').find({ _id: 'echo' });
       var handle = cursor.observe({
         added: function (x) {
-          x.age.should.equal(10);
-          x._id.should.equal('echo');
+          expect(x.age).toBe(10);
+          expect(x._id).toBe('echo');
         }, changed: function (o, n) {
-          o.age.should.equal(10);
-          n.age.should.equal(100);
+          expect(o.age).toBe(10);
+          expect(n.age).toBe(100);
           handle.stop();
           done();
         }
@@ -64,7 +62,7 @@ describe('Observe', function () {
       cursor.limit(1);
       var realDone = _.after(3, function () {
         cursor.toArray(function (err, res) {
-          res.length.should.equal(0);
+          expect(res.length).toBe(0);
           handle.stop();
           done();
         })
@@ -83,7 +81,7 @@ describe('Observe', function () {
       var cursor = store.collection('dollhouse').find({});
       var handle = cursor.observe({
         init: function (coll) {
-          coll.length.should.equal(0);
+          expect(coll.length).toBe(0);
           handle.stop();
           done();
         }
@@ -97,7 +95,7 @@ describe('Observe', function () {
         var cursor = store.collection('dollhouse').find({});
         var handle = cursor.observe({
           init: function (coll) {
-            coll.length.should.equal(1);
+            expect(coll.length).toBe(1);
             handle.stop();
             done();
           }
@@ -111,10 +109,10 @@ describe('Observe', function () {
       var cursor = store.collection('dollhouse').find({});
       var handle = cursor.observe({
         init: function (coll) {
-          coll.length.should.equal(0);
+          expect(coll.length).toBe(0);
         },
         added: function (a) {
-          a._id.should.equal('echo');
+          expect(a._id).toBe('echo');
           handle.stop();
           done();
         }

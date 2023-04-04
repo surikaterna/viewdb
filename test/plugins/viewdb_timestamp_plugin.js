@@ -1,4 +1,3 @@
-var should = require('should');
 var ViewDb = require('../..');
 var ViewDbTimestampPlugin = require('../..').plugins.TimestampPlugin;
 var ViewDBVersioningPlugin = require('../..').plugins.VersioningPlugin;
@@ -17,7 +16,7 @@ describe('Viewdb timestamp plugin', function () {
       collection.insert(obj, function () {
         collection.find({ id: '123' }).toArray(function (err, objects) {
           var object = objects[0];
-          should.exists(object.createDateTime);
+          expect(object.createDateTime).exists;
           if (currentTime < object.createDateTime) {
             done();
           } else {
@@ -41,7 +40,7 @@ describe('Viewdb timestamp plugin', function () {
           var object = objects[0];
           var hasError = false;
           objects.forEach(function (object) {
-            should.exists(object.createDateTime);
+            expect(object.createDateTime).exists;
             if (currentTime >= object.createDateTime) {
               hasError = true;
             }
@@ -61,14 +60,14 @@ describe('Viewdb timestamp plugin', function () {
     collection.find({}).toArray(function (err, objects) {
       var insertTime = objects[0].createDateTime;
       var updateTime = objects[0].changeDateTime;
-      should.exist(insertTime);
-      insertTime.should.equal(updateTime);
+      expect(insertTime).toBeDefined();
+      expect(insertTime).toBe(updateTime);
       setTimeout(function () {
         collection.save([{ _id: '123', name: 'Pelle', createDateTime: insertTime, changeDateTime: insertTime }, { _id: '999', name: 'Kalle', createDateTime: insertTime, changeDateTime: insertTime }], function () {
           collection.find({}).toArray(function (err, objects) {
             objects.forEach(function (object) {
-              object.createDateTime.should.equal(insertTime);
-              object.changeDateTime.should.greaterThan(insertTime);
+              expect(object.createDateTime).toBe(insertTime);
+              expect(object.changeDateTime).toBeGreaterThan(insertTime);
             });
             done();
           });
@@ -98,8 +97,8 @@ describe('Viewdb timestamp plugin', function () {
       collection.save(obj);
       collection.find({ id: '123' }).toArray(function (err, objects) {
         var object = objects[0];
-        object.createDateTime.should.equal(insertTime);
-        object.changeDateTime.should.greaterThan(insertTime);
+        expect(object.createDateTime).toBe(insertTime);
+        expect(object.changeDateTime).toBeGreaterThan(insertTime);
         done();
       });
     }, 1)
@@ -125,8 +124,8 @@ describe('Viewdb timestamp plugin', function () {
       collection.save(obj, { skipTimestamp: true }, function () {
         collection.find({ id: '123' }).toArray(function (err, objects) {
           var object = objects[0];
-          object.createDateTime.should.equal(insertTime);
-          object.changeDateTime.should.equal(insertTime);
+          expect(object.createDateTime).toBe(insertTime);
+          expect(object.changeDateTime).toBe(insertTime);
           done();
         });
       });
@@ -145,10 +144,10 @@ describe('Viewdb timestamp plugin', function () {
     collection.save(obj);
     collection.find({ id: '123' }).toArray(function (err, objects) {
       var object = objects[0];
-      object.version.should.equal(0);
-      object.name.should.equal('Pelle');
-      should.exists(object.createDateTime);
-      should.exists(object.changeDateTime);
+      expect(object.version).toBe(0);
+      expect(object.name).toBe('Pelle');
+      expect(object.createDateTime).exists;
+      expect(object.changeDateTime).exists;
       done();
     });
   });

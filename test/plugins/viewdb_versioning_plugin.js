@@ -1,4 +1,3 @@
-var should = require('should');
 var _ = require('lodash');
 
 var ViewDb = require('../..');
@@ -16,7 +15,7 @@ describe('Viewdb versioning plugin', function () {
     collection.find({ id: '123' }).toArray(function (err, objects) {
       var object = objects[0];
 
-      object.version.should.equal(0);
+      expect(object.version).toBe(0);
       done();
     });
   });
@@ -28,8 +27,8 @@ describe('Viewdb versioning plugin', function () {
     collection.insert([{ id: '123' }, { id: '999' }]);
 
     collection.find({}).toArray(function (err, objects) {
-      objects[0].version.should.equal(0);
-      objects[1].version.should.equal(0);
+      expect(objects[0].version).toBe(0);
+      expect(objects[1].version).toBe(0);
       done();
     });
   });
@@ -45,8 +44,8 @@ describe('Viewdb versioning plugin', function () {
 
     collection.find({ id: '123' }).toArray(function (err, objects) {
       var object = objects[0];
-      object.version.should.equal(1);
-      object.name.should.equal('Pelle');
+      expect(object.version).toBe(1);
+      expect(object.name).toBe('Pelle');
       done();
     });
   });
@@ -63,10 +62,10 @@ describe('Viewdb versioning plugin', function () {
       })
       collection.save(objects, function () {
         collection.find({}).toArray(function (err, objects) {
-          objects[0].version.should.equal(12) // add 1 version for insert and one for save
-          objects[0].name.should.equal('Pelle');
-          objects[1].version.should.equal(103);
-          objects[1].name.should.equal('Kalle');
+          expect(objects[0].version).toBe(12) // add 1 version for insert and one for save
+          expect(objects[0].name).toBe('Pelle');
+          expect(objects[1].version).toBe(103);
+          expect(objects[1].name).toBe('Kalle');
           done();
         });
       });
@@ -84,8 +83,8 @@ describe('Viewdb versioning plugin', function () {
 
     collection.find({ id: '123' }).toArray(function (err, objects) {
       var object = objects[0];
-      object.version.should.equal(0); // still version 0
-      object.name.should.equal('Pelle');
+      expect(object.version).toBe(0); // still version 0
+      expect(object.name).toBe('Pelle');
       done();
     });
   });  
@@ -102,8 +101,8 @@ describe('Viewdb versioning plugin', function () {
 
     collection.find({ id: '123' }).toArray(function (err, objects) {
       var object = objects[0];
-      object.version.should.equal(0);
-      object.name.should.equal('Pelle');
+      expect(object.version).toBe(0);
+      expect(object.name).toBe('Pelle');
       done();
     });
   });

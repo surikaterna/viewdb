@@ -23,9 +23,9 @@
   "license": "MIT",
   "devDependencies": {
     "istanbul": "^0.3.2",
+    "jest": "^29.5.0",
     "jshint": "^2.5.10",
-    "mocha": "^2.0.1",
-    "should": "^4.1.0"
+    "mocha": "^2.0.1"
   },
   "dependencies": {
     "bluebird": "^2.9.30",
