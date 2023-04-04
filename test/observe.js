@@ -123,4 +123,43 @@ describe('Observe', () => {
       store.collection('dollhouse').insert({ _id: 'echo' });
     }, 5);
   });
+  it('#observe with query update', (done) => {
+    const store = new ViewDb();
+    store.open().then(() => {
+      const cursor = store.collection('dollhouse').find({});
+      const handle = cursor.observe({
+        init: (docs) => {
+          expect(docs.length).toBe(0);
+        },
+        added: (doc) => {
+          expect(doc._id).toMatch(/^echo/);
+        },
+        changed: (found, e) => {
+          expect(found).toEqual({ _id: 'echo1', name: 'marco' });
+          expect(e).toEqual({ _id: 'echo1', name: 'marco', data: 'changed' });
+
+          handle.stop();
+          done();
+        },
+        removed: (doc) => {
+          expect(doc).toEqual({ _id: 'echo3', name: 'polo' });
+
+          store.collection('dollhouse').save([{ _id: 'echo3', name: 'polo', data: 'changed' }], () => {
+            store.collection('dollhouse').save([{ _id: 'echo1', name: 'marco', data: 'changed' }]);
+          });
+        }
+      });
+
+      store.collection('dollhouse').insert(
+        [
+          { _id: 'echo1', name: 'marco' },
+          { _id: 'echo2', name: 'marco' },
+          { _id: 'echo3', name: 'polo' }
+        ],
+        () => {
+          cursor.updateQuery({ name: 'marco' });
+        }
+      );
+    });
+  });
 });
