@@ -1,16 +1,17 @@
 {
   "name": "viewdb",
-  "version": "0.5.12",
+  "version": "0.6.0",
   "description": "",
   "main": "index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "mocha test --recursive",
-    "test.watch": "mocha test --recursive --watch",
-    "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- --recursive test -u exports -R spec",
-    "coverage-start": "istanbul cover node_modules/mocha/bin/_mocha test --recursive -- -u exports -R spec && start coverage/lcov-report/index.html",
+    "test": "jest test",
+    "test.watch": "jest test --watch",
+    "coverage": "jest test --collectCoverage",
+    "coverage-start": "npm run coverage && start coverage/lcov-report/index.html",
+    "format": "prettier --write lib test",
     "jshint": "jshint ./lib",
     "jscs": "jscs -p google ./lib"
   },
@@ -22,10 +23,11 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "istanbul": "^0.3.2",
+    "es-jest": "^2.1.0",
+    "jest": "^29.5.0",
     "jshint": "^2.5.10",
-    "mocha": "^2.0.1",
-    "should": "^4.1.0"
+    "prettier": "^2.8.7",
+    "prettier-config-surikaterna": "^1.0.1"
   },
   "dependencies": {
     "bluebird": "^2.9.30",

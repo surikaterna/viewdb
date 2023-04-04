@@ -1,57 +1,55 @@
-var should = require('should');
 var ViewDb = require('../..');
 var ViewDbTimestampPlugin = require('../..').plugins.TimestampPlugin;
 var ViewDBVersioningPlugin = require('../..').plugins.VersioningPlugin;
 
-describe('Viewdb timestamp plugin', function () {
-  it('should add changeDateTime and createDateTime timestamp on insert', function (done) {
+describe('Viewdb timestamp plugin', () => {
+  it('should add changeDateTime and createDateTime timestamp on insert', (done) => {
     var viewDb = new ViewDb();
     new ViewDbTimestampPlugin(viewDb);
     new ViewDBVersioningPlugin(viewDb);
     var obj = { id: '123' };
     var collection = viewDb.collection('test');
-    var currentTime = (new Date().valueOf());
+    var currentTime = new Date().valueOf();
 
     // wait 1ms until update operation to check for lastModified updated
     setTimeout(function () {
       collection.insert(obj, function () {
         collection.find({ id: '123' }).toArray(function (err, objects) {
           var object = objects[0];
-          should.exists(object.createDateTime);
+          expect(object.createDateTime).exists;
           if (currentTime < object.createDateTime) {
             done();
           } else {
-            done(new Error('Timestamp was not renewed'))
+            done(new Error('Timestamp was not renewed'));
           }
         });
       });
     }, 5);
   });
-  it('should add changeDateTime and createDateTime timestamp on bulk insert', function (done) {
+  it('should add changeDateTime and createDateTime timestamp on bulk insert', (done) => {
     var viewDb = new ViewDb();
     new ViewDbTimestampPlugin(viewDb);
     new ViewDBVersioningPlugin(viewDb);
     var collection = viewDb.collection('test');
-    var currentTime = (new Date().valueOf());
+    var currentTime = new Date().valueOf();
 
     // wait 1ms until update operation to check for lastModified updated
     setTimeout(function () {
       collection.insert([{ _id: '123' }, { _id: '999' }], function () {
         collection.find({}).toArray(function (err, objects) {
-          var object = objects[0];
           var hasError = false;
           objects.forEach(function (object) {
-            should.exists(object.createDateTime);
+            expect(object.createDateTime).exists;
             if (currentTime >= object.createDateTime) {
               hasError = true;
             }
           });
-          hasError && done(new Error('Timestamp was not renewed')) || done();
+          (hasError && done(new Error('Timestamp was not renewed'))) || done();
         });
       });
     });
   });
-  it('should update changeDateTime on builk save', function (done) {
+  it('should update changeDateTime on builk save', (done) => {
     var viewDb = new ViewDb();
     new ViewDbTimestampPlugin(viewDb);
     new ViewDBVersioningPlugin(viewDb);
@@ -61,24 +59,30 @@ describe('Viewdb timestamp plugin', function () {
     collection.find({}).toArray(function (err, objects) {
       var insertTime = objects[0].createDateTime;
       var updateTime = objects[0].changeDateTime;
-      should.exist(insertTime);
-      insertTime.should.equal(updateTime);
+      expect(insertTime).toBeDefined();
+      expect(insertTime).toBe(updateTime);
       setTimeout(function () {
-        collection.save([{ _id: '123', name: 'Pelle', createDateTime: insertTime, changeDateTime: insertTime }, { _id: '999', name: 'Kalle', createDateTime: insertTime, changeDateTime: insertTime }], function () {
-          collection.find({}).toArray(function (err, objects) {
-            objects.forEach(function (object) {
-              object.createDateTime.should.equal(insertTime);
-              object.changeDateTime.should.greaterThan(insertTime);
+        collection.save(
+          [
+            { _id: '123', name: 'Pelle', createDateTime: insertTime, changeDateTime: insertTime },
+            { _id: '999', name: 'Kalle', createDateTime: insertTime, changeDateTime: insertTime }
+          ],
+          function () {
+            collection.find({}).toArray(function (err, objects) {
+              objects.forEach(function (object) {
+                expect(object.createDateTime).toBe(insertTime);
+                expect(object.changeDateTime).toBeGreaterThan(insertTime);
+              });
+              done();
             });
-            done();
-          });
-        })
+          }
+        );
       }, 100);
     });
 
     // wait 1ms until update operation to check for lastModified updated
   });
-  it('should update changeDateTime on save', function (done) {
+  it('should update changeDateTime on save', (done) => {
     var viewDb = new ViewDb();
     new ViewDbTimestampPlugin(viewDb);
     new ViewDBVersioningPlugin(viewDb);
@@ -98,14 +102,14 @@ describe('Viewdb timestamp plugin', function () {
       collection.save(obj);
       collection.find({ id: '123' }).toArray(function (err, objects) {
         var object = objects[0];
-        object.createDateTime.should.equal(insertTime);
-        object.changeDateTime.should.greaterThan(insertTime);
+        expect(object.createDateTime).toBe(insertTime);
+        expect(object.changeDateTime).toBeGreaterThan(insertTime);
         done();
       });
-    }, 1)
+    }, 1);
   });
 
-  it('should skip changing timestamp with skipTimestamp option on save', function (done) {
+  it('should skip changing timestamp with skipTimestamp option on save', (done) => {
     var viewDb = new ViewDb();
     new ViewDbTimestampPlugin(viewDb);
     new ViewDBVersioningPlugin(viewDb);
@@ -125,15 +129,15 @@ describe('Viewdb timestamp plugin', function () {
       collection.save(obj, { skipTimestamp: true }, function () {
         collection.find({ id: '123' }).toArray(function (err, objects) {
           var object = objects[0];
-          object.createDateTime.should.equal(insertTime);
-          object.changeDateTime.should.equal(insertTime);
+          expect(object.createDateTime).toBe(insertTime);
+          expect(object.changeDateTime).toBe(insertTime);
           done();
         });
       });
-    }, 1)
+    }, 1);
   });
 
-  it('should work together with version plugin', function (done) {
+  it('should work together with version plugin', (done) => {
     var viewDb = new ViewDb();
     new ViewDbTimestampPlugin(viewDb);
     new ViewDBVersioningPlugin(viewDb);
@@ -145,10 +149,10 @@ describe('Viewdb timestamp plugin', function () {
     collection.save(obj);
     collection.find({ id: '123' }).toArray(function (err, objects) {
       var object = objects[0];
-      object.version.should.equal(0);
-      object.name.should.equal('Pelle');
-      should.exists(object.createDateTime);
-      should.exists(object.changeDateTime);
+      expect(object.version).toBe(0);
+      expect(object.name).toBe('Pelle');
+      expect(object.createDateTime).exists;
+      expect(object.changeDateTime).exists;
       done();
     });
   });
