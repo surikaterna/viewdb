@@ -162,4 +162,26 @@ describe('Observe', () => {
       );
     });
   });
+  it('#observe with query and sort', (done) => {
+    var store = new ViewDb();
+    store.open().then(function () {
+      store.collection('dollhouse').insert({ _id: 'echo', age: 10 });
+      store.collection('dollhouse').insert({ _id: 'echo2', age: 20 });
+      store.collection('dollhouse').insert({ _id: 'echo3', age: 30 });
+      var cursor = store.collection('dollhouse').find({});
+      cursor.sort({ age: -1 });
+      var realDone = _.after(3, function () {
+        cursor.toArray(function (err, res) {
+          expect(res[0].age).toBe(30);
+          handle.stop();
+          done();
+        });
+      });
+      var handle = cursor.observe({
+        added: function () {
+          realDone();
+        }
+      });
+    });
+  });
 });
