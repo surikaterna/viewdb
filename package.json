@@ -1,37 +1,27 @@
 {
-  "name": "viewdb",
-  "version": "0.8.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "test": "test"
-  },
+  "name": "viewdb-root",
+  "private": true,
+  "workspaces": [
+    "config/*",
+    "packages/*"
+  ],
   "scripts": {
-    "test": "jest test",
-    "test.watch": "jest test --watch",
-    "coverage": "jest test --collectCoverage",
-    "coverage-start": "npm run coverage && start coverage/lcov-report/index.html",
-    "format": "prettier --write lib test",
-    "jshint": "jshint ./lib",
-    "jscs": "jscs -p google ./lib"
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "format": "prettier --write \"**/*.{js,ts,md}\""
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/surikaterna/viewdb"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
   "devDependencies": {
     "es-jest": "^2.1.0",
-    "jest": "^29.5.0",
-    "jshint": "^2.13.6",
-    "prettier": "^2.8.7",
-    "prettier-config-surikaterna": "^1.0.1"
+    "eslint": "^8.56.0",
+    "eslint-config-surikat": "^4.0.5",
+    "jest": "^29.7.0",
+    "prettier": "^3.2.5",
+    "prettier-config-surikaterna": "^1.0.1",
+    "turbo": "^1.12.2",
+    "typescript": "^5.3.3"
   },
-  "dependencies": {
-    "kuery": "^0.5.5",
-    "lodash": "^4.17.21",
-    "uuid": "^9.0.0"
+  "engines": {
+    "node": ">=18"
   }
 }
