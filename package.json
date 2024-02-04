@@ -1,0 +1,27 @@
+{
+  "name": "viewdb-root",
+  "private": true,
+  "workspaces": [
+    "config/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "format": "prettier --write \"**/*.{js,ts,md}\""
+  },
+  "devDependencies": {
+    "es-jest": "^2.1.0",
+    "eslint": "^8.56.0",
+    "eslint-config-surikat": "^4.0.5",
+    "jest": "^29.7.0",
+    "prettier": "^3.2.5",
+    "prettier-config-surikaterna": "^1.0.1",
+    "turbo": "^1.12.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

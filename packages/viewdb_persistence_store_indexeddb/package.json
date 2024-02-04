@@ -8,17 +8,17 @@
     "test.watch": "mocha test --recursive --watch",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- --recursive test -u exports -R spec",
     "coverage-start": "istanbul cover node_modules/mocha/bin/_mocha test --recursive -- -u exports -R spec && start coverage/lcov-report/index.html",
-    "jshint": "jshint ./lib",
-    "jscs": "jscs -p google ./lib"
+    "lint": "eslint lib test"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/surikaterna/viewdb_persistence_store_indexeddb.git"
+    "url": "https://github.com/surikaterna/viewdb.git",
+    "directory": "packages/viewdb_persistence_store_indexeddb"
   },
   "author": "Andreas Karlsson",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/surikaterna/viewdb_persistence_store_indexeddb/issues"
+    "url": "https://github.com/surikaterna/viewdb/issues"
   },
   "peerDependencies": {
     "viewdb": "^0.5.1"
@@ -26,12 +26,11 @@
   "devDependencies": {
     "fake-indexeddb": "^2.0.2",
     "istanbul": "^0.3.2",
-    "jshint": "^2.5.10",
     "mocha": "^2.0.1",
     "should": "^4.1.0",
     "viewdb": "^0.5.11"
   },
-  "homepage": "https://github.com/surikaterna/viewdb_persistence_store_indexeddb#readme",
+  "homepage": "https://github.com/surikaterna/viewdb/packages/viewdb_persistence_store_indexeddb#readme",
   "dependencies": {
     "bluebird": "^2.9.30",
     "kuery": "^0.5.3",
