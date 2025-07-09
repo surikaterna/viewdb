@@ -10,7 +10,7 @@ describe('mongodb_persistence', () => {
 
   beforeAll(async () => {
     const mongoClient = await MongoClient.connect(global.__MONGO_URI__);
-    const db = await mongoClient.db('db_test_suite');
+    const db = await mongoClient.db('db_test_suite_collection');
 
     _mongoClient = mongoClient;
     _db = db;
@@ -256,11 +256,23 @@ describe('mongodb_persistence', () => {
         });
       });
     });
+    it('#createIndex should create index successfully', async () => {
+      const store = new Store(getDb());
+      await store.open()
+
+      const collection = await store.collection(COLLECTION_NAME)
+      await collection.createIndex({ name: 1 })
+
+      const indexes = await collection._collection.listIndexes().toArray()
+
+      expect(indexes).toContainEqual({ v: 2, key: { name: 1 }, name: 'name_1' })
+    });
+
     it('#remove should remove one document', function (done) {
       var store = new Store(getDb());
       store.collection(COLLECTION_NAME).insert({ _id: 'echo', name: { first: 'ECHO', last: 'TV' } });
       store.collection(COLLECTION_NAME).insert({ _id: 'sierra', name: { first: 'SIERRA', last: 'TV' } }, function () {
-        store.collection(COLLECTION_NAME).remove({ _id: 'echo' }, null,  function () {
+        store.collection(COLLECTION_NAME).remove({ _id: 'echo' }, null, function () {
           store
             .collection(COLLECTION_NAME)
             .find({ 'name.first': 'ECHO' })
@@ -322,4 +334,4 @@ describe('mongodb_persistence', () => {
     });
   });
 })
-;
+  ;
