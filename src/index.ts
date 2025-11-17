@@ -1,6 +1,10 @@
-module.exports = require('./viewdb');
+import { ViewDB } from './ViewDB';
 
-module.exports.Cursor = require('./cursor');
-module.exports.Observer = require('./observe');
-module.exports.merge = require('./merger');
-module.exports.plugins = require('./plugins');
+export * from './Cursor';
+export * from './merge';
+export * from './Observer';
+export * from './plugins';
+export * from './interfaces';
+export * from './types';
+
+export default ViewDB;

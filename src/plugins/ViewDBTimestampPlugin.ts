@@ -1,106 +1,135 @@
-var _ = require('lodash');
+import { Query, SortObject } from 'kuery';
+import clone from 'lodash/clone';
+import isArray from 'lodash/isArray';
+import { ViewDB } from '../ViewDB';
+import {
+  CollectionFindAndModifyOptions,
+  CollectionInsertOptions,
+  CollectionSaveOptions,
+  CollectionUpdateManyOptions,
+  CollectionUpdateOneOptions,
+  FindAndModifyResult,
+  Indexed,
+  UpdateFilter,
+  ViewDBCollection
+} from '../interfaces';
+import { MaybeArray } from '../types';
 
-var ViewDBTimestampPlugin = function (viewDb) {
-  var oldCollection = viewDb.collection;
-  viewDb.collection = function () {
-    var coll = oldCollection.apply(this, arguments);
-    if (!coll.__plugins_timestamp) {
-      coll.__plugins_timestamp = true;
+export class ViewDBTimestampPlugin {
+  constructor(viewDb: ViewDB) {
+    const oldCollection = viewDb.collection;
 
-      var oldSave = coll.save;
-      coll.save = function (docs, options) {
-        var newdocs = docs;
-        if (!(options && options.skipTimestamp)) {
-          var timestamp = new Date().valueOf();
-          if (!_.isArray(docs)) {
-            newdocs = [docs];
-          }
-          for (var i = 0; i < newdocs.length; i++) {
-            var doc = newdocs[i];
-            if (!doc.createDateTime) {
-              doc.createDateTime = timestamp;
+    viewDb.collection = function <T extends Indexed>(name: string): ViewDBCollection<T> {
+      const newCollection = oldCollection.call(this, name);
+
+      if (!newCollection.__plugins_timestamp) {
+        newCollection.__plugins_timestamp = true;
+
+        const oldSave = newCollection.save as ViewDBCollection<T>['save'];
+        newCollection.save = async function (docs: MaybeArray<T>, options?: CollectionSaveOptions): Promise<T[]> {
+          if (!options?.skipTimestamp) {
+            const timestamp = new Date().valueOf();
+            const newDocs = isArray(docs) ? docs : [docs];
+
+            for (const doc of newDocs) {
+              if (!('createDateTime' in doc)) {
+                // @ts-expect-error FIXME?
+                doc.createDateTime = timestamp;
+              }
+              // @ts-expect-error FIXME?
+              doc.changeDateTime = timestamp;
             }
-            doc.changeDateTime = timestamp;
           }
-        }
-        oldSave.apply(this, arguments);
-      };
+          return oldSave.call(this, docs, options);
+        };
 
-      var oldInsert = coll.insert;
-      coll.insert = function (docs, options) {
-        if (!(options && options.skipTimestamp)) {
-          if (!_.isArray(docs)) {
-            docs = [docs];
+        const oldInsert = newCollection.insert as ViewDBCollection<T>['insert'];
+        newCollection.insert = async function (docs: MaybeArray<T>, options: CollectionInsertOptions): Promise<T[]> {
+          if (!options?.skipTimestamp) {
+            if (!isArray(docs)) {
+              docs = [docs];
+            }
+
+            const timestamp = new Date().valueOf();
+
+            for (const doc of docs) {
+              // @ts-expect-error FIXME?
+              doc.createDateTime = timestamp;
+              // @ts-expect-error FIXME?
+              doc.changeDateTime = timestamp;
+            }
           }
-          var timestamp = new Date().valueOf();
-          for (var i = 0; i < docs.length; i++) {
-            var doc = docs[i];
-            doc.createDateTime = timestamp;
-            doc.changeDateTime = timestamp;
+
+          return oldInsert.call(this, docs, options);
+        };
+
+        const oldFindAndModify = newCollection.findAndModify as ViewDBCollection<T>['findAndModify'];
+        newCollection.findAndModify = async function (
+          query: Query<T>,
+          sort: SortObject | null,
+          update: UpdateFilter,
+          options: CollectionFindAndModifyOptions
+        ): Promise<FindAndModifyResult> {
+          const timestamp = new Date().valueOf();
+          const clonedUpdate = clone(update);
+          const setOnInsert = clonedUpdate.$setOnInsert || {};
+          setOnInsert.createDateTime = timestamp;
+          clonedUpdate.$setOnInsert = setOnInsert;
+
+          const set = clonedUpdate.$set || {};
+          set.changeDateTime = timestamp;
+
+          // if consumer tries to $set createDateTime it will lead to conflict. remove it
+          if (set.createDateTime) {
+            delete set.createDateTime;
           }
-        }
-        oldInsert.apply(this, arguments);
-      };
 
-      var oldFindAndModify = coll.findAndModify;
-      coll.findAndModify = function (query, sort, update, options, cb) {
-        var timestamp = new Date().valueOf();
-        var clonedUpdate = _.clone(update);
-        var setOnInsert = clonedUpdate.$setOnInsert || {};
-        setOnInsert.createDateTime = timestamp;
-        clonedUpdate.$setOnInsert = setOnInsert;
+          clonedUpdate.$set = set;
+          return oldFindAndModify.call(this, query, sort, clonedUpdate, options);
+        };
 
-        var set = clonedUpdate.$set || {};
-        set.changeDateTime = timestamp;
+        const oldUpdateMany = newCollection.updateMany as ViewDBCollection<T>['updateMany'];
+        newCollection.updateMany = async function (query: Query<T>, update: UpdateFilter, options: CollectionUpdateManyOptions): Promise<T[]> {
+          const timestamp = new Date().valueOf();
+          const clonedUpdate = clone(update);
+          const setOnInsert = clonedUpdate.$setOnInsert || {};
+          setOnInsert.createDateTime = timestamp;
+          clonedUpdate.$setOnInsert = setOnInsert;
 
-        // if consumer tries to $set createDateTime it will lead to conflict. remove it
-        if (set.createDateTime) {
-          delete set.createDateTime;
-        }
-        clonedUpdate.$set = set;
-        oldFindAndModify.apply(this, [query, sort, clonedUpdate, options, cb]);
-      };
+          const set = clonedUpdate.$set || {};
+          set.changeDateTime = timestamp;
 
-      var oldUpdateMany = coll.updateMany;
-      coll.updateMany = function (query, update, options, cb) {
-        var timestamp = new Date().valueOf();
-        var clonedUpdate = _.clone(update);
-        var setOnInsert = clonedUpdate.$setOnInsert || {};
-        setOnInsert.createDateTime = timestamp;
-        clonedUpdate.$setOnInsert = setOnInsert;
+          // if consumer tries to $set createDateTime it will lead to conflict. remove it
+          if (set.createDateTime) {
+            delete set.createDateTime;
+          }
 
-        var set = clonedUpdate.$set || {};
-        set.changeDateTime = timestamp;
+          clonedUpdate.$set = set;
+          return oldUpdateMany.call(this, query, clonedUpdate, options);
+        };
 
-        // if consumer tries to $set createDateTime it will lead to conflict. remove it
-        if (set.createDateTime) {
-          delete set.createDateTime;
-        }
-        clonedUpdate.$set = set;
-        oldUpdateMany.apply(this, [query, clonedUpdate, options, cb]);
-      };
+        const oldUpdateOne = newCollection.updateOne as ViewDBCollection<T>['updateOne'];
+        newCollection.updateOne = async function (query: Query<T>, update: UpdateFilter, options?: CollectionUpdateOneOptions): Promise<T> {
+          const timestamp = new Date().valueOf();
+          const clonedUpdate = clone(update);
+          const setOnInsert = clonedUpdate.$setOnInsert || {};
+          setOnInsert.createDateTime = timestamp;
+          clonedUpdate.$setOnInsert = setOnInsert;
 
-      var oldUpdateOne = coll.updateOne;
-      coll.updateOne = function (query, update, options, cb) {
-        var timestamp = new Date().valueOf();
-        var clonedUpdate = _.clone(update);
-        var setOnInsert = clonedUpdate.$setOnInsert || {};
-        setOnInsert.createDateTime = timestamp;
-        clonedUpdate.$setOnInsert = setOnInsert;
+          const set = clonedUpdate.$set || {};
+          set.changeDateTime = timestamp;
 
-        var set = clonedUpdate.$set || {};
-        set.changeDateTime = timestamp;
+          // if consumer tries to $set createDateTime it will lead to conflict. remove it
+          if (set.createDateTime) {
+            delete set.createDateTime;
+          }
 
-        // if consumer tries to $set createDateTime it will lead to conflict. remove it
-        if (set.createDateTime) {
-          delete set.createDateTime;
-        }
-        clonedUpdate.$set = set;
-        oldUpdateOne.apply(this, [query, clonedUpdate, options, cb]);
-      };
-    }
-    return coll;
-  };
-};
+          clonedUpdate.$set = set;
+          return oldUpdateOne.call(this, query, clonedUpdate, options);
+        };
+      }
 
-module.exports = ViewDBTimestampPlugin;
+      return newCollection as ViewDBCollection<T>;
+    };
+  }
+}

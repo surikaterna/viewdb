@@ -15,11 +15,11 @@
     "moduleDetection": "force",
     "isolatedModules": true,
     "declaration": true,
-    "composite": true,
     "sourceMap": true,
     "declarationMap": true,
+    "typeRoots": ["./@types", "./node_modules/@types"],
     /** These should probably be enabled later **/
-    "strict": false,
+    "strict": true,
     "verbatimModuleSyntax": false
   }
 }

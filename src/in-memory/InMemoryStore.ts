@@ -1,19 +1,24 @@
-var Collection = require('./collection');
+import { Indexed, ViewDBStore } from '../interfaces';
+import Collection from './InMemoryCollection';
 
-var Store = function () {
-  this._collections = {};
-};
+export class Store implements ViewDBStore {
+  private readonly collections: Record<string, Collection<any>>;
 
-Store.prototype.collection = function (collectionName, callback) {
-  var coll = this._collections[collectionName];
-  if (coll === undefined) {
-    coll = new Collection(collectionName);
-    this._collections[collectionName] = coll;
+  constructor() {
+    this.collections = {};
   }
-  if (callback) {
-    callback(coll);
-  }
-  return coll;
-};
 
-module.exports = Store;
+  collection<T extends Indexed>(name: string): Collection<T> {
+    let existingCollection = this.collections[name];
+
+    if (!existingCollection) {
+      const collection = new Collection<T>(name);
+      this.collections[name] = collection;
+      return collection;
+    }
+
+    return existingCollection;
+  }
+}
+
+export default Store;

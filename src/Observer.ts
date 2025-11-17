@@ -1,53 +1,57 @@
-var _ = require('lodash');
-var merge = require('./merger');
+import { QueryObject, QueryOptions } from 'kuery';
+import defaults from 'lodash/defaults';
+import get from 'lodash/get';
+import { Indexed, ObserverOptions, ViewDBCollection, ViewDBObserver } from './interfaces';
+import { merge } from './merge';
+import { Nullish } from './types';
 
-var Observer = function (query, queryOptions, collection, options) {
-  this._query = query;
-  this._queryOptions = queryOptions;
+export class Observer<T extends Indexed> implements ViewDBObserver {
+  private readonly query: QueryObject<T>;
+  _queryOptions: Nullish<QueryOptions>;
+  private readonly collection: ViewDBCollection<T>;
+  private readonly options: ObserverOptions<T>;
+  private cache: T[];
+  private readonly listener: () => void;
 
-  this._options = options;
-  //this._options = logger;
-  this._collection = collection;
-  this._cache = [];
-  var self = this;
-  var listener = function () {
-    self.refresh();
-  };
-  collection.on('change', listener);
-  this.refresh(true);
-  return {
-    stop: function () {
-      self._cache = null;
-      collection.removeListener('change', listener);
-    }
-  };
-};
+  constructor(query: QueryObject<T>, queryOptions: Nullish<QueryOptions>, collection: ViewDBCollection<T>, options: ObserverOptions<T>) {
+    this.query = query;
+    this._queryOptions = queryOptions;
+    this.collection = collection;
+    this.options = options;
+    this.cache = [];
 
-Observer.prototype.refresh = function (initial) {
-  var self = this;
+    this.listener = () => {
+      this.refresh();
+    };
 
-  this._collection._getDocuments(this._query, function (err, result) {
-    if (initial && self._options.init) {
-      self._cache = result;
-      self._options.init(result);
-    } else {
-      var old = self._cache;
+    collection.on('change', this.listener);
+    this.refresh(true);
+  }
 
-      self._cache = merge(
+  stop() {
+    this.cache = [];
+    this.collection.removeListener('change', this.listener);
+  }
+
+  refresh(initial?: boolean) {
+    this.collection._getDocuments(this.query).then((result) => {
+      if (initial && this.options.init) {
+        this.cache = result;
+        this.options.init(result);
+        return;
+      }
+      const old = this.cache;
+
+      this.cache = merge(
         old,
         result,
-        _.defaults(
+        defaults(
           {
-            comparatorId: function (a, b) {
-              return _.get(a, '_id') === _.get(b, '_id');
-            }
+            comparatorId: (a: any, b: any) => get(a, '_id') === get(b, '_id')
           },
-          self._options
+          this.options
         )
       );
-      //rewind cursor for next query...
-    }
-  });
-};
-
-module.exports = Observer;
+    });
+  }
+}

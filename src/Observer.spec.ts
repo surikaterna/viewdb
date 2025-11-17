@@ -1,132 +1,174 @@
-var ViewDb = require('..');
-var _ = require('lodash');
+import { describe, expect, it } from 'vitest';
+import { ViewDB } from './ViewDB';
 
 describe('Observe', () => {
-  it('#observe with insert', (done) => {
-    var store = new ViewDb();
-    store.open().then(function () {
-      var cursor = store.collection('dollhouse').find({});
-      var handle = cursor.observe({
-        added: function (x) {
+  it('#observe with insert', async () => {
+    const store = new ViewDB();
+    await store.open();
+    const cursor = store.collection('dollhouse').find({});
+
+    const promise = new Promise<void>((done) => {
+      const handle = cursor.observe({
+        added: (x) => {
           expect(x._id).toBe('echo');
           handle.stop();
           done();
         }
       });
-      store.collection('dollhouse').insert({ _id: 'echo' });
     });
+
+    await store.collection('dollhouse').insert({ _id: 'echo' });
+    return promise;
   });
-  it('#observe with query and insert', (done) => {
-    var store = new ViewDb();
-    store.open().then(function () {
-      store.collection('dollhouse').insert({ _id: 'echo' });
-      var cursor = store.collection('dollhouse').find({ _id: 'echo2' });
-      cursor.observe({
+
+  it('#observe with query and insert', async () => {
+    const store = new ViewDB();
+    await store.open();
+    store.collection('dollhouse').insert({ _id: 'echo' });
+    const cursor = store.collection('dollhouse').find({ _id: 'echo2' });
+
+    const promise = new Promise<void>((done) => {
+      const handle = cursor.observe({
         added: function (x) {
           expect(x._id).toBe('echo2');
-          done();
-        }
-      });
-      store.collection('dollhouse').insert({ _id: 'echo2' });
-    });
-  });
-  it('#observe with query and update', (done) => {
-    var store = new ViewDb();
-    store.open().then(function () {
-      var cursor = store.collection('dollhouse').find({ _id: 'echo' });
-      var handle = cursor.observe({
-        added: function (x) {
-          expect(x.age).toBe(10);
-          expect(x._id).toBe('echo');
-        },
-        changed: function (o, n) {
-          expect(o.age).toBe(10);
-          expect(n.age).toBe(100);
           handle.stop();
           done();
         }
       });
+    });
 
-      store.collection('dollhouse').insert({ _id: 'echo', age: 10 }, function () {
-        store.collection('dollhouse').save({ _id: 'echo', age: 100 });
-      });
-    });
+    await store.collection('dollhouse').insert({ _id: 'echo2' });
+    return promise;
   });
-  it('#observe with query and skip', (done) => {
-    var store = new ViewDb();
-    store.open().then(function () {
-      store.collection('dollhouse').insert({ _id: 'echo' });
-      store.collection('dollhouse').insert({ _id: 'echo2' });
-      store.collection('dollhouse').insert({ _id: 'echo3' });
-      var cursor = store.collection('dollhouse').find({});
-      var skip = 0;
-      cursor.limit(1);
-      var realDone = _.after(3, function () {
-        cursor.toArray(function (err, res) {
-          expect(res.length).toBe(0);
-          handle.stop();
-          done();
-        });
-      });
-      var handle = cursor.observe({
-        added: function () {
-          cursor.skip(++skip);
-          realDone();
-        }
-      });
-    });
-  });
-  it('#observe with no results', (done) => {
-    var store = new ViewDb();
-    store.open().then(function () {
-      var cursor = store.collection('dollhouse').find({});
-      var handle = cursor.observe({
-        init: function (coll) {
-          expect(coll.length).toBe(0);
-          handle.stop();
-          done();
-        }
-      });
-    });
-  });
-  it('#observe with init after one insert', (done) => {
-    var store = new ViewDb();
-    store.collection('dollhouse').insert({ _id: 'echo' }, function () {
-      store.open().then(function () {
-        var cursor = store.collection('dollhouse').find({});
-        var handle = cursor.observe({
-          init: function (coll) {
-            expect(coll.length).toBe(1);
-            handle.stop();
-            done();
-          }
-        });
-      });
-    });
-  });
-  it('#observe with one insert after init', (done) => {
-    var store = new ViewDb();
-    store.open().then(function () {
-      var cursor = store.collection('dollhouse').find({});
-      var handle = cursor.observe({
-        init: function (coll) {
-          expect(coll.length).toBe(0);
+
+  it('#observe with query and update', async () => {
+    const store = new ViewDB();
+    await store.open();
+
+    type Doc = { _id: string; age: number };
+    const collection = store.collection<Doc>('dollhouse');
+    const cursor = collection.find({ _id: 'echo' });
+
+    const promise = new Promise<void>((done) => {
+      const handle = cursor.observe({
+        added: (oldDoc) => {
+          expect(oldDoc.age).toBe(10);
+          expect(oldDoc._id).toBe('echo');
         },
-        added: function (a) {
-          expect(a._id).toBe('echo');
+        changed: (oldDoc, newDoc) => {
+          expect(oldDoc.age).toBe(10);
+          expect(newDoc.age).toBe(100);
           handle.stop();
           done();
         }
       });
     });
-    setTimeout(function () {
-      store.collection('dollhouse').insert({ _id: 'echo' });
-    }, 5);
+
+    await collection.insert({ _id: 'echo', age: 10 });
+    await collection.save({ _id: 'echo', age: 100 });
+    return promise;
   });
-  it('#observe with query update', (done) => {
-    const store = new ViewDb();
-    store.open().then(() => {
-      const cursor = store.collection('dollhouse').find({});
+
+  it('#observe with query and skip', async () => {
+    const store = new ViewDB();
+    await store.open();
+    const collection = store.collection('dollhouse');
+
+    const cursor = collection.find({});
+    let skip = 0;
+    cursor.limit(1);
+
+    const promise = new Promise<void>((resolve) => {
+      const handle = cursor.observe({
+        added: () => {
+          cursor.skip(++skip);
+          if (skip === 3) {
+            handle.stop();
+            resolve();
+          }
+        }
+      });
+    });
+
+    await collection.insert({ _id: 'echo' });
+    await collection.insert({ _id: 'echo2' });
+    await collection.insert({ _id: 'echo3' });
+
+    await promise;
+
+    const res = await cursor.toArray();
+    expect(res.length).toBe(0);
+  });
+
+  it('#observe with no results', async () => {
+    const store = new ViewDB();
+    await store.open();
+    const cursor = store.collection('dollhouse').find({});
+
+    return new Promise<void>((done) => {
+      const handle = cursor.observe({
+        init: (docs) => {
+          expect(docs.length).toBe(0);
+          handle.stop();
+          done();
+        }
+      });
+    });
+  });
+
+  it('#observe with init after one insert', async () => {
+    const store = new ViewDB();
+    const collection = store.collection('dollhouse');
+
+    await collection.insert({ _id: 'echo' });
+    await store.open();
+    const cursor = collection.find({});
+
+    return new Promise<void>((done) => {
+      const handle = cursor.observe({
+        init: (docs) => {
+          expect(docs.length).toBe(1);
+          handle.stop();
+          done();
+        }
+      });
+    });
+  });
+
+  it('#observe with one insert after init', async () => {
+    const store = new ViewDB();
+    await store.open();
+    const collection = store.collection('dollhouse');
+    const cursor = collection.find({});
+
+    const promise = new Promise<void>((done) => {
+      const handle = cursor.observe({
+        init: (docs) => {
+          expect(docs.length).toBe(0);
+        },
+        added: (doc) => {
+          expect(doc._id).toBe('echo');
+          handle.stop();
+          done();
+        }
+      });
+    });
+
+    setTimeout(() => {
+      collection.insert({ _id: 'echo' });
+    }, 5);
+
+    return promise;
+  });
+
+  it('#observe with query update', async () => {
+    type Doc = { _id: string; name: string; data?: string };
+    const store = new ViewDB();
+    await store.open();
+    const collection = store.collection<Doc>('dollhouse');
+    const cursor = collection.find({});
+
+    const promise = new Promise<void>((done) => {
       const handle = cursor.observe({
         init: (docs) => {
           expect(docs.length).toBe(0);
@@ -134,9 +176,9 @@ describe('Observe', () => {
         added: (doc) => {
           expect(doc._id).toMatch(/^echo/);
         },
-        changed: (found, e) => {
-          expect(found).toEqual({ _id: 'echo1', name: 'marco' });
-          expect(e).toEqual({ _id: 'echo1', name: 'marco', data: 'changed' });
+        changed: (oldDoc, newDoc) => {
+          expect(oldDoc).toEqual({ _id: 'echo1', name: 'marco' });
+          expect(newDoc).toEqual({ _id: 'echo1', name: 'marco', data: 'changed' });
 
           handle.stop();
           done();
@@ -144,22 +186,20 @@ describe('Observe', () => {
         removed: (doc) => {
           expect(doc).toEqual({ _id: 'echo3', name: 'polo' });
 
-          store.collection('dollhouse').save([{ _id: 'echo3', name: 'polo', data: 'changed' }], () => {
-            store.collection('dollhouse').save([{ _id: 'echo1', name: 'marco', data: 'changed' }]);
+          collection.save([{ _id: 'echo3', name: 'polo', data: 'changed' }]).then(() => {
+            collection.save([{ _id: 'echo1', name: 'marco', data: 'changed' }]);
           });
         }
       });
-
-      store.collection('dollhouse').insert(
-        [
-          { _id: 'echo1', name: 'marco' },
-          { _id: 'echo2', name: 'marco' },
-          { _id: 'echo3', name: 'polo' }
-        ],
-        () => {
-          cursor.updateQuery({ name: 'marco' });
-        }
-      );
     });
+
+    await collection.insert([
+      { _id: 'echo1', name: 'marco' },
+      { _id: 'echo2', name: 'marco' },
+      { _id: 'echo3', name: 'polo' }
+    ]);
+    cursor.updateQuery({ name: 'marco' });
+
+    return promise;
   });
 });

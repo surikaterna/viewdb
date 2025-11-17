@@ -1,21 +1,19 @@
-var InMemoryStore = require('./inmemory/store');
+import InMemoryStore from './in-memory/InMemoryStore';
+import { Indexed, ViewDBCollection, ViewDBStore } from './interfaces';
 
-var ViewDB = function (store) {
-  this._store = store || new InMemoryStore();
-};
+export class ViewDB {
+  private store: ViewDBStore;
 
-ViewDB.prototype.open = function () {
-  if (this._store.open) {
-    return this._store.open().then(function () {
-      return this;
-    });
-  } else {
-    return Promise.resolve(this);
+  constructor(store?: ViewDBStore) {
+    this.store = store || new InMemoryStore();
   }
-};
 
-ViewDB.prototype.collection = function (collectionName, callback) {
-  return this._store.collection(collectionName, callback);
-};
+  async open(): Promise<this> {
+    await this.store.open?.();
+    return this;
+  }
 
-module.exports = ViewDB;
+  collection<T extends Indexed>(name: string): ViewDBCollection<T> {
+    return this.store.collection(name);
+  }
+}

@@ -1,84 +1,103 @@
-var _ = require('lodash');
-var Observe = require('./observe');
+import { Query, QueryObject, QueryOptions, SortObject } from 'kuery';
+import forEach from 'lodash/forEach';
+import { Observer } from './Observer';
+import { CursorIterator, Indexed, ObserverOptions, ViewDBCollection, ViewDBCursor } from './interfaces';
+import { Nullish } from './types';
 
-var Cursor = function (collection, query, options, getDocuments) {
-  this._collection = collection;
-  this._query = query;
-  this._options = options;
-  this._getDocuments = getDocuments;
-  this._isObserving = false;
-};
+export type GetDocumentsFunc<T> = (queryObject: QueryObject<T>) => Promise<T[]>;
 
-Cursor.prototype.forEach = function (callback) {
-  this._getDocuments(this._query, function (err, result) {
-    _.forEach(result, function () {
-      callback(result);
+export class Cursor<T extends Indexed> implements ViewDBCursor<T> {
+  private readonly _collection: ViewDBCollection<T>;
+  private readonly _query: QueryObject<T>;
+  private readonly _options: Nullish<QueryOptions>;
+  private readonly _getDocuments: GetDocumentsFunc<T>;
+  private _isObserving: boolean;
+
+  constructor(collection: ViewDBCollection<T>, query: QueryObject<T>, options: Nullish<QueryOptions>, getDocuments: GetDocumentsFunc<T>) {
+    this._collection = collection;
+    this._query = query;
+    this._options = options;
+    this._getDocuments = getDocuments;
+    this._isObserving = false;
+  }
+
+  async forEach(callback: CursorIterator<T>) {
+    const result = await this._getDocuments(this._query);
+
+    forEach(result, (item) => {
+      callback(item);
     });
-  });
-};
+  }
 
-Cursor.prototype.toArray = function (callback) {
-  this._getDocuments(this._query, callback);
-};
+  toArray() {
+    return this._getDocuments(this._query);
+  }
 
-Cursor.prototype.observe = function (options) {
-  this._isObserving = true;
-  return new Observe(this._query, this._options, this._collection, options);
-};
+  observe(options: ObserverOptions<T>) {
+    this._isObserving = true;
+    return new Observer(this._query, this._options, this._collection, options);
+  }
 
-Cursor.prototype.updateQuery = function (query) {
-  this._query.query = query;
-  this._refresh();
-};
-
-Cursor.prototype.skip = function (skip) {
-  this._query.skip = skip;
-  if (this._isObserving) {
+  updateQuery(query: Query<T>) {
+    this._query.query = query;
     this._refresh();
   }
-  return this;
-};
 
-Cursor.prototype.limit = function (limit) {
-  this._query.limit = limit;
-  if (this._isObserving) {
-    this._refresh();
+  skip(skip: number) {
+    this._query.skip = skip;
+
+    if (this._isObserving) {
+      this._refresh();
+    }
+
+    return this;
   }
-  return this;
-};
 
-Cursor.prototype.sort = function (sort) {
-  this._query.sort = sort;
-  if (this._isObserving) {
-    this._refresh();
+  limit(limit: number) {
+    this._query.limit = limit;
+
+    if (this._isObserving) {
+      this._refresh();
+    }
+
+    return this;
   }
-  return this;
-};
 
-Cursor.prototype._refresh = function () {
-  this._collection.emit('change', {});
-};
+  sort(sort: SortObject) {
+    this._query.sort = sort;
 
-Cursor.prototype.rewind = function (options) {
-  //NOOP
-};
+    if (this._isObserving) {
+      this._refresh();
+    }
 
-Cursor.prototype.count = function (callback) {
-  var query = { query: this._query.query };
-  if (this._query.skip) {
-    query.skip = this._query.skip;
+    return this;
   }
-  if (this._query.limit) {
-    query.limit = this._query.limit;
+
+  _refresh() {
+    this._collection.emit('change', {});
   }
-  this._getDocuments(query, function (err, res) {
-    callback(err, res && res.length);
-  });
-};
 
-Cursor.prototype.close = function (callback) {
-  //NOOP
-  callback();
-};
+  rewind(_options: Record<string, any>) {
+    //NOOP
+  }
 
-module.exports = Cursor;
+  async count(): Promise<number> {
+    const query: QueryObject<T> = { query: this._query.query };
+
+    if (this._query.skip) {
+      query.skip = this._query.skip;
+    }
+
+    if (this._query.limit) {
+      query.limit = this._query.limit;
+    }
+
+    const docs = await this._getDocuments(query);
+    return docs.length;
+  }
+
+  close(callback: () => void) {
+    //NOOP
+    callback();
+  }
+}
