@@ -14,19 +14,16 @@
     "type": "git",
     "url": "https://github.com/surikaterna/viewdb"
   },
-  "keywords": [],
   "author": "",
   "license": "MIT",
-  "devDependencies": {
-    "@types/lodash": "^4.17.20",
-    "prettier": "^2.8.7",
-    "prettier-config-surikaterna": "^1.0.1",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.9"
-  },
   "dependencies": {
     "kuery": "^0.6.0",
     "lodash": "^4.17.21",
     "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.20",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.9"
   }
 }

@@ -1,11 +1,11 @@
-var _ = require('lodash');
-var merge = require('viewdb').merge;
-var LegacyObserver = require('viewdb').Observer;
-var Kuery = require('kuery');
-var projectDocument = require('./utils').projectDocument;
-var LoggerFactory = require('slf').LoggerFactory;
+var _ = require("lodash");
+var merge = require("viewdb").merge;
+var LegacyObserver = require("viewdb").Observer;
+var Kuery = require("kuery");
+var projectDocument = require("./utils").projectDocument;
+var LoggerFactory = require("slf").LoggerFactory;
 
-const log = LoggerFactory.getLogger('viewdb_persistence_store_mongodb:observer')
+const log = LoggerFactory.getLogger("viewdb_persistence_store_mongodb:observer");
 
 var Observer = function (query, queryOptions, collection, options, oplogListener) {
   var self = this;
@@ -36,7 +36,7 @@ var Observer = function (query, queryOptions, collection, options, oplogListener
   };
   return {
     stop: dispose,
-    dispose: dispose
+    dispose: dispose,
   };
 };
 
@@ -53,28 +53,28 @@ Observer.prototype.loadInitial = function (cb) {
     } else {
       merge(null, result, _.defaults({ comparatorId: comparator }, self._options));
     }
-    self._cache = _.map(result, '_id');
+    self._cache = _.map(result, "_id");
     cb();
   });
 };
 
 Observer.prototype._onOperation = function (doc) {
   if (!this._cache) {
-    log.warn('Got oplog event for document but cache was already disposed');
+    log.warn("Got oplog event for document but cache was already disposed");
     return;
   }
   switch (doc.op) {
-    case 'i':
+    case "i":
       this._onInsert(doc);
       break;
-    case 'u':
+    case "u":
       this._onUpdate(doc);
       break;
-    case 'd':
+    case "d":
       this._onRemove(doc);
       break;
     default:
-      log.warn('Unhandled operation: %s', doc.op);
+      log.warn("Unhandled operation: %s", doc.op);
       break;
   }
 };

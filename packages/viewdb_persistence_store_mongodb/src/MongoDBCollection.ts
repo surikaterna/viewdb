@@ -1,9 +1,9 @@
-var EventEmitter = require('events').EventEmitter;
-var util = require('util');
-var { forEach, isFunction, isArray } = require('lodash');
+var EventEmitter = require("events").EventEmitter;
+var util = require("util");
+var { forEach, isFunction, isArray } = require("lodash");
 
-var Cursor = require('./cursor');
-const { nodeify } = require('./utils');
+var Cursor = require("./cursor");
+const { nodeify } = require("./utils");
 
 var Collection = function (collection, oplogListener) {
   EventEmitter.call(this);
@@ -38,32 +38,33 @@ Collection.prototype.find = function (query, options) {
 
 Collection.prototype.findAndModify = function (query, sort, update, options, cb) {
   if (sort) {
-    Object.assign(options, sort)
+    Object.assign(options, sort);
   }
   const self = this;
   function callback(err, doc) {
-    self.emit('change', { findAndModify: update });
+    self.emit("change", { findAndModify: update });
     if (isFunction(cb)) {
       cb(err, doc);
     }
   }
   return new Promise((resolve, reject) => {
-    this._collection.findOneAndUpdate(query, update, options)
+    this._collection
+      .findOneAndUpdate(query, update, options)
       .then(function (res) {
-        resolve(res)
-        callback(null, res)
+        resolve(res);
+        callback(null, res);
       })
       .catch(function (err) {
-        reject(err)
-        callback(err)
-      })
-  })
-}
+        reject(err);
+        callback(err);
+      });
+  });
+};
 
 Collection.prototype.updateMany = function (query, update, options, cb) {
   var self = this;
   var args = wrapCallback(arguments, function () {
-    self.emit('change', { updateMany: update });
+    self.emit("change", { updateMany: update });
   });
   if (isFunction(options)) {
     cb = options;
@@ -74,7 +75,7 @@ Collection.prototype.updateMany = function (query, update, options, cb) {
 Collection.prototype.updateOne = function (query, update, options, cb) {
   var self = this;
   var args = wrapCallback(arguments, function () {
-    self.emit('change', { updateOne: update });
+    self.emit("change", { updateOne: update });
   });
   if (isFunction(options)) {
     cb = options;
@@ -83,10 +84,10 @@ Collection.prototype.updateOne = function (query, update, options, cb) {
 };
 
 Collection.prototype.remove = function (query, options, cb) {
-  console.warn('Deprecated: use deleteMany or deleteOne instead');
+  console.warn("Deprecated: use deleteMany or deleteOne instead");
   var self = this;
   var args = wrapCallback(arguments, function () {
-    self.emit('change', { remove: query });
+    self.emit("change", { remove: query });
   });
   if (isFunction(options)) {
     cb = options;
@@ -96,17 +97,17 @@ Collection.prototype.remove = function (query, options, cb) {
 
 Collection.prototype.deleteMany = function (query, options) {
   var args = wrapCallback(arguments, function () {
-    self.emit('change', { remove: query });
+    self.emit("change", { remove: query });
   });
   return this._collection.deleteMany.apply(this._collection, args);
-}
+};
 
 Collection.prototype.deleteOne = function (query, options) {
   var args = wrapCallback(arguments, function () {
-    self.emit('change', { remove: query });
+    self.emit("change", { remove: query });
   });
   return this._collection.deleteOne.apply(this._collection, args);
-}
+};
 
 Collection.prototype.insert = function (docs, cb) {
   var self = this;
@@ -114,14 +115,14 @@ Collection.prototype.insert = function (docs, cb) {
   var onFulfilled = function () {
     self.emit("change", { insert: docs });
     if (isFunction(cb)) {
-      cb(null, docs)
+      cb(null, docs);
     }
-  }
+  };
   var onRejected = function (err) {
     if (isFunction(cb)) {
-      cb(err)
+      cb(err);
     }
-  }
+  };
   var promise;
   if (isArray(docs)) {
     promise = this._collection.insertMany(docs).then(onFulfilled).catch(onRejected);
@@ -134,27 +135,28 @@ Collection.prototype.insert = function (docs, cb) {
 Collection.prototype.save = function (docs, cb) {
   var self = this;
   if (!isArray(docs)) {
-    docs = [docs]
+    docs = [docs];
   }
   const operations = [];
   forEach(docs, function (d) {
     if (!d._id) {
-      operations.push({ insertOne: { document: d } })
+      operations.push({ insertOne: { document: d } });
     } else {
-      operations.push({ replaceOne: { filter: { _id: d._id }, replacement: d, upsert: true } })
+      operations.push({ replaceOne: { filter: { _id: d._id }, replacement: d, upsert: true } });
     }
-  })
+  });
   // bulkWrite modifies docs and adds inserted _id if applicable
-  return this._collection.bulkWrite(operations)
+  return this._collection
+    .bulkWrite(operations)
     .then(function () {
       self.emit("change", { save: docs });
       if (isFunction(cb)) {
-        cb(null, docs)
+        cb(null, docs);
       }
     })
     .catch(function (err) {
       if (isFunction(cb)) {
-        cb(err)
+        cb(err);
       }
     });
 };
@@ -162,7 +164,7 @@ Collection.prototype.save = function (docs, cb) {
 Collection.prototype.drop = function (cb) {
   var self = this;
   var args = wrapCallback(arguments, function () {
-    self.emit('change', { drop: true });
+    self.emit("change", { drop: true });
   });
   return nodeify(this._collection.drop.apply(this._collection, args), cb);
 };

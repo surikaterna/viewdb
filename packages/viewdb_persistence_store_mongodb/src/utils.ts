@@ -1,11 +1,11 @@
-var _ = require('lodash');
+var _ = require("lodash");
 
 function _includeKey(key) {
-  return key === '1' || key === true || key === 1;
+  return key === "1" || key === true || key === 1;
 }
 
 function _excludeKey(key) {
-  return key === '0' || key === false || key === 0;
+  return key === "0" || key === false || key === 0;
 }
 
 function _projectLayer(document, projectObject) {
@@ -38,18 +38,18 @@ function _projectLayer(document, projectObject) {
 }
 
 var nextTick;
-if (typeof setImmediate === 'function') {
-  nextTick = setImmediate
-} else if (typeof process === 'object' && process && process.nextTick) {
-  nextTick = process.nextTick
+if (typeof setImmediate === "function") {
+  nextTick = setImmediate;
+} else if (typeof process === "object" && process && process.nextTick) {
+  nextTick = process.nextTick;
 } else {
   nextTick = function (cb) {
-    setTimeout(cb, 0)
-  }
+    setTimeout(cb, 0);
+  };
 }
 
 function nodeify(promise, cb) {
-  if (typeof cb !== 'function') return promise;
+  if (typeof cb !== "function") return promise;
   return promise
     .then(function (res) {
       nextTick(function () {
@@ -75,5 +75,5 @@ function projectDocument(document, projectObject) {
 
 module.exports = {
   projectDocument,
-  nodeify
+  nodeify,
 };
