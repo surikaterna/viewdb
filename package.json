@@ -1,0 +1,24 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint . --write",
+    "format": "biome format .",
+    "format:fix": "biome format . --write",
+    "check": "biome check .",
+    "check:fix": "biome check . --write"
+  },
+  "workspaces": [
+    "packages/*",
+    "shared/*"
+  ],
+  "devDependencies": {
+    "@biomejs/biome": "2.2.4",
+    "turbo": "latest"
+  },
+  "packageManager": "npm@10.0.0"
+}

@@ -1,25 +1,9 @@
 {
+  "extends": "@repo/typescript-config/tsconfig.json",
   "include": ["src"],
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "lib": ["es2022"],
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "target": "es2022",
-    "module": "NodeNext",
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "allowJs": false,
-    "resolveJsonModule": true,
-    "moduleDetection": "force",
-    "isolatedModules": true,
-    "declaration": true,
-    "sourceMap": true,
-    "declarationMap": true,
-    "typeRoots": ["./@types", "./node_modules/@types"],
-    /** These should probably be enabled later **/
-    "strict": true,
-    "verbatimModuleSyntax": false
+    "typeRoots": ["./@types", "../../node_modules/@types"]
   }
 }
