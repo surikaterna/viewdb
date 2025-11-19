@@ -1,0 +1,25 @@
+{
+  "ui": "tui",
+  "tasks": {
+    "dev": {
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^test"]
+    },
+    "test:watch": {
+      "interactive": true,
+      "persistent": true,
+      "cache": false
+    },
+    "//#lint": {},
+    "//#format": {},
+    "//#format-and-lint": {},
+    "//#format-and-lint:fix": {
+      "cache": false
+    }
+  }
+}
