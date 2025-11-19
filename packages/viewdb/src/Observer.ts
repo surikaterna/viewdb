@@ -1,9 +1,9 @@
-import { QueryObject, QueryOptions } from "kuery";
+import type { QueryObject, QueryOptions } from "kuery";
 import defaults from "lodash/defaults";
 import get from "lodash/get";
-import { Indexed, ObserverOptions, ViewDBCollection, ViewDBObserver } from "./interfaces";
+import type { Indexed, ObserverOptions, ViewDBCollection, ViewDBObserver } from "./interfaces";
 import { merge } from "./merge";
-import { Nullish } from "./types";
+import type { Nullish } from "./types";
 
 export class Observer<T extends Indexed> implements ViewDBObserver {
   private readonly query: QueryObject<T>;

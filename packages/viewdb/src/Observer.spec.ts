@@ -29,7 +29,7 @@ describe("Observe", () => {
 
     const promise = new Promise<void>((done) => {
       const handle = cursor.observe({
-        added: function (x) {
+        added: (x) => {
           expect(x._id).toBe("echo2");
           handle.stop();
           done();

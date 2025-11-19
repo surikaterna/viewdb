@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { beforeEach, describe, expect, it } from "vitest";
-import { ViewDBCollection } from "../interfaces";
+import type { ViewDBCollection } from "../interfaces";
 import { ViewDB } from "../ViewDB";
 import { ViewDBVersioningPlugin } from "./ViewDBVersioningPlugin";
 

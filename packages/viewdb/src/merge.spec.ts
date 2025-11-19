@@ -48,7 +48,7 @@ describe("Merger", () => {
 
       // @ts-expect-error FIXME
       const result = merge(firstList, secondList, {
-        removed: function (e) {
+        removed: (e) => {
           removed.push(e);
         },
         comparatorId: isEqual,
@@ -70,7 +70,7 @@ describe("Merger", () => {
           expect(item).toBe("c");
           done();
         },
-        removed: function () {
+        removed: () => {
           fail(new Error("should not be called"));
         },
       });
@@ -89,7 +89,7 @@ describe("Merger", () => {
           expect(isEqual(item, { c: 1 })).toBe(true);
           done();
         },
-        removed: function () {
+        removed: () => {
           fail(new Error("should not be called"));
         },
       });
@@ -104,14 +104,14 @@ describe("Merger", () => {
       const moved = [];
 
       const result = merge(firstList, secondList, {
-        added: function () {
+        added: () => {
           fail(new Error("should not be called"));
         },
-        removed: function () {
+        removed: () => {
           fail(new Error("should not be called"));
         },
-        moved: function (e, oldIndex, newIndex) {
-          moved.push(arguments);
+        moved: (e, oldIndex, newIndex) => {
+          moved.push([e, oldIndex, newIndex]);
         },
       });
 
@@ -126,19 +126,17 @@ describe("Merger", () => {
       const secondList = [{ _id: 1, a: "Hej" }];
 
       const result = merge(firstList, secondList, {
-        added: function () {
+        added: () => {
           fail(new Error("should not be called"));
         },
-        removed: function () {
+        removed: () => {
           fail(new Error("should not be called"));
         },
-        moved: function () {
+        moved: () => {
           fail(new Error("should not be called"));
         },
-        changed: function (o, n, index) {},
-        comparatorId: function (a, b) {
-          return a._id === b._id;
-        },
+        changed: (o, n, index) => {},
+        comparatorId: (a, b) => a._id === b._id,
       });
 
       expect(isEqual(secondList, result)).toBe(true);
@@ -212,9 +210,7 @@ describe("Merger", () => {
         secondList,
         defaults(
           {
-            comparatorId: function (a: Item, b: Item) {
-              return a._id === b._id;
-            },
+            comparatorId: (a: Item, b: Item) => a._id === b._id,
           },
           {}
         )

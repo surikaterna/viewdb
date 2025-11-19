@@ -1,4 +1,4 @@
-import { Indexed, ViewDBStore } from "../interfaces";
+import type { Indexed, ViewDBStore } from "../interfaces";
 import Collection from "./InMemoryCollection";
 
 export class Store implements ViewDBStore {
@@ -9,7 +9,7 @@ export class Store implements ViewDBStore {
   }
 
   collection<T extends Indexed>(name: string): Collection<T> {
-    let existingCollection = this.collections[name];
+    const existingCollection = this.collections[name];
 
     if (!existingCollection) {
       const collection = new Collection<T>(name);

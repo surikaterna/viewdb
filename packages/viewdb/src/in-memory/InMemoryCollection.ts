@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import Kuery, { Query, QueryObject, QueryOptions, SortObject } from "kuery";
+import Kuery, { type Query, type QueryObject, type QueryOptions, type SortObject } from "kuery";
 import cloneDeep from "lodash/cloneDeep";
 import has from "lodash/has";
 import isArray from "lodash/isArray";
@@ -7,7 +7,7 @@ import isObject from "lodash/isObject";
 import pullAll from "lodash/pullAll";
 import { v4 as uuid } from "uuid";
 import { Cursor } from "../Cursor";
-import {
+import type {
   CollectionFindAndModifyOptions,
   CollectionUpdateManyOptions,
   CollectionUpdateOneOptions,

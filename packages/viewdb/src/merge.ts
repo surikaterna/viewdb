@@ -39,7 +39,7 @@ export function merge<T>(asis: T[], tobe: T[], options: MergeOptions<T> = {}): T
   });
 
   let indexInNew = -1;
-  forEach(tobe, function (e) {
+  forEach(tobe, (e) => {
     indexInNew++;
     const found = contains(list, e, comparatorId);
 

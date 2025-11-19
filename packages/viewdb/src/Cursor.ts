@@ -1,8 +1,8 @@
-import { Query, QueryObject, QueryOptions, SortObject } from "kuery";
+import type { Query, QueryObject, QueryOptions, SortObject } from "kuery";
 import forEach from "lodash/forEach";
 import { Observer } from "./Observer";
-import { CursorIterator, Indexed, ObserverOptions, ViewDBCollection, ViewDBCursor } from "./interfaces";
-import { Nullish } from "./types";
+import type { CursorIterator, Indexed, ObserverOptions, ViewDBCollection, ViewDBCursor } from "./interfaces";
+import type { Nullish } from "./types";
 
 export type GetDocumentsFunc<T> = (queryObject: QueryObject<T>) => Promise<T[]>;
 

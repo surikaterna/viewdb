@@ -1,5 +1,5 @@
 import InMemoryStore from "./in-memory/InMemoryStore";
-import { Indexed, ViewDBCollection, ViewDBStore } from "./interfaces";
+import type { Indexed, ViewDBCollection, ViewDBStore } from "./interfaces";
 
 export class ViewDB {
   private store: ViewDBStore;

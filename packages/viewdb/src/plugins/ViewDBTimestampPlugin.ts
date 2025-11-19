@@ -1,8 +1,8 @@
-import { Query, SortObject } from "kuery";
+import type { Query, SortObject } from "kuery";
 import clone from "lodash/clone";
 import isArray from "lodash/isArray";
-import { ViewDB } from "../ViewDB";
-import {
+import type { ViewDB } from "../ViewDB";
+import type {
   CollectionFindAndModifyOptions,
   CollectionInsertOptions,
   CollectionSaveOptions,
@@ -13,7 +13,7 @@ import {
   UpdateFilter,
   ViewDBCollection,
 } from "../interfaces";
-import { MaybeArray } from "../types";
+import type { MaybeArray } from "../types";
 
 export class ViewDBTimestampPlugin {
   constructor(viewDb: ViewDB) {
