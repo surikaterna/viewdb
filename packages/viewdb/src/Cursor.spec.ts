@@ -9,7 +9,7 @@ type Doc = {
 };
 
 describe("Cursor", () => {
-  const noCollection = null as unknown as ViewDBCollection<any>;
+  const noCollection = null as unknown as ViewDBCollection<Doc>;
   const emptyQuery: QueryObject<Doc> = {};
   const docs: Doc[] = [{ _id: "1" }, { _id: "2" }, { _id: "3" }, { _id: "4" }];
   const getDocuments: GetDocumentsFunc<Doc> = () => Promise.resolve(docs);
@@ -28,6 +28,7 @@ describe("Cursor", () => {
     await cursor.forEach((result) => {
       expect(result).toBeTruthy();
       calls++;
+      return undefined;
     });
 
     expect(calls).toBe(4);

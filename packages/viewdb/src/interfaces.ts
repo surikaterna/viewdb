@@ -1,4 +1,4 @@
-import type { EventEmitter } from "events";
+import type { EventEmitter } from "node:events";
 import type { Query, QueryObject, SortObject } from "kuery";
 import type { MaybeArray } from "./types";
 
@@ -51,7 +51,7 @@ export interface ViewDBCursor<T extends Indexed> {
   updateQuery(query: Query<T>): void;
 }
 
-export type CursorIterator<T> = (doc: T) => boolean | void;
+export type CursorIterator<T> = (doc: T) => boolean | undefined;
 
 export interface ViewDBObserver {
   refresh(initial?: boolean): void;

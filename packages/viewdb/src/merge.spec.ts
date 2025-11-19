@@ -135,7 +135,7 @@ describe("Merger", () => {
         moved: () => {
           fail(new Error("should not be called"));
         },
-        changed: (o, n, index) => {},
+        changed: (_o, _n, _index) => {},
         comparatorId: (a, b) => a._id === b._id,
       });
 

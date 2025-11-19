@@ -28,7 +28,7 @@ export class ViewDBTimestampPlugin {
         const oldSave = newCollection.save as ViewDBCollection<T>["save"];
         newCollection.save = async function (docs: MaybeArray<T>, options?: CollectionSaveOptions): Promise<T[]> {
           if (!options?.skipTimestamp) {
-            const timestamp = new Date().valueOf();
+            const timestamp = Date.now();
             const newDocs = isArray(docs) ? docs : [docs];
 
             for (const doc of newDocs) {
@@ -50,7 +50,7 @@ export class ViewDBTimestampPlugin {
               docs = [docs];
             }
 
-            const timestamp = new Date().valueOf();
+            const timestamp = Date.now();
 
             for (const doc of docs) {
               // @ts-expect-error FIXME?
@@ -70,7 +70,7 @@ export class ViewDBTimestampPlugin {
           update: UpdateFilter,
           options: CollectionFindAndModifyOptions
         ): Promise<FindAndModifyResult> {
-          const timestamp = new Date().valueOf();
+          const timestamp = Date.now();
           const clonedUpdate = clone(update);
           const setOnInsert = clonedUpdate.$setOnInsert || {};
           setOnInsert.createDateTime = timestamp;
@@ -90,7 +90,7 @@ export class ViewDBTimestampPlugin {
 
         const oldUpdateMany = newCollection.updateMany as ViewDBCollection<T>["updateMany"];
         newCollection.updateMany = async function (query: Query<T>, update: UpdateFilter, options: CollectionUpdateManyOptions): Promise<T[]> {
-          const timestamp = new Date().valueOf();
+          const timestamp = Date.now();
           const clonedUpdate = clone(update);
           const setOnInsert = clonedUpdate.$setOnInsert || {};
           setOnInsert.createDateTime = timestamp;
@@ -110,7 +110,7 @@ export class ViewDBTimestampPlugin {
 
         const oldUpdateOne = newCollection.updateOne as ViewDBCollection<T>["updateOne"];
         newCollection.updateOne = async function (query: Query<T>, update: UpdateFilter, options?: CollectionUpdateOneOptions): Promise<T> {
-          const timestamp = new Date().valueOf();
+          const timestamp = Date.now();
           const clonedUpdate = clone(update);
           const setOnInsert = clonedUpdate.$setOnInsert || {};
           setOnInsert.createDateTime = timestamp;

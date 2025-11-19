@@ -27,7 +27,7 @@ describe("Viewdb timestamp plugin", () => {
 
   it("should add changeDateTime and createDateTime timestamp on insert", async () => {
     const obj = { id: "123" } as Doc;
-    const currentTime = new Date().valueOf();
+    const currentTime = Date.now();
 
     await wait(5);
     await collection.insert(obj);
@@ -39,7 +39,7 @@ describe("Viewdb timestamp plugin", () => {
   });
 
   it("should add changeDateTime and createDateTime timestamp on bulk insert", async () => {
-    const currentTime = new Date().valueOf();
+    const currentTime = Date.now();
 
     await wait(5);
     await collection.insert([{ _id: "123" }, { _id: "999" }] as Doc[]);

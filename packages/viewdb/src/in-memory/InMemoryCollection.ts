@@ -1,4 +1,4 @@
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import Kuery, { type Query, type QueryObject, type QueryOptions, type SortObject } from "kuery";
 import cloneDeep from "lodash/cloneDeep";
 import has from "lodash/has";
@@ -45,7 +45,7 @@ export class Collection<T extends Indexed> extends EventEmitter implements ViewD
       }
 
       if (!has(document, "_id")) {
-        document["_id"] = "id" in document && typeof document.id === "string" ? document["id"] : uuid();
+        document._id = "id" in document && typeof document.id === "string" ? document.id : uuid();
       }
 
       const index = this._documents.findIndex((d) => d._id === document._id);
