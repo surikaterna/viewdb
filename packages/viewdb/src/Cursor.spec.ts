@@ -1,8 +1,8 @@
 import type { QueryObject } from "kuery";
 import { describe, expect, it } from "vitest";
 import { Cursor, type GetDocumentsFunc } from "./Cursor";
-import { ViewDB } from "./ViewDB";
 import type { ViewDBCollection } from "./interfaces";
+import { ViewDB } from "./ViewDB";
 
 type Doc = {
   _id: string;

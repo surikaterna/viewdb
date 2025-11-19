@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { beforeEach, describe, expect, it } from "vitest";
-import { ViewDB } from "./ViewDB";
 import type { Indexed, ViewDBCollection } from "./interfaces";
+import { ViewDB } from "./ViewDB";
 
 describe("ViewDB", () => {
   type Doc = { _id: string; a?: number; b?: number; name?: string };

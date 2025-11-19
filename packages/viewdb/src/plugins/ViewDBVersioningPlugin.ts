@@ -1,6 +1,6 @@
+import type { Query, SortObject } from "kuery";
 import isArray from "lodash/isArray";
 import isUndefined from "lodash/isUndefined";
-import type { ViewDB } from "../ViewDB";
 import type {
   CollectionFindAndModifyOptions,
   CollectionInsertOptions,
@@ -13,7 +13,7 @@ import type {
   ViewDBCollection,
 } from "../interfaces";
 import type { MaybeArray } from "../types";
-import type { Query, SortObject } from "kuery";
+import type { ViewDB } from "../ViewDB";
 
 export class ViewDBVersioningPlugin {
   constructor(viewDb: ViewDB) {
