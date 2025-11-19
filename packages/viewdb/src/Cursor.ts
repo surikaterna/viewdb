@@ -1,8 +1,8 @@
-import { Query, QueryObject, QueryOptions, SortObject } from 'kuery';
-import forEach from 'lodash/forEach';
-import { Observer } from './Observer';
-import { CursorIterator, Indexed, ObserverOptions, ViewDBCollection, ViewDBCursor } from './interfaces';
-import { Nullish } from './types';
+import { Query, QueryObject, QueryOptions, SortObject } from "kuery";
+import forEach from "lodash/forEach";
+import { Observer } from "./Observer";
+import { CursorIterator, Indexed, ObserverOptions, ViewDBCollection, ViewDBCursor } from "./interfaces";
+import { Nullish } from "./types";
 
 export type GetDocumentsFunc<T> = (queryObject: QueryObject<T>) => Promise<T[]>;
 
@@ -74,7 +74,7 @@ export class Cursor<T extends Indexed> implements ViewDBCursor<T> {
   }
 
   _refresh() {
-    this._collection.emit('change', {});
+    this._collection.emit("change", {});
   }
 
   rewind(_options: Record<string, any>) {

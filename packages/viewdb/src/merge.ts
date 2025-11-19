@@ -1,6 +1,6 @@
-import forEach from 'lodash/forEach';
-import isEqual from 'lodash/isEqual';
-import slice from 'lodash/slice';
+import forEach from "lodash/forEach";
+import isEqual from "lodash/isEqual";
+import slice from "lodash/slice";
 
 type Comparator<T> = (a: T, b: T) => boolean;
 

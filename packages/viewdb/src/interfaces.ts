@@ -1,6 +1,6 @@
-import { EventEmitter } from 'events';
-import { Query, QueryObject, SortObject } from 'kuery';
-import { MaybeArray } from './types';
+import { EventEmitter } from "events";
+import { Query, QueryObject, SortObject } from "kuery";
+import { MaybeArray } from "./types";
 
 export interface ViewDBCollection<T extends Indexed> extends EventEmitter {
   count(): Promise<number>;

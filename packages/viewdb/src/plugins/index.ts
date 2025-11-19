@@ -1,2 +1,2 @@
-export * from './ViewDBTimestampPlugin';
-export * from './ViewDBVersioningPlugin';
+export * from "./ViewDBTimestampPlugin";
+export * from "./ViewDBVersioningPlugin";

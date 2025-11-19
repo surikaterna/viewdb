@@ -1,7 +1,7 @@
-import { Query, SortObject } from 'kuery';
-import clone from 'lodash/clone';
-import isArray from 'lodash/isArray';
-import { ViewDB } from '../ViewDB';
+import { Query, SortObject } from "kuery";
+import clone from "lodash/clone";
+import isArray from "lodash/isArray";
+import { ViewDB } from "../ViewDB";
 import {
   CollectionFindAndModifyOptions,
   CollectionInsertOptions,
@@ -11,9 +11,9 @@ import {
   FindAndModifyResult,
   Indexed,
   UpdateFilter,
-  ViewDBCollection
-} from '../interfaces';
-import { MaybeArray } from '../types';
+  ViewDBCollection,
+} from "../interfaces";
+import { MaybeArray } from "../types";
 
 export class ViewDBTimestampPlugin {
   constructor(viewDb: ViewDB) {
@@ -25,14 +25,14 @@ export class ViewDBTimestampPlugin {
       if (!newCollection.__plugins_timestamp) {
         newCollection.__plugins_timestamp = true;
 
-        const oldSave = newCollection.save as ViewDBCollection<T>['save'];
+        const oldSave = newCollection.save as ViewDBCollection<T>["save"];
         newCollection.save = async function (docs: MaybeArray<T>, options?: CollectionSaveOptions): Promise<T[]> {
           if (!options?.skipTimestamp) {
             const timestamp = new Date().valueOf();
             const newDocs = isArray(docs) ? docs : [docs];
 
             for (const doc of newDocs) {
-              if (!('createDateTime' in doc)) {
+              if (!("createDateTime" in doc)) {
                 // @ts-expect-error FIXME?
                 doc.createDateTime = timestamp;
               }
@@ -43,7 +43,7 @@ export class ViewDBTimestampPlugin {
           return oldSave.call(this, docs, options);
         };
 
-        const oldInsert = newCollection.insert as ViewDBCollection<T>['insert'];
+        const oldInsert = newCollection.insert as ViewDBCollection<T>["insert"];
         newCollection.insert = async function (docs: MaybeArray<T>, options: CollectionInsertOptions): Promise<T[]> {
           if (!options?.skipTimestamp) {
             if (!isArray(docs)) {
@@ -63,7 +63,7 @@ export class ViewDBTimestampPlugin {
           return oldInsert.call(this, docs, options);
         };
 
-        const oldFindAndModify = newCollection.findAndModify as ViewDBCollection<T>['findAndModify'];
+        const oldFindAndModify = newCollection.findAndModify as ViewDBCollection<T>["findAndModify"];
         newCollection.findAndModify = async function (
           query: Query<T>,
           sort: SortObject | null,
@@ -88,7 +88,7 @@ export class ViewDBTimestampPlugin {
           return oldFindAndModify.call(this, query, sort, clonedUpdate, options);
         };
 
-        const oldUpdateMany = newCollection.updateMany as ViewDBCollection<T>['updateMany'];
+        const oldUpdateMany = newCollection.updateMany as ViewDBCollection<T>["updateMany"];
         newCollection.updateMany = async function (query: Query<T>, update: UpdateFilter, options: CollectionUpdateManyOptions): Promise<T[]> {
           const timestamp = new Date().valueOf();
           const clonedUpdate = clone(update);
@@ -108,7 +108,7 @@ export class ViewDBTimestampPlugin {
           return oldUpdateMany.call(this, query, clonedUpdate, options);
         };
 
-        const oldUpdateOne = newCollection.updateOne as ViewDBCollection<T>['updateOne'];
+        const oldUpdateOne = newCollection.updateOne as ViewDBCollection<T>["updateOne"];
         newCollection.updateOne = async function (query: Query<T>, update: UpdateFilter, options?: CollectionUpdateOneOptions): Promise<T> {
           const timestamp = new Date().valueOf();
           const clonedUpdate = clone(update);

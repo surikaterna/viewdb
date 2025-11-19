@@ -1,12 +1,12 @@
-import { EventEmitter } from 'events';
-import Kuery, { Query, QueryObject, QueryOptions, SortObject } from 'kuery';
-import cloneDeep from 'lodash/cloneDeep';
-import has from 'lodash/has';
-import isArray from 'lodash/isArray';
-import isObject from 'lodash/isObject';
-import pullAll from 'lodash/pullAll';
-import { v4 as uuid } from 'uuid';
-import { Cursor } from '../Cursor';
+import { EventEmitter } from "events";
+import Kuery, { Query, QueryObject, QueryOptions, SortObject } from "kuery";
+import cloneDeep from "lodash/cloneDeep";
+import has from "lodash/has";
+import isArray from "lodash/isArray";
+import isObject from "lodash/isObject";
+import pullAll from "lodash/pullAll";
+import { v4 as uuid } from "uuid";
+import { Cursor } from "../Cursor";
 import {
   CollectionFindAndModifyOptions,
   CollectionUpdateManyOptions,
@@ -14,10 +14,10 @@ import {
   FindAndModifyResult,
   Indexed,
   UpdateFilter,
-  ViewDBCollection
-} from '../interfaces';
+  ViewDBCollection,
+} from "../interfaces";
 
-type Operation = 'insert' | 'save';
+type Operation = "insert" | "save";
 
 export class Collection<T extends Indexed> extends EventEmitter implements ViewDBCollection<T> {
   private _documents: T[];
@@ -41,16 +41,16 @@ export class Collection<T extends Indexed> extends EventEmitter implements ViewD
 
     for (const document of documents) {
       if (!isObject(document)) {
-        throw new Error('Document must be object');
+        throw new Error("Document must be object");
       }
 
-      if (!has(document, '_id')) {
-        document['_id'] = 'id' in document && typeof document.id === 'string' ? document['id'] : uuid();
+      if (!has(document, "_id")) {
+        document["_id"] = "id" in document && typeof document.id === "string" ? document["id"] : uuid();
       }
 
       const index = this._documents.findIndex((d) => d._id === document._id);
-      if (op === 'insert' && index >= 0) {
-        throw new Error('Unique constraint!');
+      if (op === "insert" && index >= 0) {
+        throw new Error("Unique constraint!");
       }
 
       if (index === -1) {
@@ -60,16 +60,16 @@ export class Collection<T extends Indexed> extends EventEmitter implements ViewD
       }
     }
 
-    this.emit('change', documents);
+    this.emit("change", documents);
     return documents;
   }
 
   insert(documents: T | T[], options: Record<string, any>): Promise<T[]> {
-    return this._write('insert', documents, options);
+    return this._write("insert", documents, options);
   }
 
   save(documents: T | T[], options: Record<string, any>): Promise<T[]> {
-    return this._write('save', documents, options);
+    return this._write("save", documents, options);
   }
 
   async drop() {
@@ -87,11 +87,11 @@ export class Collection<T extends Indexed> extends EventEmitter implements ViewD
   }
 
   async ensureIndex() {
-    throw new Error('ensureIndex not supported!');
+    throw new Error("ensureIndex not supported!");
   }
 
   async createIndex() {
-    throw new Error('createIndex not supported!');
+    throw new Error("createIndex not supported!");
   }
 
   async findAndModify(
@@ -100,15 +100,15 @@ export class Collection<T extends Indexed> extends EventEmitter implements ViewD
     _update: UpdateFilter,
     _options?: CollectionFindAndModifyOptions
   ): Promise<FindAndModifyResult> {
-    throw new Error('findAndModify not supported!');
+    throw new Error("findAndModify not supported!");
   }
 
   async updateMany(_query: Query<T>, _update: UpdateFilter, _options?: CollectionUpdateManyOptions): Promise<T[]> {
-    throw new Error('updateMany not supported!');
+    throw new Error("updateMany not supported!");
   }
 
   async updateOne(_query: Query<T>, _update: UpdateFilter, _options?: CollectionUpdateOneOptions): Promise<T> {
-    throw new Error('updateOne not supported!');
+    throw new Error("updateOne not supported!");
   }
 
   /** @internal */

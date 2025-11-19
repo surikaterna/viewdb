@@ -1,4 +1,4 @@
-declare module 'kuery' {
+declare module "kuery" {
   type Primitive = string | number | boolean | null | undefined | Date;
 
   export type Query<T> = {
@@ -19,8 +19,8 @@ declare module 'kuery' {
               $not?: Query<T[P]>;
             }
       : T[P] extends Array<infer U>
-      ? Query<U> | { $elemMatch?: Query<U> }
-      : Query<T[P]>;
+        ? Query<U> | { $elemMatch?: Query<U> }
+        : Query<T[P]>;
   } & {
     // Support for string paths such as 'identifiers.identifier'
     [key: string]: any;

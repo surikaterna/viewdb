@@ -1,5 +1,5 @@
-import { Indexed, ViewDBStore } from '../interfaces';
-import Collection from './InMemoryCollection';
+import { Indexed, ViewDBStore } from "../interfaces";
+import Collection from "./InMemoryCollection";
 
 export class Store implements ViewDBStore {
   private readonly collections: Record<string, Collection<any>>;

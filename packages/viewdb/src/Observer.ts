@@ -1,9 +1,9 @@
-import { QueryObject, QueryOptions } from 'kuery';
-import defaults from 'lodash/defaults';
-import get from 'lodash/get';
-import { Indexed, ObserverOptions, ViewDBCollection, ViewDBObserver } from './interfaces';
-import { merge } from './merge';
-import { Nullish } from './types';
+import { QueryObject, QueryOptions } from "kuery";
+import defaults from "lodash/defaults";
+import get from "lodash/get";
+import { Indexed, ObserverOptions, ViewDBCollection, ViewDBObserver } from "./interfaces";
+import { merge } from "./merge";
+import { Nullish } from "./types";
 
 export class Observer<T extends Indexed> implements ViewDBObserver {
   private readonly query: QueryObject<T>;
@@ -24,13 +24,13 @@ export class Observer<T extends Indexed> implements ViewDBObserver {
       this.refresh();
     };
 
-    collection.on('change', this.listener);
+    collection.on("change", this.listener);
     this.refresh(true);
   }
 
   stop() {
     this.cache = [];
-    this.collection.removeListener('change', this.listener);
+    this.collection.removeListener("change", this.listener);
   }
 
   refresh(initial?: boolean) {
@@ -47,7 +47,7 @@ export class Observer<T extends Indexed> implements ViewDBObserver {
         result,
         defaults(
           {
-            comparatorId: (a: any, b: any) => get(a, '_id') === get(b, '_id')
+            comparatorId: (a: any, b: any) => get(a, "_id") === get(b, "_id"),
           },
           this.options
         )

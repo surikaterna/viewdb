@@ -1,6 +1,6 @@
-import isArray from 'lodash/isArray';
-import isUndefined from 'lodash/isUndefined';
-import { ViewDB } from '../ViewDB';
+import isArray from "lodash/isArray";
+import isUndefined from "lodash/isUndefined";
+import { ViewDB } from "../ViewDB";
 import {
   CollectionFindAndModifyOptions,
   CollectionInsertOptions,
@@ -10,10 +10,10 @@ import {
   FindAndModifyResult,
   Indexed,
   UpdateFilter,
-  ViewDBCollection
-} from '../interfaces';
-import { MaybeArray } from '../types';
-import { Query, SortObject } from 'kuery';
+  ViewDBCollection,
+} from "../interfaces";
+import { MaybeArray } from "../types";
+import { Query, SortObject } from "kuery";
 
 export class ViewDBVersioningPlugin {
   constructor(viewDb: ViewDB) {
@@ -25,7 +25,7 @@ export class ViewDBVersioningPlugin {
       if (!collection.__plugins_versioning) {
         collection.__plugins_versioning = true;
 
-        const oldSave = collection.save as ViewDBCollection<T>['save'];
+        const oldSave = collection.save as ViewDBCollection<T>["save"];
         collection.save = async function (docs: MaybeArray<T>, options?: CollectionSaveOptions): Promise<T[]> {
           if (!options?.skipVersioning) {
             const newDocs = isArray(docs) ? docs : [docs];
@@ -39,7 +39,7 @@ export class ViewDBVersioningPlugin {
           return oldSave.call(this, docs, options);
         };
 
-        const oldInsert = collection.insert as ViewDBCollection<T>['insert'];
+        const oldInsert = collection.insert as ViewDBCollection<T>["insert"];
         collection.insert = async function (docs: MaybeArray<T>, options: CollectionInsertOptions): Promise<T[]> {
           if (!options?.skipVersioning) {
             if (!isArray(docs)) {
@@ -55,7 +55,7 @@ export class ViewDBVersioningPlugin {
           return oldInsert.call(this, docs, options);
         };
 
-        const oldFindAndModify = collection.findAndModify as ViewDBCollection<T>['findAndModify'];
+        const oldFindAndModify = collection.findAndModify as ViewDBCollection<T>["findAndModify"];
         collection.findAndModify = async function (
           query: Query<T>,
           sort: SortObject | null,
@@ -75,7 +75,7 @@ export class ViewDBVersioningPlugin {
           return oldFindAndModify.call(this, query, sort, update, options);
         };
 
-        const oldUpdateMany = collection.updateMany as ViewDBCollection<T>['updateMany'];
+        const oldUpdateMany = collection.updateMany as ViewDBCollection<T>["updateMany"];
         collection.updateMany = async function (query: Query<T>, update: UpdateFilter, options: CollectionUpdateManyOptions): Promise<T[]> {
           if (!options?.skipVersioning) {
             const inc = update.$inc || {};
@@ -90,7 +90,7 @@ export class ViewDBVersioningPlugin {
           return oldUpdateMany.call(this, query, update, options);
         };
 
-        const oldUpdateOne = collection.updateOne as ViewDBCollection<T>['updateOne'];
+        const oldUpdateOne = collection.updateOne as ViewDBCollection<T>["updateOne"];
         collection.updateOne = async function (query: Query<T>, update: UpdateFilter, options?: CollectionUpdateOneOptions): Promise<T> {
           if (!options?.skipVersioning) {
             const inc = update.$inc || {};
