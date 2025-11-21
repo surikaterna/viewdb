@@ -1,6 +1,5 @@
 import type { QueryObject, QueryOptions } from "kuery";
 import defaults from "lodash/defaults";
-import get from "lodash/get";
 import type { Indexed, ObserverOptions, ViewDBCollection, ViewDBObserver } from "./interfaces";
 import { merge } from "./merge";
 import type { Nullish } from "./types";
@@ -33,7 +32,7 @@ export class Observer<T extends Indexed> implements ViewDBObserver {
     this.collection.removeListener("change", this.listener);
   }
 
-  refresh(initial?: boolean) {
+  private refresh(initial?: boolean) {
     this.collection._getDocuments(this.query).then((result) => {
       if (initial && this.options.init) {
         this.cache = result;
@@ -47,7 +46,7 @@ export class Observer<T extends Indexed> implements ViewDBObserver {
         result,
         defaults(
           {
-            comparatorId: (a: any, b: any) => get(a, "_id") === get(b, "_id"),
+            comparatorId: (a: T, b: T) => a?._id === b?._id,
           },
           this.options
         )

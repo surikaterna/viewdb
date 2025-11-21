@@ -1,72 +1,89 @@
-var Observer = require('./observe');
-var {nodeify} = require('./utils');
+import type { QueryObject, QueryOptions, SortObject } from "kuery";
+import type { Document, FindCursor, ReadPreferenceLike } from "mongodb";
+import { type Indexed, Observer as LegacyObserver, type ObserverOptions, type ViewDBCursor, type ViewDBObserver } from "viewdb";
+import type { MongoDBCollection } from "./MongoDBCollection";
+import { MongoDBObserver } from "./MongoDBObserver";
+import type { OplogListener } from "./OplogListener";
 
-var Cursor = function (collection, query, options, cursor, oplogListener) {
-  this._query = query;
-  this._queryOptions = options || {};
-  this._cursor = cursor;
-  this._oplogListener = oplogListener;
-  this._collection = collection;
-};
+export class MongoDBCursor<T extends Indexed> implements ViewDBCursor<T> {
+  private readonly queryObject: QueryObject<T>;
+  private readonly queryOptions: QueryOptions;
+  private readonly cursor: FindCursor<T>;
+  private readonly oplogListener: OplogListener<T>;
+  private readonly collection: MongoDBCollection<T>;
 
-Cursor.prototype.each = function () {
-  return this._cursor.each.apply(this._cursor, arguments);
-};
+  constructor(
+    collection: MongoDBCollection<T>,
+    queryObject: QueryObject<T>,
+    queryOptions: QueryOptions,
+    cursor: FindCursor<T>,
+    oplogListener: OplogListener<T>
+  ) {
+    this.queryObject = queryObject;
+    this.queryOptions = queryOptions || {};
+    this.cursor = cursor;
+    this.oplogListener = oplogListener;
+    this.collection = collection;
+  }
 
-Cursor.prototype.setReadPreference = function () {
-   this._cursor.withReadPreference.apply(this._cursor, arguments);
-   return this;
-};
+  setReadPreference(readPreference: ReadPreferenceLike): MongoDBCursor<T> {
+    this.cursor.withReadPreference.call(this.cursor, readPreference);
+    return this;
+  }
 
-Cursor.prototype.count = function (callback) {
-  return nodeify(this._cursor.count.apply(this._cursor, arguments), callback);
-};
+  count(): Promise<number> {
+    // TODO: Update to use this.collection.countDocuments
+    return this.cursor.count();
+  }
 
-Cursor.prototype.project = function (project) {
-  this._cursor.project.apply(this._cursor, arguments);
-  this._queryOptions.project = project;
-  return this;
-};
+  project(project: Document): MongoDBCursor<T> {
+    this.cursor.project(project);
+    this.queryOptions.project = project;
+    return this;
+  }
 
-Cursor.prototype.toArray = function (callback) {
-  return nodeify(this._cursor.toArray.apply(this._cursor, arguments), callback);
-};
+  toArray(): Promise<T[]> {
+    return this.cursor.toArray();
+  }
 
-Cursor.prototype.observe = function (options) {
-  return new Observer(this._query, this._queryOptions, this._collection, options, this._oplogListener);
-};
+  observe(options: ObserverOptions<T> = {}): ViewDBObserver {
+    if (!this.oplogListener) {
+      return new LegacyObserver(this.queryObject, this.queryOptions, this.collection, options);
+    }
 
-Cursor.prototype.skip = function (skip) {
-  this._cursor.skip.apply(this._cursor, arguments);
-  this._queryOptions.skip = skip;
-  this._refresh();
-  return this;
-};
+    return new MongoDBObserver(this.queryObject, this.queryOptions, this.collection, options, this.oplogListener);
+  }
 
-Cursor.prototype.limit = function (limit) {
-  this._queryOptions.limit = limit;
-  this._cursor.limit.apply(this._cursor, arguments);
-  this._refresh();
-  return this;
-};
+  skip(amount: number): MongoDBCursor<T> {
+    this.cursor.skip(amount);
+    this.queryOptions.skip = amount;
+    this._refresh();
+    return this;
+  }
 
-Cursor.prototype.sort = function (sort) {
-  this._queryOptions.sort = sort;
-  this._cursor.sort.apply(this._cursor, arguments);
-  this._refresh();
-  return this;
-};
+  limit(amount: number): MongoDBCursor<T> {
+    this.queryOptions.limit = amount;
+    this.cursor.limit(amount);
+    this._refresh();
+    return this;
+  }
 
-Cursor.prototype._refresh = function () {
-  this._collection.emit('change', {});
-};
+  sort(sortObject: SortObject): MongoDBCursor<T> {
+    this.queryOptions.sort = sortObject;
+    this.cursor.sort(sortObject);
+    this._refresh();
+    return this;
+  }
 
-Cursor.prototype.rewind = function () {
-  return this._cursor.rewind.apply(this._cursor, arguments);
-};
+  _refresh() {
+    this.collection.emit("change", {});
+  }
 
-Cursor.prototype.close = function (callback) {
-  return nodeify(this._cursor.close.apply(this._cursor, arguments), callback);
-};
+  rewind() {
+    return this.cursor.rewind();
+  }
 
-module.exports = Cursor;
+  close(options?: { timeoutMS?: number }) {
+    return this.cursor.close(options);
+  }
+}

@@ -14,6 +14,7 @@ import type {
   FindAndModifyResult,
   Indexed,
   UpdateFilter,
+  UpdateResult,
   ViewDBCollection,
 } from "../interfaces";
 
@@ -80,7 +81,7 @@ export class Collection<T extends Indexed> extends EventEmitter implements ViewD
     return new Cursor(this, { query }, options, this._getDocuments.bind(this));
   }
 
-  async remove(query: Query<T>, _options: any): Promise<void> {
+  async remove(query: Query<T>): Promise<void> {
     const q = new Kuery(query);
     const documents = q.find(this._documents);
     this._documents = pullAll(this._documents, documents);
@@ -90,7 +91,7 @@ export class Collection<T extends Indexed> extends EventEmitter implements ViewD
     throw new Error("ensureIndex not supported!");
   }
 
-  async createIndex() {
+  async createIndex(): Promise<string> {
     throw new Error("createIndex not supported!");
   }
 
@@ -103,11 +104,11 @@ export class Collection<T extends Indexed> extends EventEmitter implements ViewD
     throw new Error("findAndModify not supported!");
   }
 
-  async updateMany(_query: Query<T>, _update: UpdateFilter, _options?: CollectionUpdateManyOptions): Promise<T[]> {
+  async updateMany(_query: Query<T>, _update: UpdateFilter, _options?: CollectionUpdateManyOptions): Promise<UpdateResult> {
     throw new Error("updateMany not supported!");
   }
 
-  async updateOne(_query: Query<T>, _update: UpdateFilter, _options?: CollectionUpdateOneOptions): Promise<T> {
+  async updateOne(_query: Query<T>, _update: UpdateFilter, _options?: CollectionUpdateOneOptions): Promise<UpdateResult> {
     throw new Error("updateOne not supported!");
   }
 

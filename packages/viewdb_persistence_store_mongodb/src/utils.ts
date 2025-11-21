@@ -1,66 +1,44 @@
-var _ = require("lodash");
+import forEach from "lodash/forEach";
+import isArray from "lodash/isArray";
+import isObject from "lodash/isObject";
+import omit from "lodash/omit";
+import type { Document } from "mongodb";
 
-function _includeKey(key) {
+function includeKey(key: unknown): boolean {
   return key === "1" || key === true || key === 1;
 }
 
-function _excludeKey(key) {
+function excludeKey(key: unknown): boolean {
   return key === "0" || key === false || key === 0;
 }
 
-function _projectLayer(document, projectObject) {
-  var projectedLayer = {};
-  var deletionKeys = [];
+function projectLayer<T extends object = Document, U extends object = Document>(document: T, projectObject: U): U {
+  let projectedLayer = {} as U;
+  const deletionKeys: string[] = [];
 
-  _.forEach(projectObject, function (value, key) {
-    if (_excludeKey(value)) {
+  forEach(projectObject, (value, key) => {
+    if (excludeKey(value)) {
       deletionKeys.push(key);
     }
   });
 
   if (deletionKeys.length > 0) {
-    projectedLayer = _.omit(document, deletionKeys);
+    projectedLayer = omit(document, deletionKeys) as U;
   }
 
-  _.forEach(projectObject, function (value, key) {
-    if (_.isArray(document[key])) {
-      projectedLayer[key] = document[key].map(function (arrayValue) {
-        return _projectLayer(arrayValue, projectObject[key]);
+  forEach(projectObject, (value, key) => {
+    if (isArray(document[key])) {
+      projectedLayer[key] = document[key].map((arrayValue) => {
+        return projectLayer(arrayValue, projectObject[key]);
       });
-    } else if (_.isObject(value)) {
-      projectedLayer[key] = _projectLayer(document[key], value);
-    } else if (_includeKey(value)) {
+    } else if (isObject(value)) {
+      projectedLayer[key] = projectLayer(document[key], value);
+    } else if (includeKey(value)) {
       projectedLayer[key] = document[key];
     }
   });
 
   return projectedLayer;
-}
-
-var nextTick;
-if (typeof setImmediate === "function") {
-  nextTick = setImmediate;
-} else if (typeof process === "object" && process && process.nextTick) {
-  nextTick = process.nextTick;
-} else {
-  nextTick = function (cb) {
-    setTimeout(cb, 0);
-  };
-}
-
-function nodeify(promise, cb) {
-  if (typeof cb !== "function") return promise;
-  return promise
-    .then(function (res) {
-      nextTick(function () {
-        cb(null, res);
-      });
-    })
-    .catch(function (err) {
-      nextTick(function () {
-        cb(err);
-      });
-    });
 }
 
 /**
@@ -69,11 +47,6 @@ function nodeify(promise, cb) {
  * @param {object} projectObject MongoDb like project object
  * @returns projected version of the document
  */
-function projectDocument(document, projectObject) {
-  return _projectLayer(document, projectObject);
+export function projectDocument<T extends object = Document, U extends object = Document>(document: T, projectObject: U): U {
+  return projectLayer(document, projectObject);
 }
-
-module.exports = {
-  projectDocument,
-  nodeify,
-};

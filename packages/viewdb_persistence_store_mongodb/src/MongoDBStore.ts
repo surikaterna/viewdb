@@ -1,40 +1,45 @@
-var Promise = require('bluebird');
-var Collection = require('./collection');
-var _ = require('lodash');
+import type { Db } from "mongodb";
+import type { Indexed } from "viewdb";
+import { MongoDBCollection } from "./MongoDBCollection";
+import type { OplogListener, OplogListenerConstructor } from "./OplogListener";
 
-var Store = function (mongodb, oplogEnabled, oplogListener) {
-  this._mongodb = mongodb;
-  this._oplogListeners = {};
-  this._collections = {};
-  this._oplogListener = oplogListener;
-  this._oplogEnabled = oplogEnabled;
-};
+export class MongoDBStore {
+  private readonly db: Db;
+  private readonly oplogListeners: Record<string, OplogListener<any>>;
+  // biome-ignore lint/correctness/noUnusedPrivateClassMembers: it is used in the collection method
+  private readonly collections: Record<string, MongoDBCollection<any>>;
+  private readonly oplogListener?: OplogListenerConstructor<any>;
+  private readonly oplogEnabled: boolean;
 
-Store.prototype.open = function (callback) {
-  var self = this;
-  return Promise.resolve(self).nodeify(callback);
-};
+  constructor(mongodb: Db, oplogEnabled = false, oplogListener?: OplogListenerConstructor<any>) {
+    this.db = mongodb;
+    this.oplogListeners = {};
+    this.collections = {};
+    this.oplogListener = oplogListener;
+    this.oplogEnabled = oplogEnabled;
+  }
 
-Store.prototype.collection = function (collectionName, callback) {
-  var coll = this._collections[collectionName];
-  if (coll === undefined) {
-    if (this._oplogEnabled && this._oplogListener) {
-      var dbName = _.get(this._mongodb, 'databaseName');
-      var namespaceFilter;
-      if (dbName) {
-        namespaceFilter = dbName + '.' + collectionName;
-      }
-      this._oplogListeners[collectionName] = new this._oplogListener(this._mongodb, namespaceFilter, collectionName);
-    } else if (this._oplogEnabled) {
-      console.warn('oplog listener must be provided to enable listening for updates');
+  async open() {
+    return this;
+  }
+
+  collection<T extends Indexed>(collectionName: string): MongoDBCollection<T> {
+    const existingCollection = this.collections[collectionName];
+
+    if (existingCollection) {
+      return existingCollection;
     }
-    coll = new Collection(this._mongodb.collection(collectionName), this._oplogListeners[collectionName]);
-    this._collections[collectionName] = coll;
-  }
-  if (callback) {
-    callback(coll);
-  }
-  return coll;
-};
 
-module.exports = Store;
+    if (this.oplogEnabled && this.oplogListener) {
+      const dbName = this.db.databaseName;
+      const namespaceFilter = dbName ? `${dbName}.${collectionName}` : undefined;
+      this.oplogListeners[collectionName] = new this.oplogListener(this.db, namespaceFilter, collectionName);
+    } else if (this.oplogEnabled) {
+      console.warn("oplog listener must be provided to enable listening for updates");
+    }
+
+    const collection = new MongoDBCollection<T>(this.db.collection(collectionName), this.oplogListeners[collectionName]);
+    this.collections[collectionName] = collection;
+    return collection;
+  }
+}

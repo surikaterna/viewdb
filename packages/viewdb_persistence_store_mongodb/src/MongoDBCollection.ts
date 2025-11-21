@@ -1,204 +1,234 @@
-var EventEmitter = require("events").EventEmitter;
-var util = require("util");
-var { forEach, isFunction, isArray } = require("lodash");
+import { EventEmitter } from "node:events";
+import type { QueryObject, QueryOptions } from "kuery";
+import isArray from "lodash/isArray";
+import type {
+  AnyBulkWriteOperation,
+  Collection,
+  CreateIndexesOptions,
+  DeleteOptions,
+  Document,
+  Filter,
+  FindCursor,
+  FindOneAndUpdateOptions,
+  IndexSpecification,
+  OptionalId,
+  OptionalUnlessRequiredId,
+  Sort,
+  UpdateFilter,
+  UpdateOptions,
+} from "mongodb";
+import type { Indexed, MaybeArray, ViewDBCollection } from "viewdb";
+import { MongoDBCursor } from "./MongoDBCursor";
+import type { OplogListener } from "./OplogListener";
 
-var Cursor = require("./cursor");
-const { nodeify } = require("./utils");
+export class MongoDBCollection<T extends Indexed> extends EventEmitter implements ViewDBCollection<T> {
+  constructor(
+    private readonly collection: Collection<T>,
+    private readonly oplogListener: OplogListener<T>
+  ) {
+    super();
+  }
 
-var Collection = function (collection, oplogListener) {
-  EventEmitter.call(this);
-  this._collection = collection;
-  this._oplogListener = oplogListener;
-};
+  get namespace(): string {
+    return this.collection.namespace;
+  }
 
-util.inherits(Collection, EventEmitter);
+  count(): Promise<number> {
+    return this.collection.count.apply(this.collection);
+  }
 
-Collection.prototype.count = function () {
-  return this._collection.count.apply(this._collection, arguments);
-};
+  find(query: Filter<T>, options?: QueryOptions): MongoDBCursor<T> {
+    const cursor = this.collection.find(query, options) as FindCursor<T>;
+    return new MongoDBCursor(this, { query } as QueryObject<T>, options, cursor, this.oplogListener);
+  }
 
-var wrapCallback = function (args, cb) {
-  var realCb = args[args.length - 1];
-  if (isFunction(realCb)) {
-    args[args.length - 1] = function () {
-      cb();
-      realCb.apply(null, arguments);
+  async findAndModify(query: Filter<T>, sort: Pick<FindOneAndUpdateOptions, "sort"> | null, update: UpdateFilter<T>, options: FindOneAndUpdateOptions) {
+    if (sort) {
+      Object.assign(options, sort);
+    }
+
+    // TODO: Remove this and only call on success?
+    const callback = () => {
+      this.emit("change", { findAndModify: update });
     };
-  } else {
-    args = Array.prototype.slice.call(args);
-    args.push(cb);
-  }
-  return args;
-};
 
-Collection.prototype.find = function (query, options) {
-  var cursor = this._collection.find.apply(this._collection, arguments);
-  return new Cursor(this, { query: query }, options, cursor, this._oplogListener);
-};
-
-Collection.prototype.findAndModify = function (query, sort, update, options, cb) {
-  if (sort) {
-    Object.assign(options, sort);
-  }
-  const self = this;
-  function callback(err, doc) {
-    self.emit("change", { findAndModify: update });
-    if (isFunction(cb)) {
-      cb(err, doc);
+    try {
+      const res = await this.collection.findOneAndUpdate(query, update, options);
+      callback();
+      return res;
+    } catch (err) {
+      callback();
+      throw err;
     }
   }
-  return new Promise((resolve, reject) => {
-    this._collection
-      .findOneAndUpdate(query, update, options)
-      .then(function (res) {
-        resolve(res);
-        callback(null, res);
-      })
-      .catch(function (err) {
-        reject(err);
-        callback(err);
-      });
-  });
-};
 
-Collection.prototype.updateMany = function (query, update, options, cb) {
-  var self = this;
-  var args = wrapCallback(arguments, function () {
-    self.emit("change", { updateMany: update });
-  });
-  if (isFunction(options)) {
-    cb = options;
-  }
-  return nodeify(this._collection.updateMany.apply(this._collection, args), cb);
-};
+  async updateMany(query: Filter<T>, update: UpdateFilter<T>, options?: UpdateOptions) {
+    // TODO: Remove this and only call on success?
+    const callback = () => {
+      this.emit("change", { updateMany: update });
+    };
 
-Collection.prototype.updateOne = function (query, update, options, cb) {
-  var self = this;
-  var args = wrapCallback(arguments, function () {
-    self.emit("change", { updateOne: update });
-  });
-  if (isFunction(options)) {
-    cb = options;
-  }
-  return nodeify(this._collection.updateOne.apply(this._collection, args), cb);
-};
-
-Collection.prototype.remove = function (query, options, cb) {
-  console.warn("Deprecated: use deleteMany or deleteOne instead");
-  var self = this;
-  var args = wrapCallback(arguments, function () {
-    self.emit("change", { remove: query });
-  });
-  if (isFunction(options)) {
-    cb = options;
-  }
-  return nodeify(this._collection.deleteMany.apply(this._collection, args), cb);
-};
-
-Collection.prototype.deleteMany = function (query, options) {
-  var args = wrapCallback(arguments, function () {
-    self.emit("change", { remove: query });
-  });
-  return this._collection.deleteMany.apply(this._collection, args);
-};
-
-Collection.prototype.deleteOne = function (query, options) {
-  var args = wrapCallback(arguments, function () {
-    self.emit("change", { remove: query });
-  });
-  return this._collection.deleteOne.apply(this._collection, args);
-};
-
-Collection.prototype.insert = function (docs, cb) {
-  var self = this;
-  // insertOne / insertMany modifies docs and adds inserted _id if applicable
-  var onFulfilled = function () {
-    self.emit("change", { insert: docs });
-    if (isFunction(cb)) {
-      cb(null, docs);
+    try {
+      const result = await this.collection.updateMany(query, update, options);
+      callback();
+      return result;
+    } catch (err) {
+      callback();
+      throw err;
     }
-  };
-  var onRejected = function (err) {
-    if (isFunction(cb)) {
-      cb(err);
-    }
-  };
-  var promise;
-  if (isArray(docs)) {
-    promise = this._collection.insertMany(docs).then(onFulfilled).catch(onRejected);
-  } else {
-    promise = this._collection.insertOne(docs).then(onFulfilled).catch(onRejected);
   }
-  return promise;
-};
 
-Collection.prototype.save = function (docs, cb) {
-  var self = this;
-  if (!isArray(docs)) {
-    docs = [docs];
+  async updateOne(query: Filter<T>, update: UpdateFilter<T>, options?: UpdateOptions & { sort?: Sort }) {
+    const callback = () => {
+      this.emit("change", { updateOne: update });
+    };
+
+    try {
+      const result = await this.collection.updateOne(query, update, options);
+      callback();
+      return result;
+    } catch (err) {
+      callback();
+      throw err;
+    }
   }
-  const operations = [];
-  forEach(docs, function (d) {
-    if (!d._id) {
-      operations.push({ insertOne: { document: d } });
+
+  /**
+   * @deprecated use deleteMany or deleteOne instead
+   */
+  async remove(query: Filter<T>, options?: DeleteOptions): Promise<void> {
+    console.warn("Deprecated: use deleteMany or deleteOne instead");
+
+    const callback = () => {
+      this.emit("change", { remove: query });
+    };
+
+    try {
+      await this.collection.deleteMany(query, options);
+      callback();
+    } catch (err) {
+      callback();
+      throw err;
+    }
+  }
+
+  async deleteMany(query?: Filter<T>, options?: DeleteOptions) {
+    const callback = () => {
+      this.emit("change", { remove: query });
+    };
+
+    try {
+      const result = await this.collection.deleteMany(query, options);
+      callback();
+      return result;
+    } catch (err) {
+      callback();
+      throw err;
+    }
+  }
+
+  async deleteOne(query?: Filter<T>, options?: DeleteOptions) {
+    const callback = () => {
+      this.emit("change", { remove: query });
+    };
+
+    try {
+      const result = await this.collection.deleteOne(query, options);
+      callback();
+      return result;
+    } catch (err) {
+      callback();
+      throw err;
+    }
+  }
+
+  async insert(doc: MaybeArray<T>) {
+    const docs = isArray(doc) ? doc : [doc];
+
+    const onFulfilled = () => {
+      this.emit("change", { insert: docs });
+    };
+
+    if (Array.isArray(doc)) {
+      await this.collection.insertMany(doc as OptionalUnlessRequiredId<T>[]);
     } else {
-      operations.push({ replaceOne: { filter: { _id: d._id }, replacement: d, upsert: true } });
+      await this.collection.insertOne(doc as OptionalUnlessRequiredId<T>);
     }
-  });
-  // bulkWrite modifies docs and adds inserted _id if applicable
-  return this._collection
-    .bulkWrite(operations)
-    .then(function () {
-      self.emit("change", { save: docs });
-      if (isFunction(cb)) {
-        cb(null, docs);
+
+    onFulfilled();
+    return docs;
+  }
+
+  async save(doc: MaybeArray<T>) {
+    const docs = isArray(doc) ? doc : [doc];
+    const operations: Array<AnyBulkWriteOperation<T>> = [];
+
+    const isOptionalId = (doc: Document): doc is OptionalId<T> => {
+      return !doc._id;
+    };
+
+    for (const doc of docs as Array<OptionalId<T> | T>) {
+      if (isOptionalId(doc)) {
+        operations.push({
+          insertOne: {
+            document: doc,
+          },
+        });
+      } else {
+        operations.push({
+          replaceOne: {
+            filter: { _id: doc._id } as Filter<T>,
+            replacement: doc,
+            upsert: true,
+          },
+        });
       }
-    })
-    .catch(function (err) {
-      if (isFunction(cb)) {
-        cb(err);
-      }
-    });
-};
-
-Collection.prototype.drop = function (cb) {
-  var self = this;
-  var args = wrapCallback(arguments, function () {
-    self.emit("change", { drop: true });
-  });
-  return nodeify(this._collection.drop.apply(this._collection, args), cb);
-};
-
-Collection.prototype.createIndex = function (indexSpec, options, cb) {
-  if (isFunction(options)) {
-    cb = options;
-    options = {};
-  }
-  return nodeify(this._collection.createIndex(indexSpec, options), cb);
-};
-
-Collection.prototype._getDocuments = function (queryObject, callback) {
-  var query = queryObject.query || queryObject;
-  var cursor = this._collection.find(query);
-  if (queryObject.skip) {
-    cursor.skip(queryObject.skip);
-  }
-  if (queryObject.limit) {
-    cursor.limit(queryObject.limit);
-  }
-  if (queryObject.sort) {
-    cursor.sort(queryObject.sort);
-  }
-  if (queryObject.project) {
-    cursor.project(queryObject.project);
-  }
-  cursor.toArray().then(function (res, err) {
-    if (err) {
-      callback(err);
-    } else {
-      callback(null, res);
     }
-  });
-};
 
-module.exports = Collection;
+    // bulkWrite modifies docs and adds inserted _id if applicable
+    await this.collection.bulkWrite(operations);
+    this.emit("change", { save: docs });
+    return docs;
+  }
+
+  async drop() {
+    const callback = () => {
+      this.emit("change", { drop: true });
+    };
+
+    try {
+      await this.collection.drop.call(this.collection);
+      callback();
+    } catch (err) {
+      callback();
+      throw err;
+    }
+  }
+
+  async createIndex(indexSpec: IndexSpecification, options?: CreateIndexesOptions): Promise<string> {
+    return this.collection.createIndex(indexSpec, options);
+  }
+
+  async _getDocuments(queryObject: QueryObject<T>): Promise<T[]> {
+    const query = queryObject.query ?? queryObject;
+    const cursor = this.collection.find<T>(query);
+
+    if (queryObject.skip) {
+      cursor.skip(queryObject.skip);
+    }
+
+    if (queryObject.limit) {
+      cursor.limit(queryObject.limit);
+    }
+
+    if (queryObject.sort) {
+      cursor.sort(queryObject.sort);
+    }
+
+    if (queryObject.project) {
+      cursor.project(queryObject.project);
+    }
+
+    return cursor.toArray();
+  }
+}

@@ -21,7 +21,7 @@ type MergeOptions<T> = {
   removed?: (element: T, index: number) => void;
 };
 
-export function merge<T>(asis: T[], tobe: T[], options: MergeOptions<T> = {}): T[] {
+export function merge<T>(asis: T[] | null, tobe: T[], options: MergeOptions<T> = {}): T[] {
   const comparator = options.comparator || isEqual;
   const comparatorId = options.comparatorId || comparator;
   const list = slice(asis);

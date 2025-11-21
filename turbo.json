@@ -16,9 +16,11 @@
       "cache": false
     },
     "//#lint": {},
+    "//#lint:fix": {},
     "//#format": {},
-    "//#format-and-lint": {},
-    "//#format-and-lint:fix": {
+    "//#format:fix": {},
+    "//#check": {},
+    "//#check:fix": {
       "cache": false
     }
   }
