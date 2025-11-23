@@ -1,4 +1,17 @@
-module.exports = [
+export type Person = {
+  id: number;
+  name: string;
+  address?: {
+    street: string;
+  };
+  born: Date;
+  girlfriends?: Array<{
+    name: string;
+    hotness: number;
+  }>;
+};
+
+const people: Person[] = [
   {
     id: 1,
     name: "Andreas",
@@ -17,3 +30,5 @@ module.exports = [
     born: new Date("1982-01-01T12:00:00.000Z"),
   },
 ];
+
+export default people;

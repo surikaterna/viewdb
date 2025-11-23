@@ -1,57 +1,59 @@
-var _ = require('lodash/fp');
+import _ from "lodash/fp";
+import { type AnyFunction, QueryCompiler } from "./QueryCompiler";
+import type { Document, Filter, QueryOptions, SortObject } from "./types";
 
-var QueryCompiler = require('./compiler');
-var Kuery = function (query) {
-  this._query = query || {};
-  this._compiledQuery = new QueryCompiler().compile(this._query);
-  this._options = {};
-};
-Kuery.prototype.skip = function (skip) {
-  this._options.skip = skip;
-  return this;
-};
+export class Kuery<T extends Document = Document> {
+  // biome-ignore lint/correctness/noUnusedPrivateClassMembers: The type is used in methods
+  private readonly compiledQuery: AnyFunction;
+  private readonly queryOptions: QueryOptions;
 
-Kuery.prototype.limit = function (limit) {
-  this._options.limit = limit;
-  return this;
-};
-
-Kuery.prototype.sort = function (sort) {
-  this._options.sort = sort;
-  return this;
-};
-
-Kuery.prototype.find = function (collection) {
-  var q = [this._compiledQuery];
-  if (this._options.sort) {
-    var self = this;
-    var sortKeys = _.keys(this._options.sort);
-    var sortDir = _.map(function (key) {
-      if (self._options.sort[key] > 0) return 'asc';
-      else return 'desc';
-    })(sortKeys);
-    q.push(_.orderBy(sortKeys, sortDir));
+  constructor(query: Filter<T> = {}) {
+    this.compiledQuery = new QueryCompiler<T>().compile(query);
+    this.queryOptions = {};
   }
-  if (this._options.skip) {
-    q.push(_.drop(this._options.skip));
-  }
-  if (this._options.limit) {
-    q.push(_.take(this._options.limit));
-  }
-  if (q.length > 1) {
-    q = _.flow(q);
-  } else {
-    q = q[0];
-  }
-  return q(collection);
-};
 
-Kuery.prototype.findOne = function (collection, options) {
-  var result = this.find(collection, options);
-  if (result.length !== 1) {
-    throw new Error('findOne returned ' + result.length + ' results.');
+  skip(skip: number) {
+    this.queryOptions.skip = skip;
+    return this;
   }
-  return result[0];
-};
 
-module.exports = Kuery;
+  limit(limit: number) {
+    this.queryOptions.limit = limit;
+    return this;
+  }
+
+  sort(sortObject: SortObject) {
+    this.queryOptions.sort = sortObject;
+    return this;
+  }
+
+  find(collection: T[]): T[] {
+    const queryFuncs = [this.compiledQuery];
+
+    if (this.queryOptions.sort) {
+      const sortKeys = _.keys(this.queryOptions.sort);
+      const sortDir = _.map((key: string) => (this.queryOptions.sort[key] > 0 ? "asc" : "desc"))(sortKeys);
+      queryFuncs.push(_.orderBy(sortKeys, sortDir));
+    }
+
+    if (this.queryOptions.skip) {
+      queryFuncs.push(_.drop(this.queryOptions.skip));
+    }
+
+    if (this.queryOptions.limit) {
+      queryFuncs.push(_.take(this.queryOptions.limit));
+    }
+
+    const queryFunc = queryFuncs.length > 1 ? _.flow(queryFuncs) : queryFuncs[0];
+    return queryFunc(collection);
+  }
+
+  findOne(collection: T[]): T {
+    const result = this.find(collection);
+    if (result.length !== 1) {
+      throw new Error(`findOne returned ${result.length} results.`);
+    }
+
+    return result[0];
+  }
+}

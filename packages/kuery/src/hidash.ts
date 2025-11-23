@@ -1,107 +1,122 @@
-var _ = require("lodash/fp");
-var __ = require("lodash");
+import __ from "lodash";
+import _ from "lodash/fp";
 
-var hi = {
-  __logN: function (name) {
-    return function (v) {
-      console.log(">>(" + name + ") ", v);
-      return v;
-    };
-  },
-  __log: function (v) {
-    console.log(">>", v);
+function __logN(name: string) {
+  return (v: any) => {
+    console.log(`>>(${name}) `, v);
     return v;
-  },
-  or: function OR(predicates) {
-    return function (v) {
-      var i;
-      for (i = 0; i < predicates.length; i++) {
-        if (predicates[i](v)) {
-          return true;
-        }
+  };
+}
+
+function __log(v: any) {
+  console.log(">>", v);
+  return v;
+}
+
+function or(predicates: any[]) {
+  return (v: any) => {
+    for (let i = 0; i < predicates.length; i++) {
+      if (predicates[i](v)) {
+        return true;
       }
-      return false;
-    };
-  },
-  and: function AND(predicates) {
-    return function (v) {
-      var i;
-      for (i = 0; i < predicates.length; i++) {
-        if (!predicates[i](v)) {
-          return false;
-        }
+    }
+
+    return false;
+  };
+}
+
+function and(predicates: any[]) {
+  return (v: any) => {
+    for (let i = 0; i < predicates.length; i++) {
+      if (!predicates[i](v)) {
+        return false;
       }
-      return true;
-    };
-  },
-  check: function check(key, op) {
-    var res;
-    if (key.indexOf(".") !== -1) {
-      res = function (v) {
-        var collected = hi.collect(key)(v);
+    }
+
+    return true;
+  };
+}
+
+function check(key: string, op: any) {
+  return key.indexOf(".") !== -1
+    ? (v: any) => {
+        const collected = hi.collect(key)(v);
         if (_.isArray(collected) && collected.length === 0) {
           return op(undefined);
         }
+
         return _.some(op)(collected);
-      };
-    } else {
-      res = function (v) {
+      }
+    : (v: any) => {
         if (!v) {
           return op(undefined);
         }
 
         return op(v[key]);
       };
-    }
-    return res;
-  },
-  compare: function COMP(key, op, arg) {
-    return hi.check(key, op(_, arg));
-  },
-  exists: function exists(key, op) {
-    return hi.check(key, function (v) {
-      return op ? !!v : !v;
-    });
-  },
-  /**
-   * Traverse an object/array graph and collect all elements matching {key}
-   * @param {string} key path for all elements to collect
-   * @returns an array of all elements collected
-   */
-  collect: function collect(key, lastPathMustBeArray) {
-    return function (v) {
-      var path = key.split(".");
-      var res = [];
-      hi._collect(res, v, path, lastPathMustBeArray);
-      return res;
-    };
-  },
-  _collect: function _collect(result, object, path, lastPathMustBeArray) {
-    var index = 0;
-    var length = path.length;
-    var element = object;
+}
 
-    if (_.isArray(object)) {
-      __.forEach(object, function (e) {
-        hi._collect(result, e, path, lastPathMustBeArray);
-      });
-    } else {
-      while (element !== null && element !== undefined && index < length) {
-        element = element[path[index++]];
-        if (_.isArray(element)) {
-          hi._collect(result, element, __.slice(path, index), path.length > 1 && lastPathMustBeArray);
-          element = null;
-        } else {
-          if (path.length === 1 && lastPathMustBeArray) {
-            return;
-          }
+function compare(key: string, op: any, arg: any) {
+  return hi.check(key, op(_, arg));
+}
+
+function exists(key: string, op: any) {
+  return hi.check(key, (v: any) => {
+    return op ? !!v : !v;
+  });
+}
+
+/**
+ * Traverse an object/array graph and collect all elements matching {key}
+ * @param {string} key path for all elements to collect
+ * @returns an array of all elements collected
+ */
+function collect(key: string, lastPathMustBeArray?: boolean) {
+  return (v: any) => {
+    const path = key.split(".");
+    const res = [];
+    hi._collect(res, v, path, lastPathMustBeArray);
+    return res;
+  };
+}
+
+function _collect(result: any, object: any, path: any, lastPathMustBeArray?: boolean) {
+  let index = 0;
+  const length = path.length;
+  let element = object;
+
+  if (_.isArray(object)) {
+    __.forEach(object, (e) => {
+      hi._collect(result, e, path, lastPathMustBeArray);
+    });
+  } else {
+    while (element !== null && element !== undefined && index < length) {
+      element = element[path[index++]];
+      if (_.isArray(element)) {
+        hi._collect(result, element, __.slice(path, index), path.length > 1 && lastPathMustBeArray);
+        element = null;
+      } else {
+        if (path.length === 1 && lastPathMustBeArray) {
+          return;
         }
       }
-      if (element) {
-        result.push(element);
-      }
     }
-  },
+    if (element) {
+      result.push(element);
+    }
+  }
+}
+
+const hi = {
+  __logN,
+  __log,
+  or,
+  and,
+  check,
+  compare,
+  exists,
+  collect,
+  _collect,
 };
 
-module.exports = hi;
+export default hi;
