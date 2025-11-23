@@ -1,15 +1,15 @@
-var _ = require('lodash/fp');
-var __ = require('lodash');
+var _ = require("lodash/fp");
+var __ = require("lodash");
 
 var hi = {
   __logN: function (name) {
     return function (v) {
-      console.log('>>(' + name + ') ', v);
+      console.log(">>(" + name + ") ", v);
       return v;
     };
   },
   __log: function (v) {
-    console.log('>>', v);
+    console.log(">>", v);
     return v;
   },
   or: function OR(predicates) {
@@ -36,7 +36,7 @@ var hi = {
   },
   check: function check(key, op) {
     var res;
-    if (key.indexOf('.') !== -1) {
+    if (key.indexOf(".") !== -1) {
       res = function (v) {
         var collected = hi.collect(key)(v);
         if (_.isArray(collected) && collected.length === 0) {
@@ -70,7 +70,7 @@ var hi = {
    */
   collect: function collect(key, lastPathMustBeArray) {
     return function (v) {
-      var path = key.split('.');
+      var path = key.split(".");
       var res = [];
       hi._collect(res, v, path, lastPathMustBeArray);
       return res;
@@ -101,7 +101,7 @@ var hi = {
         result.push(element);
       }
     }
-  }
+  },
 };
 
 module.exports = hi;

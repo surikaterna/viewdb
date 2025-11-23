@@ -1,0 +1,9 @@
+{
+  "extends": "@repo/typescript-config/tsconfig.json",
+  "include": ["src"],
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "typeRoots": ["./@types", "../../node_modules/@types"]
+  }
+}
