@@ -1,0 +1,38 @@
+{
+  "name": "kuery",
+  "version": "0.6.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test --recursive",
+    "test.watch": "mocha test --watch --recursive",
+    "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- --recursive test -u exports -R spec",
+    "coverage-start": "istanbul cover node_modules/mocha/bin/_mocha test --recursive -- -u exports -R spec && start coverage/lcov-report/index.html",
+    "jshint": "jshint ./lib",
+    "jscs": "jscs -p google ./lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/surikaterna/kuery.git"
+  },
+  "author": "Surikat AB",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/surikaterna/kuery/issues"
+  },
+  "prettier": "prettier-config-surikaterna",
+  "devDependencies": {
+    "eslint": "^2.5.3",
+    "eslint-config-surikat": "^1.1.0",
+    "istanbul": "^0.3.2",
+    "jshint": "^2.5.10",
+    "mocha": "^2.0.1",
+    "prettier": "^3.4.1",
+    "prettier-config-surikaterna": "^1.0.1",
+    "should": "^4.1.0"
+  },
+  "homepage": "https://github.com/surikaterna/kuery#readme",
+  "dependencies": {
+    "lodash": "^4.17.21"
+  }
+}
