@@ -4,6 +4,9 @@
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "directories": {
     "test": "test"
   },
@@ -13,9 +16,9 @@
     "test.watch": "jest test --watch",
     "coverage": "jest test --collectCoverage",
     "coverage-start": "npm run coverage && start coverage/lcov-report/index.html",
-    "format": "prettier --write lib test",
-    "jshint": "jshint ./lib",
-    "jscs": "jscs -p google ./lib"
+    "format": "prettier --write src test",
+    "jshint": "jshint ./src",
+    "jscs": "jscs -p google ./src"
   },
   "repository": {
     "type": "git",

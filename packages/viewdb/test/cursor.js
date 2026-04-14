@@ -1,4 +1,4 @@
-var Cursor = require('../lib/cursor');
+var Cursor = require('../dist/cursor');
 var ViewDB = require('..');
 
 describe('Cursor', () => {

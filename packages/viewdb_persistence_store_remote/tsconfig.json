@@ -6,9 +6,9 @@
     "rootDir": "src",
     "composite": true,
     "types": ["node", "lodash"],
-    "typeRoots": ["../../node_modules/@types", "./@types"]
+    "typeRoots": ["../../node_modules/@types", "../shared-types", "./@types"]
   },
   "references": [{ "path": "../viewdb" }],
-  "include": ["src", "@types"],
+  "include": ["src", "../shared-types", "@types"],
   "exclude": ["node_modules", "dist", "__tests__"]
 }

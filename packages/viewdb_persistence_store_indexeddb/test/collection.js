@@ -1,7 +1,7 @@
 var should = require('should');
 
-var Store = require('../lib/store');
-var Collection = require('../lib/collection');
+var Store = require('../dist/store');
+var Collection = require('../dist/collection');
 var getDb = require('./util');
 
 describe('Collection', function () {
