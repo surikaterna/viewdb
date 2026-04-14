@@ -55,13 +55,14 @@ describe('mongodb_persistence', () => {
     it('#insert two documents with same key should throw', function (done) {
       var store = new Store(getDb());
       store.open().then(function () {
-        store.collection(COLLECTION_NAME).insert({ _id: 'echo' });
-        store.collection(COLLECTION_NAME).insert({ _id: 'echo' }, function (err) {
-          if (err) {
-            done();
-          } else {
-            done(new Error('should have thrown unique constraint'));
-          }
+        store.collection(COLLECTION_NAME).insert({ _id: 'echo' }, function () {
+          store.collection(COLLECTION_NAME).insert({ _id: 'echo' }, function (err) {
+            if (err) {
+              done();
+            } else {
+              done(new Error('should have thrown unique constraint'));
+            }
+          });
         });
       });
     });
@@ -197,32 +198,34 @@ describe('mongodb_persistence', () => {
     it('#find {_id:"echo"} should return correct document', function (done) {
       var store = new Store(getDb());
       store.open().then(function () {
-        store.collection(COLLECTION_NAME).insert({ _id: 'echo' });
-        store.collection(COLLECTION_NAME).insert({ _id: 'sierra' }, function () {
-          store
-            .collection(COLLECTION_NAME)
-            .find({ _id: 'echo' })
-            .toArray(function (err, results) {
-              expect(results).toHaveLength(1);
-              expect(results[0]._id).toBe('echo');
-              done();
-            });
+        store.collection(COLLECTION_NAME).insert({ _id: 'echo' }, function () {
+          store.collection(COLLECTION_NAME).insert({ _id: 'sierra' }, function () {
+            store
+              .collection(COLLECTION_NAME)
+              .find({ _id: 'echo' })
+              .toArray(function (err, results) {
+                expect(results).toHaveLength(1);
+                expect(results[0]._id).toBe('echo');
+                done();
+              });
+          });
         });
       });
     });
     it('#find with complex key {"name.first":"echo"} should return correct document', function (done) {
       var store = new Store(getDb());
       store.open().then(function () {
-        store.collection(COLLECTION_NAME).insert({ _id: 'echo', name: { first: 'ECHO', last: 'TV' } });
-        store.collection(COLLECTION_NAME).insert({ _id: 'sierra', name: { first: 'SIERRA', last: 'TV' } }, function () {
-          store
-            .collection(COLLECTION_NAME)
-            .find({ 'name.first': 'ECHO' })
-            .toArray(function (err, results) {
-              expect(results).toHaveLength(1);
-              expect(results[0]._id).toBe('echo');
-              done();
-            });
+        store.collection(COLLECTION_NAME).insert({ _id: 'echo', name: { first: 'ECHO', last: 'TV' } }, function () {
+          store.collection(COLLECTION_NAME).insert({ _id: 'sierra', name: { first: 'SIERRA', last: 'TV' } }, function () {
+            store
+              .collection(COLLECTION_NAME)
+              .find({ 'name.first': 'ECHO' })
+              .toArray(function (err, results) {
+                expect(results).toHaveLength(1);
+                expect(results[0]._id).toBe('echo');
+                done();
+              });
+          });
         });
       });
     });
@@ -247,15 +250,16 @@ describe('mongodb_persistence', () => {
     it('#drop should remove all documents', function (done) {
       var store = new Store(getDb());
       store.open().then(function () {
-        store.collection(COLLECTION_NAME).insert({ _id: 'echo' });
-        store.collection(COLLECTION_NAME).drop(function () {
-          store
-            .collection(COLLECTION_NAME)
-            .find({})
-            .toArray(function (err, results) {
-              expect(results).toHaveLength(0);
-              done();
-            });
+        store.collection(COLLECTION_NAME).insert({ _id: 'echo' }, function () {
+          store.collection(COLLECTION_NAME).drop(function () {
+            store
+              .collection(COLLECTION_NAME)
+              .find({})
+              .toArray(function (err, results) {
+                expect(results).toHaveLength(0);
+                done();
+              });
+          });
         });
       });
     });
@@ -273,16 +277,19 @@ describe('mongodb_persistence', () => {
 
     it('#remove should remove one document', function (done) {
       var store = new Store(getDb());
-      store.collection(COLLECTION_NAME).insert({ _id: 'echo', name: { first: 'ECHO', last: 'TV' } });
-      store.collection(COLLECTION_NAME).insert({ _id: 'sierra', name: { first: 'SIERRA', last: 'TV' } }, function () {
-        store.collection(COLLECTION_NAME).remove({ _id: 'echo' }, null, function () {
-          store
-            .collection(COLLECTION_NAME)
-            .find({ 'name.first': 'ECHO' })
-            .toArray(function (err, results) {
-              expect(results).toHaveLength(0);
-              done();
+      store.open().then(function () {
+        store.collection(COLLECTION_NAME).insert({ _id: 'echo', name: { first: 'ECHO', last: 'TV' } }, function () {
+          store.collection(COLLECTION_NAME).insert({ _id: 'sierra', name: { first: 'SIERRA', last: 'TV' } }, function () {
+            store.collection(COLLECTION_NAME).remove({ _id: 'echo' }, null, function () {
+              store
+                .collection(COLLECTION_NAME)
+                .find({ 'name.first': 'ECHO' })
+                .toArray(function (err, results) {
+                  expect(results).toHaveLength(0);
+                  done();
+                });
             });
+          });
         });
       });
     });
