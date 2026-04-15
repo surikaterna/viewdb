@@ -32,7 +32,7 @@ packages/shared-types/kuery/                     - kuery type shim (only shared 
 ## Technical Constraints
 
 - CommonJS only. Core uses `export = Object.assign(ViewDB, { Cursor, Observer, merge, plugins })` pattern.
-- Callback-based API throughout. No promises.
+- API supports both callbacks and promises. Prefer promises for new code.
 - ES2018 target, compiled from TypeScript.
 - Observer constructor returns { stop }, not this. Preserved with as-any cast in implementation.
 - Plugins (TimestampPlugin, VersioningPlugin) use monkey-patching. Not typed.
