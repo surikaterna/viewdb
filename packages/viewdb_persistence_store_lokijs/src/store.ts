@@ -4,7 +4,7 @@ import Collection = require('./collection');
 
 const Loki = require('lokijs');
 import Promise = require('bluebird');
-const LOG = LoggerFactory.getLogger('lx:client-react:lokijs-store');
+const LOG = LoggerFactory.getLogger('viewdb_persistence_store_lokijs:store');
 
 class Store {
   _collections: any;

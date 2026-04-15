@@ -1,6 +1,6 @@
 import { LoggerFactory } from 'slf';
 
-const LOG = LoggerFactory.getLogger('lx:client-react:loki-fs-adapter');
+const LOG = LoggerFactory.getLogger('viewdb_persistence_store_lokijs:cordova-fs-adapter');
 
 class LokiCordovaFSAdapterError extends Error {}
 
