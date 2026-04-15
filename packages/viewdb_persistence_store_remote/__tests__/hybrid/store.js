@@ -1,4 +1,4 @@
-var Store = require('../../lib/hybrid/store');
+var Store = require('../../dist/hybrid/store');
 var LocalStore = require('viewdb/dist/inmemory/store');
 var should = require('should');
 var Cursor = require('viewdb').Cursor;

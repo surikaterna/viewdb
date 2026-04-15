@@ -1,5 +1,5 @@
 var should = require('should');
-var reconcile = require('../../lib/hybrid/reconcile');
+var reconcile = require('../../dist/hybrid/reconcile');
 
 describe('Reconcile', function () {
   it('#reconcile should return remote docs if only remote', function () {
@@ -70,11 +70,17 @@ describe('Reconcile', function () {
     (end - start).should.be.below(500);
   });
   it('#reconcile should not break if local contain duplicates, and should update to newest version of local copy', function () {
-    const result = reconcile([{ _id: 1, version: 1 }, { _id: 1, version: 2 }], [{ _id: 1, version: 1 }])
-    result[0].version.should.equal(2)
-  })
+    const result = reconcile(
+      [
+        { _id: 1, version: 1 },
+        { _id: 1, version: 2 }
+      ],
+      [{ _id: 1, version: 1 }]
+    );
+    result[0].version.should.equal(2);
+  });
   it('#reconcile should not break if local contain duplicates, and should get best copy with version', function () {
-    const result = reconcile([{ _id: 1 }, { _id: 1, version: 1 }], [{ _id: 1 }])
+    const result = reconcile([{ _id: 1 }, { _id: 1, version: 1 }], [{ _id: 1 }]);
     result[0].version.should.equal(1);
-  })
+  });
 });
