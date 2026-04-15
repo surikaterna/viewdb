@@ -5,7 +5,7 @@ import _ = require('lodash');
 import TimeTracker = require('./timeTracker');
 import { LoggerFactory } from 'slf';
 
-var LOG = LoggerFactory.getLogger('viewdb_persistence_store_remote:cursor');
+var LOG = LoggerFactory.getLogger('viewdb:remote:hybrid-cursor');
 
 class HybridCursor {
   _query: any;

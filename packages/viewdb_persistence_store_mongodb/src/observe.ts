@@ -8,7 +8,7 @@ var ViewDB = require('viewdb');
 var merge = ViewDB.merge;
 var LegacyObserver = ViewDB.Observer;
 
-const log = LoggerFactory.getLogger('viewdb_persistence_store_mongodb:observer');
+const log = LoggerFactory.getLogger('viewdb:mongodb:observer');
 
 class Observer {
   _queryOptions!: { query?: any; skip?: number; limit?: number; sort?: Record<string, 1 | -1>; project?: Record<string, 0 | 1> };

@@ -5,7 +5,7 @@ import parseSort = require('./parseSort');
 
 var Cursor = require('viewdb').Cursor;
 
-const LOG = LoggerFactory.getLogger('viewdb_persistence_store_lokijs:collection');
+const LOG = LoggerFactory.getLogger('viewdb:lokijs:collection');
 
 const fixCorruptedLoki = (collection: any) => {
   if (!collection.idIndex) {

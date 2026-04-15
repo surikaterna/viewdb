@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid';
 import _ = require('lodash');
 import Observer = require('./observe');
 
-var LOG = Logger.getLogger('viewdb_persistence_store_remote:cursor');
+var LOG = Logger.getLogger('viewdb:remote:cursor');
 var Cursor = require('viewdb').Cursor;
 
 class RemoteCursor extends Cursor {
