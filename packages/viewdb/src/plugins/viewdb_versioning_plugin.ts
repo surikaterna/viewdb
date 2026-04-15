@@ -1,45 +1,52 @@
-var _ = require('lodash');
+import _ = require('lodash');
 
-var ViewDBVersioningPlugin = function (viewDb) {
-  var oldCollection = viewDb.collection;
-  viewDb.collection = function () {
-    var coll = oldCollection.apply(this, arguments);
+function _getVersion(version: number | undefined): number {
+  if (_.isUndefined(version)) {
+    return 0;
+  }
+  return version + 1;
+}
+
+function ViewDBVersioningPlugin(viewDb: any): void {
+  const oldCollection = viewDb.collection;
+  viewDb.collection = function (this: any) {
+    const coll = oldCollection.apply(this, arguments);
     if (!coll.__plugins_versioning) {
       coll.__plugins_versioning = true;
 
-      var oldSave = coll.save;
-      coll.save = function (docs, options) {
-        var newdocs = docs;
+      const oldSave = coll.save;
+      coll.save = function (this: any, docs: any, options: any) {
+        let newdocs = docs;
         if (!(options && options.skipVersioning)) {
           if (!_.isArray(docs)) {
             newdocs = [docs];
           }
-          for (var i = 0; i < newdocs.length; i++) {
-            var doc = newdocs[i];
+          for (let i = 0; i < newdocs.length; i++) {
+            const doc = newdocs[i];
             doc.version = _getVersion(doc.version);
           }
         }
         return oldSave.apply(this, arguments);
       };
 
-      var oldInsert = coll.insert;
-      coll.insert = function (docs, options) {
+      const oldInsert = coll.insert;
+      coll.insert = function (this: any, docs: any, options: any) {
         if (!(options && options.skipVersioning)) {
           if (!_.isArray(docs)) {
             docs = [docs];
           }
-          for (var i = 0; i < docs.length; i++) {
-            var doc = docs[i];
+          for (let i = 0; i < docs.length; i++) {
+            const doc = docs[i];
             doc.version = _getVersion(doc.version);
           }
         }
         return oldInsert.apply(this, arguments);
       };
 
-      var oldFindAndModify = coll.findAndModify;
-      coll.findAndModify = function (query, sort, update, options, cb) {
+      const oldFindAndModify = coll.findAndModify;
+      coll.findAndModify = function (this: any, query: any, sort: any, update: any, options: any, cb: any) {
         if (!(options && options.skipVersioning)) {
-          var inc = update.$inc || {};
+          const inc = update.$inc || {};
           inc.version = 1;
           update.$inc = inc;
           if (update.$set && update.$set.version >= 0) {
@@ -49,10 +56,10 @@ var ViewDBVersioningPlugin = function (viewDb) {
         return oldFindAndModify.apply(this, arguments);
       };
 
-      var oldUpdateMany = coll.updateMany;
-      coll.updateMany = function (query, update, options, cb) {
+      const oldUpdateMany = coll.updateMany;
+      coll.updateMany = function (this: any, query: any, update: any, options: any, cb: any) {
         if (!(options && options.skipVersioning)) {
-          var inc = update.$inc || {};
+          const inc = update.$inc || {};
           inc.version = 1;
           update.$inc = inc;
           if (update.$set && update.$set.version >= 0) {
@@ -62,10 +69,10 @@ var ViewDBVersioningPlugin = function (viewDb) {
         return oldUpdateMany.apply(this, arguments);
       };
 
-      var oldUpdateOne = coll.updateOne;
-      coll.updateOne = function (query, update, options, cb) {
+      const oldUpdateOne = coll.updateOne;
+      coll.updateOne = function (this: any, query: any, update: any, options: any, cb: any) {
         if (!(options && options.skipVersioning)) {
-          var inc = update.$inc || {};
+          const inc = update.$inc || {};
           inc.version = 1;
           update.$inc = inc;
           if (update.$set && update.$set.version >= 0) {
@@ -77,17 +84,6 @@ var ViewDBVersioningPlugin = function (viewDb) {
     }
     return coll;
   };
-};
-
-function _getVersion(version) {
-  var newVersion;
-  if (_.isUndefined(version)) {
-    newVersion = 0;
-  } else {
-    newVersion = version + 1;
-  }
-
-  return newVersion;
 }
 
-module.exports = ViewDBVersioningPlugin;
+export = ViewDBVersioningPlugin;

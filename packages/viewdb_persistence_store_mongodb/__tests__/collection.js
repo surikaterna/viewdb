@@ -55,13 +55,14 @@ describe('mongodb_persistence', () => {
     it('#insert two documents with same key should throw', function (done) {
       var store = new Store(getDb());
       store.open().then(function () {
-        store.collection(COLLECTION_NAME).insert({ _id: 'echo' });
-        store.collection(COLLECTION_NAME).insert({ _id: 'echo' }, function (err) {
-          if (err) {
-            done();
-          } else {
-            done(new Error('should have thrown unique constraint'));
-          }
+        store.collection(COLLECTION_NAME).insert({ _id: 'echo' }, function () {
+          store.collection(COLLECTION_NAME).insert({ _id: 'echo' }, function (err) {
+            if (err) {
+              done();
+            } else {
+              done(new Error('should have thrown unique constraint'));
+            }
+          });
         });
       });
     });
@@ -106,9 +107,9 @@ describe('mongodb_persistence', () => {
       const sort = {};
       const update = { $setOnInsert: { test: 1 }, $push: { events: { event: 1, test: 2 }, references: { $each: [{ ref: 1 }, { ref: 2 }, { ref: 3 }] } } };
       const options = { upsert: true };
-      await store.open()
+      await store.open();
       await store.collection(COLLECTION_NAME).findAndModify(filter, sort, update, options);
-      const results = await store.collection(COLLECTION_NAME).find({}).toArray()
+      const results = await store.collection(COLLECTION_NAME).find({}).toArray();
       expect(results).toHaveLength(1);
       expect(results[0]).toStrictEqual({
         _id: 'not-existing',
@@ -124,14 +125,17 @@ describe('mongodb_persistence', () => {
       const sort = {};
       const update = { $setOnInsert: { test: 1 }, $push: { events: { event: 1, test: 2 }, references: { $each: [{ ref: 1 }, { ref: 2 }, { ref: 3 }] } } };
       const options = { upsert: true };
-      await store.open()
+      await store.open();
       await store.collection(COLLECTION_NAME).save({ _id: 'not-existing', test: 2, events: [{ event: 10, test: 3 }], references: [] });
       await store.collection(COLLECTION_NAME).findAndModify(filter, sort, update, options);
-      const results = await store.collection(COLLECTION_NAME).find({}).toArray()
+      const results = await store.collection(COLLECTION_NAME).find({}).toArray();
       expect(results).toHaveLength(1);
       expect(results[0]).toStrictEqual({
         _id: 'not-existing',
-        events: [{ event: 10, test: 3 }, { event: 1, test: 2 }],
+        events: [
+          { event: 10, test: 3 },
+          { event: 1, test: 2 }
+        ],
         references: [{ ref: 1 }, { ref: 2 }, { ref: 3 }],
         test: 2
       });
@@ -194,32 +198,34 @@ describe('mongodb_persistence', () => {
     it('#find {_id:"echo"} should return correct document', function (done) {
       var store = new Store(getDb());
       store.open().then(function () {
-        store.collection(COLLECTION_NAME).insert({ _id: 'echo' });
-        store.collection(COLLECTION_NAME).insert({ _id: 'sierra' }, function () {
-          store
-            .collection(COLLECTION_NAME)
-            .find({ _id: 'echo' })
-            .toArray(function (err, results) {
-              expect(results).toHaveLength(1);
-              expect(results[0]._id).toBe('echo');
-              done();
-            });
+        store.collection(COLLECTION_NAME).insert({ _id: 'echo' }, function () {
+          store.collection(COLLECTION_NAME).insert({ _id: 'sierra' }, function () {
+            store
+              .collection(COLLECTION_NAME)
+              .find({ _id: 'echo' })
+              .toArray(function (err, results) {
+                expect(results).toHaveLength(1);
+                expect(results[0]._id).toBe('echo');
+                done();
+              });
+          });
         });
       });
     });
     it('#find with complex key {"name.first":"echo"} should return correct document', function (done) {
       var store = new Store(getDb());
       store.open().then(function () {
-        store.collection(COLLECTION_NAME).insert({ _id: 'echo', name: { first: 'ECHO', last: 'TV' } });
-        store.collection(COLLECTION_NAME).insert({ _id: 'sierra', name: { first: 'SIERRA', last: 'TV' } }, function () {
-          store
-            .collection(COLLECTION_NAME)
-            .find({ 'name.first': 'ECHO' })
-            .toArray(function (err, results) {
-              expect(results).toHaveLength(1);
-              expect(results[0]._id).toBe('echo');
-              done();
-            });
+        store.collection(COLLECTION_NAME).insert({ _id: 'echo', name: { first: 'ECHO', last: 'TV' } }, function () {
+          store.collection(COLLECTION_NAME).insert({ _id: 'sierra', name: { first: 'SIERRA', last: 'TV' } }, function () {
+            store
+              .collection(COLLECTION_NAME)
+              .find({ 'name.first': 'ECHO' })
+              .toArray(function (err, results) {
+                expect(results).toHaveLength(1);
+                expect(results[0]._id).toBe('echo');
+                done();
+              });
+          });
         });
       });
     });
@@ -244,42 +250,46 @@ describe('mongodb_persistence', () => {
     it('#drop should remove all documents', function (done) {
       var store = new Store(getDb());
       store.open().then(function () {
-        store.collection(COLLECTION_NAME).insert({ _id: 'echo' });
-        store.collection(COLLECTION_NAME).drop(function () {
-          store
-            .collection(COLLECTION_NAME)
-            .find({})
-            .toArray(function (err, results) {
-              expect(results).toHaveLength(0);
-              done();
-            });
+        store.collection(COLLECTION_NAME).insert({ _id: 'echo' }, function () {
+          store.collection(COLLECTION_NAME).drop(function () {
+            store
+              .collection(COLLECTION_NAME)
+              .find({})
+              .toArray(function (err, results) {
+                expect(results).toHaveLength(0);
+                done();
+              });
+          });
         });
       });
     });
     it('#createIndex should create index successfully', async () => {
       const store = new Store(getDb());
-      await store.open()
+      await store.open();
 
-      const collection = await store.collection(COLLECTION_NAME)
-      await collection.createIndex({ name: 1 })
+      const collection = await store.collection(COLLECTION_NAME);
+      await collection.createIndex({ name: 1 });
 
-      const indexes = await collection._collection.listIndexes().toArray()
+      const indexes = await collection._collection.listIndexes().toArray();
 
-      expect(indexes).toContainEqual({ v: 2, key: { name: 1 }, name: 'name_1' })
+      expect(indexes).toContainEqual({ v: 2, key: { name: 1 }, name: 'name_1' });
     });
 
     it('#remove should remove one document', function (done) {
       var store = new Store(getDb());
-      store.collection(COLLECTION_NAME).insert({ _id: 'echo', name: { first: 'ECHO', last: 'TV' } });
-      store.collection(COLLECTION_NAME).insert({ _id: 'sierra', name: { first: 'SIERRA', last: 'TV' } }, function () {
-        store.collection(COLLECTION_NAME).remove({ _id: 'echo' }, null, function () {
-          store
-            .collection(COLLECTION_NAME)
-            .find({ 'name.first': 'ECHO' })
-            .toArray(function (err, results) {
-              expect(results).toHaveLength(0);
-              done();
+      store.open().then(function () {
+        store.collection(COLLECTION_NAME).insert({ _id: 'echo', name: { first: 'ECHO', last: 'TV' } }, function () {
+          store.collection(COLLECTION_NAME).insert({ _id: 'sierra', name: { first: 'SIERRA', last: 'TV' } }, function () {
+            store.collection(COLLECTION_NAME).remove({ _id: 'echo' }, null, function () {
+              store
+                .collection(COLLECTION_NAME)
+                .find({ 'name.first': 'ECHO' })
+                .toArray(function (err, results) {
+                  expect(results).toHaveLength(0);
+                  done();
+                });
             });
+          });
         });
       });
     });
@@ -311,12 +321,10 @@ describe('mongodb_persistence', () => {
       var store = new Store(getDb());
       var collection = store.collection(COLLECTION_NAME);
       populate(collection, 0, function () {
-        collection
-          .find({})
-          .count(function (err, res) {
-            expect(res).toBe(10);
-            done();
-          });
+        collection.find({}).count(function (err, res) {
+          expect(res).toBe(10);
+          done();
+        });
       });
     });
     it('#count should apply skip', function (done) {
@@ -333,5 +341,4 @@ describe('mongodb_persistence', () => {
       });
     });
   });
-})
-  ;
+});
