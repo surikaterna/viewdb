@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2018",
+    "outDir": "dist",
+    "rootDir": "src",
+    "composite": true,
+    "types": ["node"],
+    "typeRoots": ["../../node_modules/@types", "../shared-types"]
+  },
+  "references": [{ "path": "../viewdb" }],
+  "include": ["src", "../shared-types"],
+  "exclude": ["node_modules", "dist", "__tests__"]
+}
