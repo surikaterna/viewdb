@@ -1,15 +1,16 @@
 import Promise = require('bluebird');
 import Collection = require('./collection');
 import _ = require('lodash');
+import type { Db } from 'mongodb';
 
 class Store {
-  _mongodb: any;
+  _mongodb: Db;
   _oplogListeners: Record<string, any>;
   _collections: Record<string, any>;
   _oplogListener: any;
   _oplogEnabled: boolean;
 
-  constructor(mongodb: any, oplogEnabled?: boolean, oplogListener?: any) {
+  constructor(mongodb: Db, oplogEnabled?: boolean, oplogListener?: any) {
     this._mongodb = mongodb;
     this._oplogListeners = {};
     this._collections = {};

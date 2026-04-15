@@ -1,15 +1,15 @@
 import _ = require('lodash');
 import merge = require('./merger');
-import { QueryObject, VDocument } from './types';
+import { QueryObject, VDocument, ObserveOptions, CollectionLike } from './types';
 
 class Observer {
   _query: QueryObject;
   _queryOptions: QueryObject;
-  _options: any;
-  _collection: any;
+  _options: ObserveOptions;
+  _collection: CollectionLike;
   _cache: VDocument[] | null;
 
-  constructor(query: QueryObject, queryOptions: QueryObject, collection: any, options: any) {
+  constructor(query: QueryObject, queryOptions: QueryObject, collection: CollectionLike, options: ObserveOptions) {
     this._query = query;
     this._queryOptions = queryOptions;
     this._options = options;
@@ -38,7 +38,7 @@ class Observer {
     this._collection._getDocuments(this._query, function (err: Error | null, result?: VDocument[]) {
       if (initial && self._options.init) {
         self._cache = result!;
-        self._options.init(result);
+        self._options.init(result!);
       } else {
         const old = self._cache;
         self._cache = merge(

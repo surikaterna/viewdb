@@ -1,15 +1,16 @@
 import _ = require('lodash');
 import debug = require('debug');
+import { VdbSocket } from '../types';
 
 var warn = debug('viewdb:warn');
 
 class Client {
-  _socket: any;
+  _socket: VdbSocket | undefined;
   _requests: Record<number, { cb: Function; k: boolean }>;
   _requestId: number;
 
-  constructor(socket?: any) {
-    this._socket = null;
+  constructor(socket?: VdbSocket) {
+    this._socket = undefined;
     this._requests = {};
     this._requestId = 10;
     if (socket) {
@@ -17,7 +18,7 @@ class Client {
     }
   }
 
-  connect(socket: any): void {
+  connect(socket: VdbSocket): void {
     this._socket = socket;
     this._requests = {};
     this._requestId = 10;
@@ -46,7 +47,7 @@ class Client {
       p: payload
     };
     this._requests[req.i] = { cb: callback, k: persistent || false };
-    this._socket.emit('/vdb/request', req);
+    this._socket!.emit('/vdb/request', req);
     return req.i;
   }
 

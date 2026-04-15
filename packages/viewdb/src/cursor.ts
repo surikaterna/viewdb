@@ -1,17 +1,15 @@
 import _ = require('lodash');
 import Observer = require('./observe');
-import { QueryObject, SortSpec, Callback, VDocument } from './types';
-
-type GetDocumentsFn = (queryObject: QueryObject, callback: Callback<VDocument[]>) => void;
+import { QueryObject, SortSpec, Callback, VDocument, ObserveOptions, ObserveHandle, CollectionLike, GetDocumentsFn } from './types';
 
 class Cursor {
-  _collection: any;
+  _collection: CollectionLike;
   _query: QueryObject;
   _options: QueryObject;
   _getDocuments: GetDocumentsFn;
   _isObserving: boolean;
 
-  constructor(collection: any, query: QueryObject, options: QueryObject, getDocuments: GetDocumentsFn) {
+  constructor(collection: CollectionLike, query: QueryObject, options: QueryObject, getDocuments: GetDocumentsFn) {
     this._collection = collection;
     this._query = query;
     this._options = options;
@@ -31,7 +29,7 @@ class Cursor {
     this._getDocuments(this._query, callback);
   }
 
-  observe(options: any): { stop(): void } {
+  observe(options: ObserveOptions): ObserveHandle {
     this._isObserving = true;
     // Observer constructor returns { stop } object, not the Observer instance
     return new Observer(this._query, this._options, this._collection, options) as any;

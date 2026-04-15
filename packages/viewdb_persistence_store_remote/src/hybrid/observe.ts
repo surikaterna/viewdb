@@ -70,9 +70,9 @@ class HybridObserver {
   _remoteCache: any[];
   _removed: any[];
   _reconciledCache: any[];
-  _localHandle: any;
-  _remoteHandle: any;
-  _cacheUpdaterInterval: any;
+  _localHandle: { stop: () => void } | null;
+  _remoteHandle: { stop: () => void } | null;
+  _cacheUpdaterInterval: ReturnType<typeof setInterval> | null;
 
   constructor(localCursor: any, remoteCursor: any, collectionOptions: any, options: any) {
     var self = this;
@@ -83,6 +83,9 @@ class HybridObserver {
     this._options = options;
     this._cacheCallback = options.cacheCallback;
     this._getCache = options.getCache;
+    this._localHandle = null;
+    this._remoteHandle = null;
+    this._cacheUpdaterInterval = null;
 
     this._localCache = [];
     this._remoteCache = [];
@@ -121,8 +124,8 @@ class HybridObserver {
         (this as any)._remoteCache = null;
         (this as any)._reconciledCache = null;
         self._localHandle && self._localHandle.stop();
-        self._remoteHandle.stop();
-        clearInterval(self._cacheUpdaterInterval);
+        self._remoteHandle && self._remoteHandle.stop();
+        clearInterval(self._cacheUpdaterInterval!);
       }
     } as any;
   }

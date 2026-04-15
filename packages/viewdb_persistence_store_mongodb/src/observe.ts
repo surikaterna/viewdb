@@ -2,6 +2,7 @@ import _ = require('lodash');
 import Kuery = require('kuery');
 import { projectDocument } from './utils';
 import { LoggerFactory } from 'slf';
+import type { ObserveOptions, ObserveHandle } from 'viewdb/dist/types';
 
 var ViewDB = require('viewdb');
 var merge = ViewDB.merge;
@@ -12,7 +13,7 @@ const log = LoggerFactory.getLogger('viewdb_persistence_store_mongodb:observer')
 class Observer {
   _queryOptions!: { query?: any; skip?: number; limit?: number; sort?: Record<string, 1 | -1>; project?: Record<string, 0 | 1> };
   _query: any;
-  _options: any;
+  _options!: ObserveOptions;
   _collection: any;
   _cache: string[] | null = [];
   listener: any = undefined;
@@ -55,7 +56,7 @@ class Observer {
     var newQuery = _.merge(this._query, self._queryOptions);
     this._collection._getDocuments(newQuery, function (err: Error | null, result?: any[]) {
       if (self._options.init) {
-        self._options.init(result);
+        self._options.init(result || []);
       } else {
         merge(null, result, _.defaults({ comparatorId: comparator }, self._options));
       }
@@ -123,7 +124,7 @@ class Observer {
         index = length - 1;
       }
       if (this._options.changed) {
-        this._options.changed(null, doc.o, index); // have no access to asis / old document
+        this._options.changed(null as any, doc.o, index); // have no access to asis / old document
       }
     } else {
       this._onRemove(doc);

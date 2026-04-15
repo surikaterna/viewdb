@@ -1,11 +1,12 @@
 import Promise = require('bluebird');
 import Collection = require('./collection');
+import { VdbClient } from '../types';
 
 class Store {
   _collections: Record<string, Collection>;
-  _client: any;
+  _client: VdbClient;
 
-  constructor(client: any) {
+  constructor(client: VdbClient) {
     this._collections = {};
     this._client = client;
   }

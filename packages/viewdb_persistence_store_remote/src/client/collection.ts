@@ -3,13 +3,14 @@ import _ = require('lodash');
 import Cursor = require('./cursor');
 import { EventEmitter } from 'events';
 import { v4 as uuid } from 'node-uuid';
+import { VdbClient } from '../types';
 
 class Collection extends EventEmitter {
   static Cursor: any = Cursor;
-  _client: any;
+  _client: VdbClient;
   _name: string;
 
-  constructor(client: any, collectionName: string) {
+  constructor(client: VdbClient, collectionName: string) {
     super();
     this._client = client;
     this._name = collectionName;

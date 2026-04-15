@@ -2,7 +2,20 @@ import _ = require('lodash');
 import Promise = require('bluebird');
 import Collection = require('./collection');
 
-var defaultOptions = {
+interface HybridStoreOptions {
+  syncWrites: boolean;
+  cacheReads: boolean;
+  localFirst: boolean;
+  throwRemoteErr: boolean;
+  throttleObserveRefresh: number;
+  cacheLifeTime: number;
+  cacheQueries: boolean;
+  localOnlyCollections: Set<string>;
+  cacheCollectionName: string;
+  projectedDocumentsCollection: string;
+}
+
+var defaultOptions: HybridStoreOptions = {
   syncWrites: false, // if local writes should be sent over the wire to remote
   cacheReads: true, // when reading remote documents should they be stored in the local db
   localFirst: true, // when reading documents should we return the locally cached ones first and then the remote ones when they arrive
@@ -18,10 +31,10 @@ var defaultOptions = {
 class HybridStore {
   _local: any;
   _remote: any;
-  _options: any;
+  _options: HybridStoreOptions;
   _collections: Record<string, any>;
 
-  constructor(local: any, remote: any, options?: any) {
+  constructor(local: any, remote: any, options?: Partial<HybridStoreOptions>) {
     this._local = local;
     this._remote = remote;
     this._options = _.defaults(options || {}, defaultOptions);

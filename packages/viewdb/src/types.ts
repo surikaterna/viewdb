@@ -28,3 +28,36 @@ export interface MergeOptions<T = any> {
   changed?: (oldElement: T, newElement: T, index: number) => void;
   moved?: (element: T, fromIndex: number, toIndex: number) => void;
 }
+
+/** Options passed to cursor.observe() */
+export interface ObserveOptions<T = VDocument> {
+  init?: (elements: T[]) => void;
+  added?: (element: T, index: number) => void;
+  removed?: (element: T, index: number) => void;
+  changed?: (asis: T, tobe: T, index: number) => void;
+  moved?: (element: T, fromIndex: number, toIndex: number) => void;
+}
+
+/** Handle returned by observe() */
+export interface ObserveHandle {
+  stop: () => void | Promise<void>;
+  dispose?: () => void | Promise<void>;
+}
+
+/**
+ * Callback signature for _getDocuments implementations.
+ * Used by Collection implementations across all stores.
+ */
+export type GetDocumentsFn = (queryObject: QueryObject, callback: Callback<VDocument[]>) => void;
+
+/**
+ * Abstract collection interface that all store collections should satisfy.
+ * Used internally to type _collection fields in cursor/observe.
+ */
+export interface CollectionLike {
+  find(query: Record<string, any>, options?: Record<string, any>): any;
+  _getDocuments: GetDocumentsFn;
+  emit(event: string, ...args: any[]): void;
+  on(event: string, listener: (...args: any[]) => void): any;
+  removeListener(event: string, listener: (...args: any[]) => void): any;
+}

@@ -30,7 +30,7 @@ var buildParams = function (defaults: any, query: any, collection: any): any {
 };
 
 class Observer {
-  handles: any[] = [];
+  handles: string[] = [];
 
   constructor(collection: any, options: any, query: any) {
     var remoteHandle: any = null;

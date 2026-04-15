@@ -3,9 +3,9 @@ import { v4 as uuid } from 'uuid';
 import { EventEmitter } from 'events';
 import Kuery = require('kuery');
 import Cursor = require('../cursor');
-import { VDocument, QueryObject, Callback } from '../types';
+import { VDocument, QueryObject, Callback, CollectionLike } from '../types';
 
-class Collection extends EventEmitter {
+class Collection extends EventEmitter implements CollectionLike {
   _documents: VDocument[];
   _name: string;
 

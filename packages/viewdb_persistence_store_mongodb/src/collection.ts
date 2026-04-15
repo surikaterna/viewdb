@@ -2,23 +2,24 @@ import { EventEmitter } from 'events';
 import { forEach, isFunction, isArray } from 'lodash';
 import Cursor = require('./cursor');
 import { nodeify } from './utils';
+import type { Collection as MongoCollection, Document as MongoDocument } from 'mongodb';
 
 class Collection extends EventEmitter {
-  _collection: any;
+  _collection: MongoCollection<MongoDocument>;
   _oplogListener: any;
 
-  constructor(collection: any, oplogListener?: any) {
+  constructor(collection: MongoCollection<MongoDocument>, oplogListener?: any) {
     super();
     this._collection = collection;
     this._oplogListener = oplogListener;
   }
 
   count(): any {
-    return this._collection.count.apply(this._collection, arguments);
+    return (this._collection as any).count.apply(this._collection, arguments);
   }
 
   find(query: any, options?: any): Cursor {
-    var cursor = this._collection.find.apply(this._collection, arguments);
+    var cursor = (this._collection as any).find.apply(this._collection, arguments);
     return new Cursor(this, { query: query }, options, cursor, this._oplogListener);
   }
 
@@ -197,13 +198,14 @@ class Collection extends EventEmitter {
     if (queryObject.project) {
       cursor.project(queryObject.project);
     }
-    cursor.toArray().then(function (res: any, err: any) {
-      if (err) {
-        callback(err);
-      } else {
+    cursor
+      .toArray()
+      .then(function (res) {
         callback(null, res);
-      }
-    });
+      })
+      .catch(function (err: Error) {
+        callback(err);
+      });
   }
 }
 

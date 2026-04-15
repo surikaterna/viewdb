@@ -1,9 +1,9 @@
 import InMemoryStore = require('./inmemory/store');
-import { Callback } from './types';
+import { Callback, CollectionLike } from './types';
 
 interface ViewDBStore {
   open?(callback?: Callback<any>): Promise<any>;
-  collection(name: string, callback?: (coll: any) => void): any;
+  collection(name: string, callback?: (coll: CollectionLike) => void): CollectionLike;
 }
 
 class ViewDB {
@@ -23,7 +23,7 @@ class ViewDB {
     }
   }
 
-  collection(collectionName: string, callback?: (collection: any) => void): any {
+  collection(collectionName: string, callback?: (collection: CollectionLike) => void): CollectionLike {
     return this._store.collection(collectionName, callback);
   }
 }

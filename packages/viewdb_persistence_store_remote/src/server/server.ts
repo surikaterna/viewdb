@@ -1,6 +1,7 @@
 import _ = require('lodash');
+import { VdbSocket } from '../types';
 
-function sendChange(socket: any, change: any, request: any): void {
+function sendChange(socket: VdbSocket, change: any, request: any): void {
   socket.emit('/vdb/response', {
     i: request.i,
     p: {
@@ -10,8 +11,8 @@ function sendChange(socket: any, change: any, request: any): void {
 }
 
 class ViewDbSocketServer {
-  constructor(viewdb: any, socket: any, queryDecorator?: any, globalLimit?: number, readPreference?: any) {
-    var _observers: Record<string, any> = {};
+  constructor(viewdb: any, socket: VdbSocket, queryDecorator?: any, globalLimit?: number, readPreference?: any) {
+    var _observers: Record<string, { i: number; handle: { stop: () => void } }> = {};
     var _queryDecorator: any;
     if (!queryDecorator) {
       _queryDecorator = function (_col: any, q: any, cb: any) {

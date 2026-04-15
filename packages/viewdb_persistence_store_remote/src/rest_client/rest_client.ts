@@ -1,11 +1,12 @@
 import debug = require('debug');
 import _ = require('lodash');
+import { VdbClient } from '../types';
 
 var warn = debug('viewdb:warn');
 var merge = require('viewdb').merge;
 var axios: any = require('axios');
 
-class Client {
+class Client implements VdbClient {
   _pollInterval: number;
   _baseUri: string;
   _requestOptions: { headers: Record<string, string> };
