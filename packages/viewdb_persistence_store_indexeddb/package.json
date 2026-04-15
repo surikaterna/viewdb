@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@types/bluebird": "3.5.42",
-    "@types/node-uuid": "0.0.32",
+    "@types/uuid": "9.0.8",
     "fake-indexeddb": "^2.0.2",
     "mocha": "^10.7.3",
     "should": "^4.1.0",
@@ -37,6 +37,6 @@
     "bluebird": "^3.7.2",
     "kuery": "^0.5.3",
     "lodash": "^4.17.21",
-    "node-uuid": "^1.4.3"
+    "uuid": "^9.0.0"
   }
 }
