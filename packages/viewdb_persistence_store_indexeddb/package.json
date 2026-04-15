@@ -2,7 +2,11 @@
   "name": "viewdb_persistence_store_indexeddb",
   "version": "0.5.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "mocha test --recursive",
@@ -21,6 +25,8 @@
     "viewdb": "*"
   },
   "devDependencies": {
+    "@types/bluebird": "3.5.42",
+    "@types/node-uuid": "0.0.32",
     "fake-indexeddb": "^2.0.2",
     "mocha": "^10.7.3",
     "should": "^4.1.0",
