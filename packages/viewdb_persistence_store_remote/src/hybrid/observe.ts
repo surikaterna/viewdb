@@ -3,7 +3,7 @@ import reconcile = require('./reconcile');
 
 var merge = require('viewdb').merge;
 
-function pushArray(arr: any[], arr2: any[]): void {
+function pushArray<T>(arr: T[], arr2: T[]): void {
   arr.push.apply(arr, arr2);
 }
 
@@ -97,7 +97,7 @@ class HybridObserver {
       this._localHandle = this._localCursor.observe(buildOptions(this._localCache, _refresh, this._removed, false));
       this._remoteHandle = this._remoteCursor.observe(remoteOptions);
     } else {
-      this._getCache(function (err: any, data: any) {
+      this._getCache(function (err: Error | null, data: any) {
         if (data) {
           self._remoteCache.concat(data);
           self.refresh();
@@ -148,7 +148,7 @@ class HybridObserver {
         result,
         _.defaults(
           {
-            comparatorId: function (a: any, b: any) {
+            comparatorId: function (a: { _id: string }, b: { _id: string }) {
               return a._id === b._id;
             }
           },

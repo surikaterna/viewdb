@@ -1,16 +1,17 @@
 import _ = require('lodash');
 import Observer = require('./observe');
+import { QueryObject, SortSpec, Callback, VDocument } from './types';
 
-type GetDocumentsFn = (query: any, callback: (err: any, result?: any[]) => void) => void;
+type GetDocumentsFn = (queryObject: QueryObject, callback: Callback<VDocument[]>) => void;
 
 class Cursor {
   _collection: any;
-  _query: any;
-  _options: any;
+  _query: QueryObject;
+  _options: QueryObject;
   _getDocuments: GetDocumentsFn;
   _isObserving: boolean;
 
-  constructor(collection: any, query: any, options: any, getDocuments: GetDocumentsFn) {
+  constructor(collection: any, query: QueryObject, options: QueryObject, getDocuments: GetDocumentsFn) {
     this._collection = collection;
     this._query = query;
     this._options = options;
@@ -18,7 +19,7 @@ class Cursor {
     this._isObserving = false;
   }
 
-  forEach(callback: (result: any[]) => void): void {
+  forEach(callback: (result: VDocument[]) => void): void {
     this._getDocuments(this._query, function (err, result) {
       _.forEach(result, function () {
         callback(result!);
@@ -26,7 +27,7 @@ class Cursor {
     });
   }
 
-  toArray(callback: (err: any, result?: any[]) => void): void {
+  toArray(callback: Callback<VDocument[]>): void {
     this._getDocuments(this._query, callback);
   }
 
@@ -36,7 +37,7 @@ class Cursor {
     return new Observer(this._query, this._options, this._collection, options) as any;
   }
 
-  updateQuery(query: any): void {
+  updateQuery(query: Record<string, any>): void {
     this._query.query = query;
     this._refresh();
   }
@@ -57,7 +58,7 @@ class Cursor {
     return this;
   }
 
-  sort(sort: any): this {
+  sort(sort: SortSpec): this {
     this._query.sort = sort;
     if (this._isObserving) {
       this._refresh();
@@ -69,12 +70,12 @@ class Cursor {
     this._collection.emit('change', {});
   }
 
-  rewind(_options?: any): void {
+  rewind(_options?: unknown): void {
     // NOOP
   }
 
-  count(callback: (err: any, count?: number) => void): void {
-    const query: any = { query: this._query.query };
+  count(callback: Callback<number>): void {
+    const query: QueryObject = { query: this._query.query };
     if (this._query.skip) {
       query.skip = this._query.skip;
     }

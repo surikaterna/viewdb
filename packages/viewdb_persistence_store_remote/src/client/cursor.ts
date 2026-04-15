@@ -11,7 +11,11 @@ class RemoteCursor extends Cursor {
     super(collection, query, options, getDocuments);
   }
 
-  count(applySkipLimit?: any, options?: any, callback?: any): void {
+  count(
+    applySkipLimit?: boolean | ((err: Error | null, result?: number) => void),
+    options?: Record<string, any> | ((err: Error | null, result?: number) => void),
+    callback?: (err: Error | null, result?: number) => void
+  ): void {
     if (_.isFunction(applySkipLimit)) {
       callback = applySkipLimit;
       applySkipLimit = true;
@@ -35,18 +39,18 @@ class RemoteCursor extends Cursor {
       params.limit = limit;
     }
 
-    this._collection._client.request(params, function (err: any, result: any) {
-      callback(err, result);
+    this._collection._client.request(params, function (err: Error | null, result: any) {
+      callback!(err, result);
     });
   }
 
-  sort(params: any): this {
+  sort(params: Record<string, 1 | -1>): this {
     this._query.sort = params;
     this._refresh();
     return this;
   }
 
-  project(params: any): this {
+  project(params: Record<string, 0 | 1>): this {
     this._query.project = params;
     return this;
   }

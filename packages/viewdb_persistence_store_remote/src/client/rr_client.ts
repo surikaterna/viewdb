@@ -5,7 +5,7 @@ var warn = debug('viewdb:warn');
 
 class Client {
   _socket: any;
-  _requests: Record<number, any>;
+  _requests: Record<number, { cb: Function; k: boolean }>;
   _requestId: number;
 
   constructor(socket?: any) {
@@ -45,7 +45,7 @@ class Client {
       i: this._requestId++,
       p: payload
     };
-    this._requests[req.i] = { cb: callback, k: persistent };
+    this._requests[req.i] = { cb: callback, k: persistent || false };
     this._socket.emit('/vdb/request', req);
     return req.i;
   }

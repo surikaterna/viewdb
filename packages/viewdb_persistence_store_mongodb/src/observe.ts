@@ -10,11 +10,11 @@ var LegacyObserver = ViewDB.Observer;
 const log = LoggerFactory.getLogger('viewdb_persistence_store_mongodb:observer');
 
 class Observer {
-  _queryOptions: any;
+  _queryOptions!: { query?: any; skip?: number; limit?: number; sort?: Record<string, 1 | -1>; project?: Record<string, 0 | 1> };
   _query: any;
   _options: any;
   _collection: any;
-  _cache: any[] | null = [];
+  _cache: string[] | null = [];
   listener: any = undefined;
   _kuery: any;
 
@@ -53,7 +53,7 @@ class Observer {
   loadInitial(cb: () => void): void {
     var self = this;
     var newQuery = _.merge(this._query, self._queryOptions);
-    this._collection._getDocuments(newQuery, function (err: any, result: any[]) {
+    this._collection._getDocuments(newQuery, function (err: Error | null, result?: any[]) {
       if (self._options.init) {
         self._options.init(result);
       } else {
@@ -141,7 +141,7 @@ class Observer {
   }
 }
 
-var comparator = function (a: any, b: any) {
+var comparator = function (a: { _id: string }, b: { _id: string }) {
   return a._id === b._id;
 };
 

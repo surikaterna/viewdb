@@ -46,7 +46,7 @@ class Observer {
 
     var params = buildParams({ events: events }, query, collection);
     var startObserver = function (): { stop: () => void } {
-      var handle = collection._client.subscribe(params, function (err: any, result: any) {
+      var handle = collection._client.subscribe(params, function (err: Error | null, result: any) {
         if (err) {
           handle.stop();
           startObserver();

@@ -1,8 +1,9 @@
 import InMemoryStore = require('./inmemory/store');
+import { Callback } from './types';
 
 interface ViewDBStore {
-  open?(): Promise<any>;
-  collection(collectionName: string, callback?: (collection: any) => void): any;
+  open?(callback?: Callback<any>): Promise<any>;
+  collection(name: string, callback?: (coll: any) => void): any;
 }
 
 class ViewDB {

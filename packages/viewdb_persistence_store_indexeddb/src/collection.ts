@@ -18,7 +18,7 @@ class Collection extends EventEmitter {
     this._name = name;
   }
 
-  _isIdentityQuery(query: any, _options?: any): boolean {
+  _isIdentityQuery(query: Record<string, any>, _options?: Record<string, any>): boolean {
     var keys = Object.keys(query);
     if (keys.length === 1 && (keys[0] === 'id' || keys[0] === '_id') && (typeof query['id'] === 'string' || typeof query['_id'] === 'string')) {
       return true;
@@ -35,7 +35,7 @@ class Collection extends EventEmitter {
     }
   }
 
-  _getKey(document: any): string {
+  _getKey(document: Record<string, any>): string {
     return this._name + '_' + document['_id'];
   }
 
@@ -54,7 +54,7 @@ class Collection extends EventEmitter {
       documents = [documents];
     }
 
-    return new Promise(function (resolve: any, reject: any) {
+    return new Promise(function (resolve, reject) {
       var txn = self._db.transaction(['documents'], 'readwrite');
       var docs = txn.objectStore('documents');
 
@@ -129,7 +129,7 @@ class Collection extends EventEmitter {
       callback = function () {};
     }
 
-    this._getDocuments(query, function (err: any, res: any) {
+    this._getDocuments(query, function (err: Error | null, res: any) {
       if (err) {
         callback(err);
       } else {
@@ -151,7 +151,7 @@ class Collection extends EventEmitter {
     });
   }
 
-  _getDocuments(query: any, callback: (err: any, result?: any[]) => void): void {
+  _getDocuments(query: any, callback: (err: Error | null, result?: any[]) => void): void {
     var qry = query.query || query;
     var txn = this._db.transaction(['documents'], 'readonly');
     var docs = txn.objectStore('documents');
@@ -175,21 +175,21 @@ class Collection extends EventEmitter {
     };
   }
 
-  _getByKey(query: any, callback: (err: any, result?: any[]) => void): void {
+  _getByKey(query: any, callback: (err: Error | null, result?: any[]) => void): void {
     var qry = query.query || query;
     var txn = this._db.transaction(['documents'], 'readonly');
     var docs = txn.objectStore('documents');
     var key = qry['id'] || qry['_id'];
     key = this._name + '_' + key;
     var request = docs.get(key);
-    request.onsuccess = function (_event: any) {
+    request.onsuccess = function (_event: Event) {
       var result: any[] = [];
       if (request.result !== undefined) {
         result.push(request.result);
       }
       callback(null, result);
     };
-    request.onerror = function (_event: any) {
+    request.onerror = function (_event: Event) {
       callback(new Error('Unable to _getByKey ' + key));
     };
   }

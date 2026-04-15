@@ -3,9 +3,10 @@ import { v4 as uuid } from 'uuid';
 import { EventEmitter } from 'events';
 import Kuery = require('kuery');
 import Cursor = require('../cursor');
+import { VDocument, QueryObject, Callback } from '../types';
 
 class Collection extends EventEmitter {
-  _documents: any[];
+  _documents: VDocument[];
   _name: string;
 
   constructor(collectionName: string) {
@@ -14,19 +15,17 @@ class Collection extends EventEmitter {
     this._name = collectionName;
   }
 
-  count(callback: (err: any, count?: number) => void): void {
+  count(callback: Callback<number>): void {
     callback(null, this._documents.length);
   }
 
-  _write(op: string, documents: any, options: any, callback?: (err: any, docs?: any[]) => void): void {
+  _write(op: string, documents: VDocument | VDocument[], options: Record<string, any> | Callback<VDocument[]>, callback?: Callback<VDocument[]>): void {
     if (_.isFunction(options)) {
-      callback = options;
+      callback = options as Callback<VDocument[]>;
     }
-    if (!_.isArray(documents)) {
-      documents = [documents];
-    }
-    for (let i = 0; i < documents.length; i++) {
-      const document: Record<string, any> = documents[i];
+    const docs: VDocument[] = _.isArray(documents) ? documents : [documents];
+    for (let i = 0; i < docs.length; i++) {
+      const document: Record<string, any> = docs[i];
       if (!_.isObject(document)) {
         return callback!(new Error('Document must be object'));
       }
@@ -38,37 +37,37 @@ class Collection extends EventEmitter {
         return callback!(new Error('Unique constraint!'));
       }
       if (idx === -1) {
-        this._documents.push(document);
+        this._documents.push(document as VDocument);
       } else {
-        this._documents[idx] = document;
+        this._documents[idx] = document as VDocument;
       }
     }
-    this.emit('change', documents);
+    this.emit('change', docs);
     if (callback) {
-      callback(null, documents);
+      callback(null, docs);
     }
   }
 
-  insert(documents: any, options?: any, callback?: (err: any, docs?: any[]) => void): void {
-    return this._write('insert', documents, options, callback);
+  insert(documents: VDocument | VDocument[], options?: Record<string, any> | Callback<VDocument[]>, callback?: Callback<VDocument[]>): void {
+    return this._write('insert', documents, options!, callback);
   }
 
-  save(documents: any, options?: any, callback?: (err: any, docs?: any[]) => void): void {
-    return this._write('save', documents, options, callback);
+  save(documents: VDocument | VDocument[], options?: Record<string, any> | Callback<VDocument[]>, callback?: Callback<VDocument[]>): void {
+    return this._write('save', documents, options!, callback);
   }
 
-  drop(callback?: (err: any) => void): void {
+  drop(callback?: Callback): void {
     this._documents = [];
     if (callback) {
       callback(null);
     }
   }
 
-  find(query: any, options?: any): Cursor {
-    return new Cursor(this, { query: query }, options, this._getDocuments.bind(this));
+  find(query: Record<string, any>, options?: Record<string, any>): Cursor {
+    return new Cursor(this, { query: query }, options || {}, this._getDocuments.bind(this));
   }
 
-  remove(query: any, options?: any, callback?: (err: any) => void): void {
+  remove(query: Record<string, any>, options?: Record<string, any>, callback?: Callback): void {
     const q = new Kuery(query);
     const documents = q.find(this._documents);
     this._documents = _.pullAll(this._documents, documents);
@@ -86,7 +85,7 @@ class Collection extends EventEmitter {
     throw new Error('createIndex not supported!');
   }
 
-  _getDocuments(queryObject: any, callback: (err: any, docs?: any[]) => void): void {
+  _getDocuments(queryObject: QueryObject, callback: Callback<VDocument[]>): void {
     const query = queryObject.query || queryObject;
     const q = new Kuery(query);
     if (queryObject.sort) {

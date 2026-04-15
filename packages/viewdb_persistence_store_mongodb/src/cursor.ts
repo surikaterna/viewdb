@@ -3,7 +3,7 @@ import { nodeify } from './utils';
 
 class Cursor {
   _query: any;
-  _queryOptions: any;
+  _queryOptions: { query?: any; skip?: number; limit?: number; sort?: Record<string, 1 | -1>; project?: Record<string, 0 | 1> };
   _cursor: any;
   _oplogListener: any;
   _collection: any;
@@ -25,17 +25,17 @@ class Cursor {
     return this;
   }
 
-  count(callback?: any): any {
+  count(callback?: (err: Error | null, count?: number) => void): any {
     return nodeify(this._cursor.count.apply(this._cursor, arguments), callback);
   }
 
-  project(project: any): this {
+  project(project: Record<string, 0 | 1>): this {
     this._cursor.project.apply(this._cursor, arguments);
     this._queryOptions.project = project;
     return this;
   }
 
-  toArray(callback?: any): any {
+  toArray(callback?: (err: Error | null, result?: any[]) => void): any {
     return nodeify(this._cursor.toArray.apply(this._cursor, arguments), callback);
   }
 
@@ -57,7 +57,7 @@ class Cursor {
     return this;
   }
 
-  sort(sort: any): this {
+  sort(sort: Record<string, 1 | -1>): this {
     this._queryOptions.sort = sort;
     this._cursor.sort.apply(this._cursor, arguments);
     this._refresh();
@@ -72,7 +72,7 @@ class Cursor {
     return this._cursor.rewind.apply(this._cursor, arguments);
   }
 
-  close(callback?: any): any {
+  close(callback?: (err: Error | null) => void): any {
     return nodeify(this._cursor.close.apply(this._cursor, arguments), callback);
   }
 }

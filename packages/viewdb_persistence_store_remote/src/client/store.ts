@@ -10,7 +10,7 @@ class Store {
     this._client = client;
   }
 
-  open(callback?: (err: any, value?: Store) => void): any {
+  open(callback?: (err: Error | null, value?: Store) => void): any {
     return Promise.resolve(this).nodeify(callback);
   }
 

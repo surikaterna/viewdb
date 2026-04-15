@@ -51,7 +51,7 @@ class ViewDbSocketServer {
               console.log('warn: no support for project on cursor');
             }
           }
-          cursor.toArray(function (err: any, result: any) {
+          cursor.toArray(function (err: Error | null, result: any) {
             if (err) {
               console.log(err);
             } else {
@@ -74,7 +74,7 @@ class ViewDbSocketServer {
           if (_.isNumber(request.p.skip)) {
             cursor.skip(request.p.skip);
           }
-          cursor.count(function (err: any, result: any) {
+          cursor.count(function (err: Error | null, result: any) {
             if (err) {
               console.log(err);
             } else {
@@ -83,7 +83,7 @@ class ViewDbSocketServer {
                 p: result
               });
             }
-            cursor.close(function (_err: any) {});
+            cursor.close(function (_err: Error | null) {});
           });
         });
       } else if (request.p.observe) {
@@ -159,7 +159,7 @@ class ViewDbSocketServer {
               handle: observeId
             }
           });
-          cursor.close(function (_err: any) {});
+          cursor.close(function (_err: Error | null) {});
         });
       } else if (request.p['observe.stop']) {
         var handle = request.p['observe.stop'].h;

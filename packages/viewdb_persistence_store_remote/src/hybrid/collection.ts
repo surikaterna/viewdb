@@ -38,7 +38,7 @@ class HybridCollection {
 
   insert(doc: any, callback?: any): any {
     var self = this;
-    return this._local.insert(doc, function (err: any, result: any) {
+    return this._local.insert(doc, function (err: Error | null, result: any) {
       if (self._options.syncWrites) {
         self._remote.insert(doc, callback);
       }
@@ -50,7 +50,7 @@ class HybridCollection {
 
   remove(query: any, options?: any, callback?: any): any {
     var self = this;
-    return this._local.remove(query, options, function (err: any, result: any) {
+    return this._local.remove(query, options, function (err: Error | null, result: any) {
       if (self._options.syncWrites) {
         self._remote.remove(query, options);
       }
@@ -60,7 +60,14 @@ class HybridCollection {
     });
   }
 
-  _cacheQuery(query: any, skip: any, limit: any, sort: any, project: any, documents: any[]): void {
+  _cacheQuery(
+    query: any,
+    skip: number,
+    limit: number,
+    sort: Record<string, 1 | -1> | undefined,
+    project: Record<string, 0 | 1> | undefined,
+    documents: any[]
+  ): void {
     var self = this;
 
     if (!this._options.cacheQueries) {
@@ -85,7 +92,14 @@ class HybridCollection {
     this._cacheCollection.save({ _id: queryHash, createDateTime: cachedDateTime, resultSet: documentIds }, { skipVersioning: true, skipTimestamp: true });
   }
 
-  _getCachedData(query: any, skip: any, limit: any, sort: any, project: any, callback: any): void {
+  _getCachedData(
+    query: any,
+    skip: number,
+    limit: number,
+    sort: Record<string, 1 | -1> | undefined,
+    project: Record<string, 0 | 1> | undefined,
+    callback: any
+  ): void {
     var self = this;
     this._getCachedIds(query, skip, limit, sort, function (ids: any) {
       if (!ids) {
@@ -99,7 +113,7 @@ class HybridCollection {
         collection = self._projectedDocumentCollection;
       }
 
-      collection.find({ _id: { $in: ids } }).toArray(function (cacheError: any, cachedResults: any) {
+      collection.find({ _id: { $in: ids } }).toArray(function (cacheError: Error | null, cachedResults: any) {
         if (cacheError) {
           callback(cacheError, cachedResults);
         }
@@ -114,7 +128,7 @@ class HybridCollection {
     });
   }
 
-  _getCachedIds(query: any, skip: any, limit: any, sort: any, callback: any): void {
+  _getCachedIds(query: any, skip: number, limit: number, sort: Record<string, 1 | -1> | undefined, callback: any): void {
     if (!this._cacheCollection || !this._options.cacheLifeTime) {
       callback(undefined);
       return;
@@ -125,7 +139,7 @@ class HybridCollection {
     minimumChangeDateTime.setMinutes(minimumChangeDateTime.getMinutes() - this._options.cacheLifeTime);
     var minTimeEpoch = minimumChangeDateTime.getTime();
 
-    this._cacheCollection.find({ _id: queryHash, createDateTime: { $gt: minTimeEpoch } }).toArray(function (err: any, result: any) {
+    this._cacheCollection.find({ _id: queryHash, createDateTime: { $gt: minTimeEpoch } }).toArray(function (err: Error | null, result: any) {
       var hasResult = result && result[0];
 
       if (!hasResult) {

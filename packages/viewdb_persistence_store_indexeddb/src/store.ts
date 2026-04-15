@@ -14,10 +14,10 @@ class Store {
     this._collections = {};
   }
 
-  open(callback?: (err: any, value?: Store) => void): Promise<Store> {
+  open(callback?: (err: Error | null, value?: Store) => void): Promise<Store> {
     var self = this;
     var request = this._idb.open(this._name, 2);
-    return new Promise<Store>(function (resolve: any, reject: any) {
+    return new Promise<Store>(function (resolve, reject) {
       request.onsuccess = function (event: any) {
         self._db = event.target.result;
         resolve(self);
@@ -44,22 +44,22 @@ class Store {
     }).nodeify(callback);
   }
 
-  close(callback?: (err: any) => void): Promise<void> {
+  close(callback?: (err: Error | null) => void): Promise<void> {
     var self = this;
-    return new Promise<void>(function (resolve: any, _reject: any) {
+    return new Promise<void>(function (resolve, _reject) {
       var req = self._db.close();
       resolve();
     }).nodeify(callback);
   }
 
-  delete(callback?: (err: any) => void): Promise<void> {
+  delete(callback?: (err: Error | null) => void): Promise<void> {
     var self = this;
-    return new Promise<void>(function (resolve: any, reject: any) {
-      var req = (self as any)._idb.deleteDatabase((self as any)._name);
+    return new Promise<void>(function (resolve, reject) {
+      var req = self._idb.deleteDatabase(self._name);
       req.onsuccess = function () {
         resolve();
       };
-      req.onerror = function (_event: any) {
+      req.onerror = function (_event: Event) {
         reject();
       };
     }).nodeify(callback);

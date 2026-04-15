@@ -8,7 +8,7 @@ var axios: any = require('axios');
 class Client {
   _pollInterval: number;
   _baseUri: string;
-  _requestOptions: any;
+  _requestOptions: { headers: Record<string, string> };
 
   constructor(url: string, headers?: any, options?: any) {
     if (!url) {
@@ -41,7 +41,7 @@ class Client {
       .then(function (response: any) {
         callback(null, response.data);
       })
-      .catch(function (err: any) {
+      .catch(function (err: Error | null) {
         if (_.isUndefined(callback)) {
           warn('API call failed. Error message: ' + err);
         } else {
@@ -74,7 +74,7 @@ class Client {
     var cache: any[] = [];
     payload.find = payload.observe;
     function poll() {
-      self.request(payload, function (err: any, result: any) {
+      self.request(payload, function (err: Error | null, result: any) {
         if (err) {
           callback(err);
         }
@@ -84,7 +84,7 @@ class Client {
           result,
           _.defaults(
             {
-              comparatorId: function (a: any, b: any) {
+              comparatorId: function (a: { id: string }, b: { id: string }) {
                 return a.id === b.id;
               }
             },

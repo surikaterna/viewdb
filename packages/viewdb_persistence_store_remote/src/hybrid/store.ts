@@ -34,7 +34,7 @@ class HybridStore {
     }
   }
 
-  open(): any {
+  open(): PromiseLike<HybridStore> {
     var self = this;
     var storesToOpen: any[] = [];
     if (this._local.open) {

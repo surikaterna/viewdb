@@ -9,8 +9,8 @@ var LOG = LoggerFactory.getLogger('lx:viewdb-persistence-store-remote');
 
 class HybridCursor {
   _query: any;
-  _sort: any;
-  _limit: any;
+  _sort: Record<string, 1 | -1> | undefined;
+  _limit: number | undefined;
   _skip: number;
   _local: any;
   _remote: any;
@@ -18,12 +18,12 @@ class HybridCursor {
   _options: any;
   _onCacheUpdateCallback: any;
   _getCachedData: any;
-  _project: any;
+  _project: Record<string, 0 | 1> | undefined;
 
   constructor(query: any, local: any, remote: any, findOptions: any, options: any) {
     this._query = query;
-    this._sort = null;
-    this._limit = null;
+    this._sort = undefined;
+    this._limit = undefined;
     this._skip = 0;
     this._local = local;
     this._remote = remote;
@@ -35,10 +35,10 @@ class HybridCursor {
 
   _toArray(callback: any): void {
     var self = this;
-    var localData: any = null;
-    var remoteData: any = null;
-    var localErr: any = null;
-    var remoteErr: any = null;
+    var localData: any[] | null = null;
+    var remoteData: any[] | null = null;
+    var localErr: Error | null = null;
+    var remoteErr: Error | null = null;
     var kuery = new Kuery(this._query);
     var sort = this._sort;
     var limit = this._limit;
@@ -55,7 +55,7 @@ class HybridCursor {
       kuery.skip(skip);
     }
 
-    function serverResult(err: any, result: any) {
+    function serverResult(err: Error | null, result: any) {
       if (err) {
         remoteErr = err;
         result = result || [];
@@ -65,7 +65,7 @@ class HybridCursor {
       }
       remoteData = result;
       if (localData) {
-        var combinedResult = kuery.find(reconcile(localData, remoteData));
+        var combinedResult = kuery.find(reconcile(localData, remoteData!));
         callback(null, combinedResult);
         if (_.isFunction(self._onCacheUpdateCallback)) {
           self._onCacheUpdateCallback(self._query, skip, limit, sort, project, combinedResult);
@@ -73,7 +73,7 @@ class HybridCursor {
       }
     }
 
-    function localResult(err: any, result: any) {
+    function localResult(err: Error | null, result: any) {
       if (err) {
         localErr = err;
         return callback(err, result);
@@ -82,7 +82,7 @@ class HybridCursor {
       localData = result;
       if (remoteData || remoteErr) {
         if (!(remoteErr && self._options.throwRemoteErr)) {
-          var combinedResult = kuery.find(reconcile(localData, remoteData || []));
+          var combinedResult = kuery.find(reconcile(localData!, remoteData || []));
           callback(null, combinedResult);
           if (_.isFunction(self._onCacheUpdateCallback)) {
             self._onCacheUpdateCallback(self._query, skip, limit, sort, project, combinedResult);
@@ -133,7 +133,7 @@ class HybridCursor {
     }
     timeTracker.start();
     if (this._options.cacheQueries && this._getCachedData) {
-      this._getCachedData(this._query, this._skip, this._limit, this._sort, this._project, function (err: any, data: any) {
+      this._getCachedData(this._query, this._skip, this._limit, this._sort, this._project, function (err: Error | null, data: any) {
         if (data) {
           wrappedCallback(null, data);
           return;
@@ -151,12 +151,12 @@ class HybridCursor {
     this._local._refresh();
   }
 
-  sort(sort: any): this {
+  sort(sort: Record<string, 1 | -1>): this {
     this._sort = sort;
     return this;
   }
 
-  limit(limit: any): this {
+  limit(limit: number): this {
     this._limit = limit;
     return this;
   }
@@ -205,7 +205,7 @@ class HybridCursor {
 
     timeTracker.start();
 
-    function serverResult(err: any, count: any) {
+    function serverResult(err: Error | null, count: any) {
       if (err) {
         return wrappedCallback(err);
       }
@@ -213,7 +213,7 @@ class HybridCursor {
       return wrappedCallback(null, count);
     }
 
-    function localResult(err: any, count: any) {
+    function localResult(err: Error | null, count: any) {
       if (err) {
         return wrappedCallback(err, count);
       }
@@ -240,7 +240,7 @@ class HybridCursor {
     }
 
     if (this._getCachedData) {
-      this._getCachedData(this._query, this._skip, this._limit, this._sort, this._project, function (err: any, data: any) {
+      this._getCachedData(this._query, this._skip, this._limit, this._sort, this._project, function (err: Error | null, data: any) {
         if (data) {
           callback(null, data.length);
           return;
@@ -282,7 +282,7 @@ class HybridCursor {
     return new Observe(this._local, this._remote, this._options, modifiedOptions);
   }
 
-  project(project: any): this {
+  project(project: Record<string, 0 | 1>): this {
     this._project = project;
     return this;
   }

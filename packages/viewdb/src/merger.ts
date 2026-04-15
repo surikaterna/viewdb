@@ -1,15 +1,7 @@
 import _ = require('lodash');
+import { MergeOptions } from './types';
 
-interface MergeOptions {
-  comparator?: (a: any, b: any) => boolean;
-  comparatorId?: (a: any, b: any) => boolean;
-  added?: (element: any, index: number) => void;
-  removed?: (element: any, index: number) => void;
-  changed?: (oldElement: any, newElement: any, index: number) => void;
-  moved?: (element: any, fromIndex: number, toIndex: number) => void;
-}
-
-function contains(list: any[], element: any, comparator: (a: any, b: any) => boolean): any | undefined {
+function contains<T>(list: T[], element: T, comparator: (a: T, b: T) => boolean): T | undefined {
   for (const i in list) {
     const n = list[i];
     if (comparator(element, n)) {
@@ -19,14 +11,14 @@ function contains(list: any[], element: any, comparator: (a: any, b: any) => boo
   return undefined;
 }
 
-function merge(asis: any[] | null, tobe: any[], options?: MergeOptions): any[] {
+function merge<T>(asis: T[] | null, tobe: T[], options?: MergeOptions<T>): T[] {
   options = options || {};
   const comparator = options.comparator || _.isEqual;
   const comparatorId = options.comparatorId || comparator;
-  const list = _.slice(asis as any[]);
+  const list = _.slice(asis as T[]);
 
   // check removed
-  _.forEach(asis, function (e: any) {
+  _.forEach(asis, function (e: T) {
     const found = contains(tobe, e, comparatorId);
     if (found === undefined) {
       const index = list.indexOf(e);
@@ -38,7 +30,7 @@ function merge(asis: any[] | null, tobe: any[], options?: MergeOptions): any[] {
   });
 
   let indexInNew = -1;
-  _.forEach(tobe, function (e: any) {
+  _.forEach(tobe, function (e: T) {
     indexInNew++;
     const found = contains(list, e, comparatorId);
     // added

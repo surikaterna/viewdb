@@ -35,12 +35,12 @@ class Collection extends EventEmitter {
     throw new Error('Not implemented');
   }
 
-  _buildParams(query: any, method?: string): any {
+  _buildParams(query: any, method?: string): Record<string, any> {
     var q = query.query || query;
-    var skip: any;
-    var limit: any;
-    var sort: any;
-    var project: any;
+    var skip: number | undefined;
+    var limit: number | undefined;
+    var sort: Record<string, 1 | -1> | undefined;
+    var project: Record<string, 0 | 1> | undefined;
     if (query.query) {
       skip = query.skip;
       limit = query.limit;
@@ -64,9 +64,9 @@ class Collection extends EventEmitter {
     return params;
   }
 
-  _getDocuments(query: any, callback: (err: any, result?: any) => void): void {
+  _getDocuments(query: any, callback: (err: Error | null, result?: any) => void): void {
     var params = this._buildParams(query);
-    this._client.request(params, function (err: any, res: any) {
+    this._client.request(params, function (err: Error | null, res: any) {
       if (err) {
         callback(err);
       } else {
@@ -100,12 +100,12 @@ class Collection extends EventEmitter {
       }
     }
 
-    this._client.request(params, function (err: any, result: any) {
+    this._client.request(params, function (err: Error | null, result: any) {
       callback(err, result);
     });
   }
 
-  _isIdentityQuery(_query: any): boolean {
+  _isIdentityQuery(_query: Record<string, any>): boolean {
     return false;
   }
 }

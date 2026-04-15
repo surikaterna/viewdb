@@ -17,7 +17,7 @@ class Store {
     this._oplogEnabled = !!oplogEnabled;
   }
 
-  open(callback?: (err: any, value?: Store) => void): any {
+  open(callback?: (err: Error | null, value?: Store) => void): any {
     var self = this;
     return Promise.resolve(self).nodeify(callback);
   }
