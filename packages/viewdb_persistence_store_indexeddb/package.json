@@ -1,0 +1,35 @@
+{
+  "name": "viewdb_persistence_store_indexeddb",
+  "version": "0.5.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test --recursive",
+    "test.watch": "mocha test --recursive --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/surikaterna/viewdb_persistence_store_indexeddb.git"
+  },
+  "author": "Andreas Karlsson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/surikaterna/viewdb_persistence_store_indexeddb/issues"
+  },
+  "peerDependencies": {
+    "viewdb": "*"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^2.0.2",
+    "mocha": "^10.7.3",
+    "should": "^4.1.0",
+    "viewdb": "*"
+  },
+  "homepage": "https://github.com/surikaterna/viewdb_persistence_store_indexeddb#readme",
+  "dependencies": {
+    "bluebird": "^3.7.2",
+    "kuery": "^0.5.3",
+    "lodash": "^4.17.21",
+    "node-uuid": "^1.4.3"
+  }
+}
