@@ -23,10 +23,15 @@ class Store {
     this._lokiOptions = {
       autosave: false
     };
-    this.adapter = options?.adapter ?? null;
     if (options && options.inMemoryOnly) {
       this._lokiOptions = {};
+      this.adapter = null;
     } else {
+      if (typeof options?.adapter === 'function') {
+        this.adapter = options.adapter(this._name);
+      } else {
+        this.adapter = options?.adapter ?? null;
+      }
       if (this.adapter) {
         this._lokiOptions.adapter = this.adapter;
       }
