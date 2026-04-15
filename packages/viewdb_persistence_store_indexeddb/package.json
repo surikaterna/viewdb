@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
     "test": "mocha test --recursive",
     "test.watch": "mocha test --recursive --watch"
   },
