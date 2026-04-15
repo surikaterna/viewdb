@@ -32,7 +32,7 @@ class Store {
       }
     }
 
-    this._lokiJs = new Loki('lynx3', this._lokiOptions);
+    this._lokiJs = new Loki(options?.dbName ?? this._name, this._lokiOptions);
     this._options = options;
     this._collections = {};
     this._onBeforeUnloadFunc = (event: any) => {

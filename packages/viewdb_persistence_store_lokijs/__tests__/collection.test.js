@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const Store = require('..');
+const { Store } = require('..');
 
 describe('Collection', function () {
   var store;
