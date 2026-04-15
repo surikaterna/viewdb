@@ -2,7 +2,7 @@ import _ = require('lodash');
 import { Logger } from 'slf';
 import { v4 as uuid } from 'uuid';
 
-var LOG = Logger.getLogger('lx:viewdb-persistence-store-remote');
+var LOG = Logger.getLogger('viewdb:remote:observe');
 
 var buildParams = function (defaults: any, query: any, collection: any): any {
   var skip: any, limit: any, sort: any, project: any;

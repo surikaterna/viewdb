@@ -1,0 +1,49 @@
+# ViewDB
+
+Database facade for JavaScript/TypeScript with pluggable persistence stores.
+
+## Architecture
+
+ViewDB -> Store -> Collection -> Cursor / Observer
+
+- ViewDB: facade that accepts a Store (default: InMemoryStore).
+- Store: .open(), .close(), .collection(name).
+- Collection: .find(query), .insert(docs, cb), .save(docs, cb), .remove(query, cb), .drop(cb), .ensureIndex().
+- Cursor: returned by .find(). Supports .toArray(cb), .sort(), .skip(), .limit(), .count(cb), .observe(callbacks).
+- Observer: returned by .observe(). Returns { stop } handle (not this). Callbacks: init, added, changed, removed.
+
+## Packages
+
+- viewdb (0.12.0): Core facade, in-memory store, cursor, observer, merge utilities.
+- viewdb_persistence_store_indexeddb (0.5.0): IndexedDB store for browsers.
+- viewdb_persistence_store_mongodb (4.3.0): MongoDB store for server (driver v6).
+- viewdb_persistence_store_remote (4.3.0): Remote store via socket.io, REST, or hybrid (local+remote).
+- viewdb_persistence_store_lokijs (1.0.0): LokiJS store with partitioning and Cordova FS adapters.
+
+## File Layout
+
+packages/viewdb/src/                          - Core: ViewDB, InMemoryStore, Cursor, Observer, merge
+packages/viewdb_persistence_store_indexeddb/src/ - IndexedDB store
+packages/viewdb_persistence_store_mongodb/src/   - MongoDB store
+packages/viewdb_persistence_store_remote/src/    - Remote store (socket, REST, hybrid)
+packages/viewdb_persistence_store_lokijs/src/    - LokiJS store
+packages/shared-types/kuery/                     - kuery type shim (only shared type)
+
+## Technical Constraints
+
+- CommonJS only. Core uses `export = Object.assign(ViewDB, { Cursor, Observer, merge, plugins })` pattern.
+- API supports both callbacks and promises. Prefer promises for new code.
+- ES2018 target, compiled from TypeScript.
+- Observer constructor returns { stop }, not this. Preserved with as-any cast in implementation.
+- Plugins (TimestampPlugin, VersioningPlugin) use monkey-patching. Not typed.
+- kuery is the only shared type shim, located at packages/shared-types/kuery/.
+- tsconfig: strict: false for lokijs store, strict: true for all others.
+- npm workspaces with Turborepo. Requires npm v8+.
+
+## Build and Test
+
+npm install        - install all workspace dependencies
+npx turbo build    - build all packages (TypeScript -> CommonJS)
+npx turbo test     - run all tests
+
+Individual package: npx turbo build --filter=viewdb

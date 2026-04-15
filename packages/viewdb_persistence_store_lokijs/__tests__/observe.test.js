@@ -1,0 +1,178 @@
+const _ = require('lodash');
+const { Store } = require('..');
+
+describe('Collection', function () {
+  var store;
+  beforeEach(function (done) {
+    store = new Store('test-suite', { inMemoryOnly: true, disableThrottle: true });
+    done();
+  });
+  afterEach(function (done) {
+    if (store) {
+      store.collection('dollhouse').drop(function () {
+        store.collection('dollhouse2').drop(function () {
+          store.close(function () {
+            store.clearAllIntervals();
+            done();
+          });
+        });
+      });
+    }
+  });
+  it('#observe with insert', function (done) {
+    store.open().then(function () {
+      var cursor = store.collection('dollhouse').find({});
+      var handle = cursor.observe({
+        added: function (x) {
+          expect(x._id).toBe('echo');
+          setTimeout(() => {
+            handle.stop();
+            done();
+          }, 10);
+        }
+      });
+      store.collection('dollhouse').insert({ _id: 'echo' });
+    });
+  });
+  it('#observe with implicit remove', function (done) {
+    store.open().then(function () {
+      var cursor = store.collection('dollhouse').find({ _id: 'echo', status: 'confirmed' });
+      var haveAdded = false;
+      var handle = cursor.observe({
+        added: function (x) {
+          haveAdded = true;
+        },
+        removed: function (x) {
+          expect(haveAdded).toBe(true);
+          expect(x._id).toBe('echo');
+          handle.stop();
+          done();
+        }
+      });
+      store.collection('dollhouse').insert({ _id: 'echo', status: 'confirmed' });
+      store.collection('dollhouse').save({ _id: 'echo', status: 'checked_in' });
+    });
+  });
+  it('#observe with remove', function (done) {
+    store.open().then(function () {
+      store.collection('dollhouse').insert({ _id: 'echo' }, function () {
+        var cursor = store.collection('dollhouse').find({});
+        var handle = cursor.observe({
+          removed: function (x) {
+            expect(x._id).toBe('echo');
+            handle.stop();
+            done();
+          }
+        });
+        store.collection('dollhouse').remove({ _id: 'echo' });
+      });
+    });
+  });
+  it('#observe with query and insert', function (done) {
+    store.open().then(function () {
+      store.collection('dollhouse').insert({ _id: 'echo' });
+      var cursor = store.collection('dollhouse').find({ _id: 'echo2' });
+      cursor.observe({
+        added: function (x) {
+          expect(x._id).toBe('echo2');
+          done();
+        }
+      });
+      store.collection('dollhouse').insert({ _id: 'echo2' });
+    });
+  });
+  it('#observe with query and update', function (done) {
+    store.open().then(function () {
+      var cursor = store.collection('dollhouse').find({ _id: 'echo' });
+      var handle = cursor.observe({
+        added: function (x) {
+          expect(x.age).toBe(10);
+          expect(x._id).toBe('echo');
+        },
+        changed: function (o, n) {
+          expect(o.age).toBe(10);
+          expect(n.age).toBe(100);
+          handle.stop();
+          done();
+        }
+      });
+
+      store.collection('dollhouse').insert({ _id: 'echo', age: 10 }, function () {
+        store.collection('dollhouse').save({ _id: 'echo', age: 100 });
+      });
+    });
+  });
+  it('#observe with query and skip', function (done) {
+    store.open().then(function () {
+      store.collection('dollhouse').insert({ _id: 'echo' });
+      store.collection('dollhouse').insert({ _id: 'echo2' });
+      store.collection('dollhouse').insert({ _id: 'echo3' });
+      var cursor = store.collection('dollhouse').find({});
+      var skip = 0;
+      cursor.limit(1);
+      var realDone = _.after(3, function () {
+        cursor.toArray(function (err, res) {
+          expect(res.length).toBe(0);
+          setTimeout(() => {
+            handle.stop();
+            done();
+          }, 10);
+        });
+      });
+      var handle = cursor.observe({
+        added: function (x) {
+          cursor.skip(++skip);
+          realDone();
+        }
+      });
+    });
+  });
+  it('#observe with no results', function (done) {
+    store.open().then(function () {
+      var cursor = store.collection('dollhouse').find({});
+      var handle = cursor.observe({
+        init: function (coll) {
+          expect(coll.length).toBe(0);
+          setTimeout(() => {
+            handle.stop();
+            done();
+          }, 10);
+        }
+      });
+    });
+  });
+  it('#observe with init after one insert', function (done) {
+    store.collection('dollhouse').insert({ _id: 'echo' }, function () {
+      store.open().then(function () {
+        var cursor = store.collection('dollhouse').find({});
+        var handle = cursor.observe({
+          init: function (coll) {
+            expect(coll.length).toBe(1);
+            setTimeout(() => {
+              handle.stop();
+              done();
+            }, 10);
+          }
+        });
+      });
+    });
+  });
+  it('#observe with one insert after init', function (done) {
+    store.open().then(function () {
+      var cursor = store.collection('dollhouse').find({});
+      var handle = cursor.observe({
+        init: function (coll) {
+          expect(coll.length).toBe(0);
+        },
+        added: function (a) {
+          expect(a._id).toBe('echo');
+          handle.stop();
+          done();
+        }
+      });
+    });
+    setTimeout(function () {
+      store.collection('dollhouse').insert({ _id: 'echo' });
+    }, 5);
+  });
+});

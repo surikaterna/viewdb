@@ -1,0 +1,37 @@
+{
+  "name": "viewdb_persistence_store_lokijs",
+  "version": "1.0.0",
+  "description": "LokiJS persistence store for ViewDB",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "jest --forceExit",
+    "test.watch": "jest --watchAll"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/surikaterna/viewdb.git"
+  },
+  "author": "Andreas Karlsson",
+  "license": "ISC",
+  "peerDependencies": {
+    "viewdb": "*"
+  },
+  "devDependencies": {
+    "@types/lokijs": "1.5.14",
+    "@types/node": "^18.0.0",
+    "jest": "^29.4.3",
+    "typescript": "^5.0.0",
+    "viewdb": "*"
+  },
+  "dependencies": {
+    "bluebird": "^3.7.2",
+    "lodash": "^4.18.0",
+    "lokijs": "1.5.12",
+    "slf": "^1.0.0"
+  }
+}
