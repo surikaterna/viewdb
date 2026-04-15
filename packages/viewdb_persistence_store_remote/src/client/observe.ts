@@ -1,6 +1,6 @@
 import _ = require('lodash');
 import { Logger } from 'slf';
-import { v4 as uuid } from 'node-uuid';
+import { v4 as uuid } from 'uuid';
 
 var LOG = Logger.getLogger('lx:viewdb-persistence-store-remote');
 

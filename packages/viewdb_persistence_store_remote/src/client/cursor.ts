@@ -1,5 +1,5 @@
 import { Logger } from 'slf';
-import { v4 as uuid } from 'node-uuid';
+import { v4 as uuid } from 'uuid';
 import _ = require('lodash');
 import Observer = require('./observe');
 

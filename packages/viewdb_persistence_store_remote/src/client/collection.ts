@@ -2,7 +2,7 @@ import Promise = require('bluebird');
 import _ = require('lodash');
 import Cursor = require('./cursor');
 import { EventEmitter } from 'events';
-import { v4 as uuid } from 'node-uuid';
+import { v4 as uuid } from 'uuid';
 import { VdbClient } from '../types';
 
 class Collection extends EventEmitter {

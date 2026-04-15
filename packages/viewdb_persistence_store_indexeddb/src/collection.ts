@@ -1,6 +1,6 @@
 import Promise = require('bluebird');
 import _ = require('lodash');
-import { v4 as uuid } from 'node-uuid';
+import { v4 as uuid } from 'uuid';
 import Kuery = require('kuery');
 import { EventEmitter } from 'events';
 
