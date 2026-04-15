@@ -1,7 +1,7 @@
-var Store = require('../../lib/hybrid/store');
-var LocalStore = require('viewdb/lib/inmemory/store');
+var Store = require('../../dist/hybrid/store');
+var LocalStore = require('viewdb/dist/inmemory/store');
 var should = require('should');
-var Cursor = require('viewdb/lib').Cursor;
+var Cursor = require('viewdb').Cursor;
 
 describe('Store', function () {
   it('should cache', function (done) {

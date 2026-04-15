@@ -1,11 +1,13 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "target": "ES5",
     "outDir": "dist",
     "rootDir": "src",
     "composite": true,
-    "typeRoots": ["./node_modules/@types", "./@types"]
+    "types": ["node", "lodash"],
+    "typeRoots": ["../../node_modules/@types", "../shared-types"]
   },
-  "include": ["src", "@types"],
+  "include": ["src", "../shared-types"],
   "exclude": ["node_modules", "dist", "test"]
 }

@@ -1,9 +1,9 @@
 var should = require('should');
 var ViewDb = require('viewdb');
 var _ = require('lodash');
-var ViewDbSocketServer = require('../../lib/server/server');
-var Store = require('../../lib/client/store');
-var Client = require('../../lib/client/rr_client');
+var ViewDbSocketServer = require('../../dist/server/server');
+var Store = require('../../dist/client/store');
+var Client = require('../../dist/client/rr_client');
 var SocketMock = require('socket.io-mock');
 var HybridStore = require('../..').Hybrid;
 

@@ -1,4 +1,4 @@
-var projectDocument = require('../lib/utils').projectDocument;
+var projectDocument = require('../dist/utils').projectDocument;
 
 describe('Project document', function () {
   it('#Should pick property', function (done) {

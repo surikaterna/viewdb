@@ -1,4 +1,4 @@
-var Cursor = require('../../lib/hybrid/cursor');
+var Cursor = require('../../dist/hybrid/cursor');
 var LocalCursor = require('viewdb').Cursor;
 var should = require('should');
 

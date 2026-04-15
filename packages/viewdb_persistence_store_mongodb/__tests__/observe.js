@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var MongoClient = require('mongodb').MongoClient;
 var ViewDb = require('viewdb');
-var Store = require('../lib/store');
+var Store = require('../dist/store');
 
 describe('Observe', function () {
   const COLLECTION_NAME = 'observe';

@@ -1,5 +1,5 @@
 var _ = require('lodash');
-var merge = require('../lib/merger');
+var merge = require('../dist/merger');
 
 describe('Merger', () => {
   it('#merge with remove element', (done) => {
