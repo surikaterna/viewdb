@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import Cursor = require('./cursor');
-import type { ViewDbScompContract, VDocument } from '../types';
+import type { ViewDbScompContract, VDocument, CollectionRef } from '../types';
 
 /** Query object shape used between collection and cursor */
 interface QueryObject {
@@ -18,17 +18,18 @@ class Collection extends EventEmitter {
 
   constructor(proxy: ViewDbScompContract, collectionName: string, writable: boolean) {
     super();
+    this.setMaxListeners(0);
     this._proxy = proxy;
     this._name = collectionName;
     this._writable = writable;
   }
 
   find(query: Record<string, unknown>, options?: Record<string, unknown>): Cursor {
-    return new Cursor(this as any, { query }, options || {}, this._getDocuments.bind(this));
+    return new Cursor(this as CollectionRef, { query }, options || {}, this._getDocuments.bind(this));
   }
 
   _getDocuments(queryObject: QueryObject, callback: (err: Error | null, result?: VDocument[]) => void): void {
-    const q = queryObject.query || queryObject;
+    const q = queryObject.query;
     this._proxy
       .find({
         collection: this._name,

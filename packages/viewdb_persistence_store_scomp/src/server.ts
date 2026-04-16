@@ -85,20 +85,12 @@ function handleCount(viewdb: ViewDbLike, decorator: NonNullable<ServerOptions['q
   return async (input: CountRequest): Promise<number> => {
     const decoratedQuery = await decorateQuery(decorator, input.collection, input.query);
     const cursor = viewdb.collection(input.collection).find(decoratedQuery);
-    if (options.readPreference && cursor.setReadPreference) {
-      cursor.setReadPreference(options.readPreference);
-    }
-    if (typeof input.limit === 'number') {
-      cursor.limit(input.limit);
-    }
-    if (typeof input.skip === 'number') {
-      cursor.skip(input.skip);
-    }
+    // globalLimit from applyCursorOptions applies here too — counts what you'd actually get back
+    applyCursorOptions(cursor, input, options);
     return new Promise((resolve, reject) => {
       cursor.count((err, result) => {
         if (err) return reject(err);
         resolve(result ?? 0);
-        cursor.close(() => {});
       });
     });
   };
@@ -146,21 +138,40 @@ function handleObserve(viewdb: ViewDbLike, decorator: NonNullable<ServerOptions[
       const cursor = viewdb.collection(input.collection).find(decoratedQuery);
       applyCursorOptions(cursor, input, options);
 
+      let pendingEvents: ObserveEvent[] = [];
+      let flushScheduled = false;
+
+      function enqueue(event: ObserveEvent): void {
+        pendingEvents.push(event);
+        if (!flushScheduled) {
+          flushScheduled = true;
+          queueMicrotask(() => {
+            const batch = pendingEvents;
+            pendingEvents = [];
+            flushScheduled = false;
+            for (const e of batch) {
+              feed.next(e);
+            }
+          });
+        }
+      }
+
       const observeOptions: Record<string, unknown> = {
         init: (result: VDocument[]) => {
+          // Init bypasses batching — it's the initial state delivery
           feed.next({ type: 'init', documents: result });
         },
         added: (e: VDocument, index: number) => {
-          feed.next({ type: 'added', document: e, index });
+          enqueue({ type: 'added', document: e, index });
         },
         removed: (e: VDocument, index: number) => {
-          feed.next({ type: 'removed', document: e, index });
+          enqueue({ type: 'removed', document: e, index });
         },
         changed: (oldDoc: VDocument, newDoc: VDocument, index: number) => {
-          feed.next({ type: 'changed', oldDocument: oldDoc, newDocument: newDoc, index });
+          enqueue({ type: 'changed', oldDocument: oldDoc, newDocument: newDoc, index });
         },
         moved: (e: VDocument, fromIndex: number, toIndex: number) => {
-          feed.next({ type: 'moved', document: e, fromIndex, toIndex });
+          enqueue({ type: 'moved', document: e, fromIndex, toIndex });
         },
         oplog: true
       };
@@ -179,7 +190,7 @@ function handleObserve(viewdb: ViewDbLike, decorator: NonNullable<ServerOptions[
         handle.stop();
       });
 
-      cursor.close(() => {});
+      // Cursor stays alive — the observe handle owns its lifecycle
     })();
 
     return feed;

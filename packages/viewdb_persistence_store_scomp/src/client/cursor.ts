@@ -1,4 +1,4 @@
-import type { ViewDbScompContract, VDocument, ObserveEvent } from '../types';
+import type { VDocument, ObserveEvent, CollectionRef } from '../types';
 
 /** Query state accumulated by cursor methods */
 interface QueryState {
@@ -19,15 +19,6 @@ interface ObserveCallbacks {
   moved?: (document: VDocument, fromIndex: number, toIndex: number) => void;
 }
 
-interface CollectionRef {
-  _name: string;
-  _proxy: ViewDbScompContract;
-  emit(event: string, ...args: unknown[]): void;
-  on(event: string, listener: (...args: unknown[]) => void): unknown;
-  removeListener(event: string, listener: (...args: unknown[]) => void): unknown;
-  count(query?: Record<string, unknown>, options?: Record<string, unknown>, callback?: (err: Error | null, result?: number) => void): void;
-}
-
 /**
  * Standalone cursor for the scomp client.
  * Does NOT extend viewdb's Cursor — uses direct proxy calls instead of socket messages.
@@ -38,6 +29,7 @@ class Cursor {
   _getDocuments: GetDocumentsFn;
   _isObserving: boolean;
   private _handle: { stop: () => void } | null;
+  private _refreshTimer: ReturnType<typeof setTimeout> | null;
 
   constructor(collection: CollectionRef, query: { query: Record<string, unknown> }, _options: Record<string, unknown>, getDocuments: GetDocumentsFn) {
     this._collection = collection;
@@ -45,6 +37,7 @@ class Cursor {
     this._getDocuments = getDocuments;
     this._isObserving = false;
     this._handle = null;
+    this._refreshTimer = null;
   }
 
   sort(params: Record<string, 1 | -1>): this {
@@ -55,11 +48,13 @@ class Cursor {
 
   limit(n: number): this {
     this._query.limit = n;
+    this._refresh();
     return this;
   }
 
   skip(n: number): this {
     this._query.skip = n;
+    this._refresh();
     return this;
   }
 
@@ -118,6 +113,10 @@ class Cursor {
     this._handle = startFeedObserver(this._collection, this._query, options);
     return {
       stop: () => {
+        if (this._refreshTimer) {
+          clearTimeout(this._refreshTimer);
+          this._refreshTimer = null;
+        }
         if (this._handle) {
           this._handle.stop();
           this._handle = null;
@@ -130,7 +129,11 @@ class Cursor {
 
   private _refresh(): void {
     if (this._isObserving) {
-      this._collection.emit('change');
+      if (this._refreshTimer) clearTimeout(this._refreshTimer);
+      this._refreshTimer = setTimeout(() => {
+        this._refreshTimer = null;
+        this._collection.emit('change');
+      }, 50);
     }
   }
 }
