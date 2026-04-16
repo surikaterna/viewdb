@@ -23,6 +23,7 @@ export type Callback<T = void> = (err: Error | null, result?: T) => void;
 export interface MergeOptions<T = any> {
   comparator?: (a: T, b: T) => boolean;
   comparatorId?: (a: T, b: T) => boolean;
+  keyFn?: (element: T) => string;
   added?: (element: T, index: number) => void;
   removed?: (element: T, index: number) => void;
   changed?: (oldElement: T, newElement: T, index: number) => void;
@@ -36,6 +37,7 @@ export interface ObserveOptions<T = VDocument> {
   removed?: (element: T, index: number) => void;
   changed?: (asis: T, tobe: T, index: number) => void;
   moved?: (element: T, fromIndex: number, toIndex: number) => void;
+  enableBatching?: boolean;
 }
 
 /** Handle returned by observe() */
