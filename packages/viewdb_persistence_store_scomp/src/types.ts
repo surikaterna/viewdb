@@ -1,5 +1,6 @@
-/** A generic document stored in viewdb */
-export type VDocument = Record<string, unknown> & { _id?: string };
+import type { VDocument, CollectionLike } from 'viewdb/dist/types';
+
+export type { VDocument };
 
 /** Find request parameters */
 export interface FindRequest {
@@ -62,14 +63,11 @@ export type ObserveEvent =
   | { type: 'changed'; oldDocument: VDocument; newDocument: VDocument; index: number }
   | { type: 'moved'; document: VDocument; fromIndex: number; toIndex: number };
 
-/** Reference to a collection as seen by cursors */
-export interface CollectionRef {
+/** Scomp-specific extension of core CollectionLike */
+export interface ScompCollectionLike extends CollectionLike {
   _name: string;
   _proxy: ViewDbScompContract;
-  emit(event: string, ...args: unknown[]): void;
-  on(event: string, listener: (...args: unknown[]) => void): unknown;
-  removeListener(event: string, listener: (...args: unknown[]) => void): unknown;
-  count(query?: Record<string, unknown>, options?: Record<string, unknown>, callback?: (err: Error | null, result?: number) => void): void;
+  count(query?: Record<string, any>, options?: Record<string, any>, callback?: (err: Error | null, result?: number) => void): void;
 }
 
 /** The scomp contract shape for ViewDB operations */

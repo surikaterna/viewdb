@@ -1,70 +1,35 @@
-import type { VDocument, ObserveEvent, CollectionRef } from '../types';
+import type { QueryObject, VDocument, ObserveOptions, Callback } from 'viewdb/dist/types';
+import type { ObserveEvent, ScompCollectionLike } from '../types';
 
-/** Query state accumulated by cursor methods */
-interface QueryState {
-  query: Record<string, unknown>;
-  sort?: Record<string, 1 | -1>;
-  limit?: number;
-  skip?: number;
-  project?: Record<string, 0 | 1>;
-}
-
-type GetDocumentsFn = (queryState: QueryState, callback: (err: Error | null, result?: VDocument[]) => void) => void;
-
-interface ObserveCallbacks {
-  init?: (documents: VDocument[]) => void;
-  added?: (document: VDocument, index: number) => void;
-  removed?: (document: VDocument, index: number) => void;
-  changed?: (oldDoc: VDocument, newDoc: VDocument, index: number) => void;
-  moved?: (document: VDocument, fromIndex: number, toIndex: number) => void;
-}
+const BaseCursor = require('viewdb').Cursor;
 
 /**
- * Standalone cursor for the scomp client.
- * Does NOT extend viewdb's Cursor — uses direct proxy calls instead of socket messages.
+ * Scomp cursor extending core Cursor.
+ * Overrides observe (feed-based), count (RPC), and _refresh (debounced).
+ * Adds project() which core doesn't have.
  */
-class Cursor {
-  _collection: CollectionRef;
-  _query: QueryState;
-  _getDocuments: GetDocumentsFn;
-  _isObserving: boolean;
+class ScompCursor extends BaseCursor {
   private _handle: { stop: () => void } | null;
   private _refreshTimer: ReturnType<typeof setTimeout> | null;
 
-  constructor(collection: CollectionRef, query: { query: Record<string, unknown> }, _options: Record<string, unknown>, getDocuments: GetDocumentsFn) {
-    this._collection = collection;
-    this._query = { query: query.query };
-    this._getDocuments = getDocuments;
-    this._isObserving = false;
+  constructor(
+    collection: ScompCollectionLike,
+    query: { query: Record<string, unknown> },
+    options: Record<string, unknown>,
+    getDocuments: (queryObject: QueryObject, callback: Callback<VDocument[]>) => void
+  ) {
+    super(collection, query, options, getDocuments);
     this._handle = null;
     this._refreshTimer = null;
   }
 
-  sort(params: Record<string, 1 | -1>): this {
-    this._query.sort = params;
-    this._refresh();
-    return this;
-  }
-
-  limit(n: number): this {
-    this._query.limit = n;
-    this._refresh();
-    return this;
-  }
-
-  skip(n: number): this {
-    this._query.skip = n;
-    this._refresh();
-    return this;
+  private get _scompCollection(): ScompCollectionLike {
+    return this._collection as unknown as ScompCollectionLike;
   }
 
   project(params: Record<string, 0 | 1>): this {
     this._query.project = params;
     return this;
-  }
-
-  toArray(callback: (err: Error | null, result?: VDocument[]) => void): void {
-    this._getDocuments(this._query, callback);
   }
 
   count(
@@ -85,20 +50,16 @@ class Cursor {
       if (this._query.skip) opts.skip = this._query.skip;
       if (this._query.limit) opts.limit = this._query.limit;
     }
-    this._collection.count(this._query.query, opts, callback!);
-  }
-
-  close(callback?: (err: Error | null) => void): void {
-    if (callback) callback(null);
+    this._scompCollection.count(this._query.query, opts, callback!);
   }
 
   /**
    * Observe live changes via the scomp feed.
    * Returns a handle with stop() to end the subscription.
    */
-  observe(options: ObserveCallbacks): { stop: () => void } {
+  observe(options: ObserveOptions): { stop: () => void } {
     if (this._isObserving) {
-      throw new Error('Already observing this cursor. Collection: ' + this._collection._name);
+      throw new Error('Already observing this cursor. Collection: ' + this._scompCollection._name);
     }
     this._isObserving = true;
 
@@ -106,11 +67,11 @@ class Cursor {
       if (this._handle) {
         this._handle.stop();
       }
-      this._handle = startFeedObserver(this._collection, this._query, options);
+      this._handle = startFeedObserver(this._scompCollection, this._query, options);
     };
-    this._collection.on('change', refreshListener);
+    this._scompCollection.on('change', refreshListener);
 
-    this._handle = startFeedObserver(this._collection, this._query, options);
+    this._handle = startFeedObserver(this._scompCollection, this._query, options);
     return {
       stop: () => {
         if (this._refreshTimer) {
@@ -121,25 +82,25 @@ class Cursor {
           this._handle.stop();
           this._handle = null;
         }
-        this._collection.removeListener('change', refreshListener);
+        this._scompCollection.removeListener('change', refreshListener);
         this._isObserving = false;
       }
     };
   }
 
-  private _refresh(): void {
+  _refresh(): void {
     if (this._isObserving) {
       if (this._refreshTimer) clearTimeout(this._refreshTimer);
       this._refreshTimer = setTimeout(() => {
         this._refreshTimer = null;
-        this._collection.emit('change');
+        this._scompCollection.emit('change');
       }, 50);
     }
   }
 }
 
 /** Start a scomp feed observer and return a handle to stop it */
-function startFeedObserver(collection: CollectionRef, query: QueryState, callbacks: ObserveCallbacks): { stop: () => void } {
+function startFeedObserver(collection: ScompCollectionLike, query: QueryObject, callbacks: ObserveOptions): { stop: () => void } {
   const events = {
     i: callbacks.init != null,
     a: callbacks.added != null,
@@ -150,7 +111,7 @@ function startFeedObserver(collection: CollectionRef, query: QueryState, callbac
 
   const feed = collection._proxy.observe({
     collection: collection._name,
-    query: query.query,
+    query: query.query as Record<string, unknown>,
     sort: query.sort,
     limit: query.limit,
     skip: query.skip,
@@ -183,7 +144,7 @@ function startFeedObserver(collection: CollectionRef, query: QueryState, callbac
   };
 }
 
-function dispatchEvent(event: ObserveEvent, callbacks: ObserveCallbacks): void {
+function dispatchEvent(event: ObserveEvent, callbacks: ObserveOptions): void {
   switch (event.type) {
     case 'init':
       callbacks.init?.(event.documents);
@@ -203,4 +164,4 @@ function dispatchEvent(event: ObserveEvent, callbacks: ObserveCallbacks): void {
   }
 }
 
-export = Cursor;
+export = ScompCursor;

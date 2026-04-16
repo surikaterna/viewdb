@@ -1,15 +1,7 @@
 import { EventEmitter } from 'events';
 import Cursor = require('./cursor');
-import type { ViewDbScompContract, VDocument, CollectionRef } from '../types';
-
-/** Query object shape used between collection and cursor */
-interface QueryObject {
-  query: Record<string, unknown>;
-  skip?: number;
-  limit?: number;
-  sort?: Record<string, 1 | -1>;
-  project?: Record<string, 0 | 1>;
-}
+import type { QueryObject } from 'viewdb/dist/types';
+import type { ViewDbScompContract, VDocument, ScompCollectionLike } from '../types';
 
 class Collection extends EventEmitter {
   _proxy: ViewDbScompContract;
@@ -25,7 +17,7 @@ class Collection extends EventEmitter {
   }
 
   find(query: Record<string, unknown>, options?: Record<string, unknown>): Cursor {
-    return new Cursor(this as CollectionRef, { query }, options || {}, this._getDocuments.bind(this));
+    return new Cursor(this as unknown as ScompCollectionLike, { query }, options || {}, this._getDocuments.bind(this));
   }
 
   _getDocuments(queryObject: QueryObject, callback: (err: Error | null, result?: VDocument[]) => void): void {
