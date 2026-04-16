@@ -1,6 +1,6 @@
 import _ = require('lodash');
 import Observer = require('./observe');
-import { QueryObject, SortSpec, Callback, VDocument, ObserveOptions, ObserveHandle, CollectionLike, GetDocumentsFn } from './types';
+import { QueryObject, SortSpec, ProjectionSpec, Callback, VDocument, ObserveOptions, ObserveHandle, CollectionLike, GetDocumentsFn } from './types';
 
 class Cursor {
   _collection: CollectionLike;
@@ -61,6 +61,11 @@ class Cursor {
     if (this._isObserving) {
       this._refresh();
     }
+    return this;
+  }
+
+  project(project: ProjectionSpec): this {
+    this._query.project = project;
     return this;
   }
 

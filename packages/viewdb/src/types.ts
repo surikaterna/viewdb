@@ -53,13 +53,32 @@ export interface ObserveHandle {
 export type GetDocumentsFn = (queryObject: QueryObject, callback: Callback<VDocument[]>) => void;
 
 /**
- * Abstract collection interface that all store collections should satisfy.
- * Used internally to type _collection fields in cursor/observe.
+ * Core collection contract that all persistence store collections should satisfy.
+ *
+ * Required members are used by Cursor and Observer.
+ * Optional members represent common store capabilities.
  */
 export interface CollectionLike {
+  /** Create a cursor for the given query */
   find(query: Record<string, any>, options?: Record<string, any>): any;
+  /** Internal: retrieve documents matching the query object */
   _getDocuments: GetDocumentsFn;
+  /** EventEmitter: emit events (primarily 'change') */
   emit(event: string, ...args: any[]): void;
+  /** EventEmitter: listen for events */
   on(event: string, listener: (...args: any[]) => void): any;
+  /** EventEmitter: remove listener */
   removeListener(event: string, listener: (...args: any[]) => void): any;
+
+  // Optional store capabilities
+  /** Insert documents into the collection */
+  insert?(documents: any, options?: any, callback?: Callback<any>): void;
+  /** Save (upsert) documents */
+  save?(documents: any, options?: any, callback?: Callback<any>): void;
+  /** Remove documents matching the query */
+  remove?(query: any, options?: any, callback?: Callback): void;
+  /** Count documents */
+  count?(callback: Callback<number>): void;
+  /** Drop all documents */
+  drop?(callback?: Callback): void;
 }
