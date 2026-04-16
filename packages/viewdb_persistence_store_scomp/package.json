@@ -1,0 +1,30 @@
+{
+  "name": "viewdb_persistence_store_scomp",
+  "version": "0.1.0",
+  "description": "Scomp-based persistence store for ViewDB",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "peerDependencies": {
+    "viewdb": ">=0.12.0",
+    "@scomp/core": ">=0.1.0"
+  },
+  "devDependencies": {
+    "@scomp/core": "file:../../../scomp/packages/core",
+    "@scomp/client": "file:../../../scomp/packages/client",
+    "@scomp/types": "file:../../../scomp/packages/types",
+    "@scomp/transport-inprocess": "file:../../../scomp/packages/transport-inprocess",
+    "viewdb": "*",
+    "jest": "^29.4.3",
+    "prettier": "3.0.3",
+    "prettier-config-surikaterna": "^1.0.1"
+  },
+  "author": "Andreas Karlsson",
+  "license": "MIT"
+}
