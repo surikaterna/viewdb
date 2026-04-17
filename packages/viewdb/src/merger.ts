@@ -81,7 +81,7 @@ function merge<T>(asis: T[] | null, tobe: T[], options?: MergeOptions<T>): T[] {
   const keyFn = options.keyFn;
 
   if (keyFn) {
-    return mergeWithMap(asis as T[], tobe, { ...options, comparator }, keyFn);
+    return mergeWithMap(asis ?? [], tobe, { ...options, comparator }, keyFn);
   }
 
   const list = _.slice(asis as T[]);
