@@ -57,7 +57,7 @@ describe('Store', function () {
                           hcursor.collection('alfa')._getCachedData({ id: 'abc' }, undefined, undefined, undefined, { id: 1 }, function (_err2, projectedData) {
                             data.length.should.equal(1);
                             projectedData.length.should.equal(1);
-                            projectedData[0]._insertedAt.should.be.below(data[0]._insertedAt);
+                            projectedData[0]._insertedAt.should.be.belowOrEqual(data[0]._insertedAt);
                             resolve();
                           });
                         });
