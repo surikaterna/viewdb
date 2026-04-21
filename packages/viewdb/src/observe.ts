@@ -8,6 +8,7 @@ class Observer {
   _options: ObserveOptions;
   _collection: CollectionLike;
   _cache: VDocument[] | null;
+  private _boundListener: () => void;
 
   constructor(query: QueryObject, queryOptions: QueryObject, collection: CollectionLike, options: ObserveOptions) {
     this._query = query;
@@ -16,21 +17,23 @@ class Observer {
     this._collection = collection;
     this._cache = [];
 
-    const self = this;
-    const listener = function () {
-      self.refresh();
-    };
-    collection.on('change', listener);
+    this._boundListener = this._onCollectionChange.bind(this);
+    collection.on('change', this._boundListener);
     this.refresh(true);
 
     // The constructor returns a plain object, not `this`.
     // This matches the original JS behavior.
+    const self = this;
     return {
       stop: function () {
         self._cache = null;
-        collection.removeListener('change', listener);
+        collection.removeListener('change', self._boundListener);
       }
     } as any;
+  }
+
+  private _onCollectionChange(): void {
+    this.refresh();
   }
 
   refresh(initial?: boolean): void {
