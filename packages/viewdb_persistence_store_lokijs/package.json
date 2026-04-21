@@ -26,6 +26,7 @@
     "@types/node": "^18.0.0",
     "typescript": "^5.0.0",
     "viewdb": "*",
+    "viewdb-store-tests": "*",
     "vitest": "2.1.9"
   },
   "dependencies": {

@@ -1,0 +1,7 @@
+{
+  "name": "viewdb-store-tests",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.js",
+  "description": "Shared test suite for viewdb persistence stores"
+}
