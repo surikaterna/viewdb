@@ -61,3 +61,16 @@ export interface CollectionLike {
   on(event: string, listener: (...args: any[]) => void): any;
   removeListener(event: string, listener: (...args: any[]) => void): any;
 }
+
+/**
+ * Extended collection interface for stores that support write operations.
+ * Methods use Promise-based signatures as the migration target.
+ * All methods are optional — stores implement them as they migrate from callbacks to Promises.
+ */
+export interface WritableCollectionLike extends CollectionLike {
+  insert?(doc: VDocument | VDocument[], options?: Record<string, any>): Promise<VDocument[]>;
+  save?(doc: VDocument | VDocument[], options?: Record<string, any>): Promise<VDocument[]>;
+  remove?(query: Record<string, any>, options?: Record<string, any>): Promise<void>;
+  count?(): Promise<number>;
+  drop?(): Promise<void>;
+}
