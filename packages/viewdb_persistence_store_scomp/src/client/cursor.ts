@@ -1,5 +1,4 @@
-import type { QueryObject, VDocument, ObserveOptions, Callback } from 'viewdb/dist/types';
-import type { ObserveEvent, ScompCollectionLike } from '../types';
+import type { QueryObject, VDocument, ObserveOptions, Callback, ObserveEvent, ScompCollectionLike } from '../types';
 
 const BaseCursor = require('viewdb').Cursor;
 

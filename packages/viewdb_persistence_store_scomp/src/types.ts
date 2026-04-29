@@ -1,6 +1,28 @@
-import type { VDocument, CollectionLike } from 'viewdb/dist/types';
+import { EventEmitter } from 'events';
 
-export type { VDocument };
+/** A document stored in ViewDB */
+export type VDocument = Record<string, any> & { _id?: string };
+
+/** Query object describing a find operation */
+export interface QueryObject {
+  query?: Record<string, any>;
+  skip?: number;
+  limit?: number;
+  sort?: Record<string, 1 | -1>;
+  project?: Record<string, 0 | 1>;
+}
+
+/** Options for observing a cursor */
+export interface ObserveOptions<T = VDocument> {
+  init?: (elements: T[]) => void;
+  added?: (element: T, index: number) => void;
+  removed?: (element: T, index: number) => void;
+  changed?: (asis: T, tobe: T, index: number) => void;
+  moved?: (element: T, fromIndex: number, toIndex: number) => void;
+}
+
+/** Node-style callback */
+export type Callback<T = void> = (err: Error | null, result?: T) => void;
 
 /** Find request parameters */
 export interface FindRequest {
@@ -63,8 +85,8 @@ export type ObserveEvent =
   | { type: 'changed'; oldDocument: VDocument; newDocument: VDocument; index: number }
   | { type: 'moved'; document: VDocument; fromIndex: number; toIndex: number };
 
-/** Scomp-specific extension of core CollectionLike */
-export interface ScompCollectionLike extends CollectionLike {
+/** Scomp-specific collection interface with EventEmitter support */
+export interface ScompCollectionLike extends EventEmitter {
   _name: string;
   _proxy: ViewDbScompContract;
   count(query?: Record<string, any>, options?: Record<string, any>, callback?: (err: Error | null, result?: number) => void): void;

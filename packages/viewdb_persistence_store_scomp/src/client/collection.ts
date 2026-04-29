@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events';
 import Cursor = require('./cursor');
-import type { QueryObject } from 'viewdb/dist/types';
-import type { ViewDbScompContract, VDocument, ScompCollectionLike } from '../types';
+import type { QueryObject, ViewDbScompContract, VDocument, ScompCollectionLike } from '../types';
 
 class Collection extends EventEmitter {
   _proxy: ViewDbScompContract;
