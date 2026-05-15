@@ -1,6 +1,6 @@
 import _ = require('lodash');
 import Kuery = require('kuery');
-import merge = require('./merger');
+import merge from './merger';
 import { QueryObject, VDocument, ObserveOptions, CollectionLike } from './types';
 
 class Observer {
