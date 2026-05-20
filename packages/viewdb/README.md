@@ -14,7 +14,7 @@ a default in-memory Store for easy testing.
       * [open](#open)
       * [collection](#collection)
     * [Plugins](#plugins)
-      * [TimeStampPlugin](#timestampplugin)
+      * [TimestampPlugin](#timestampplugin)
       * [VersioningPlugin](#versioningplugin)
   * [Store](#store)
     * [Methods](#methods-1)
@@ -33,7 +33,7 @@ a default in-memory Store for easy testing.
       * [remove](#remove)
       * [save](#save)
     * [InMemoryCollection](#inmemorycollection)
-  * [Cursor](#cursor)
+  * [ViewDBCursor](#viewdbcursor)
     * [Methods](#methods-3)
       * [count](#count-1)
       * [forEach](#foreach)
@@ -42,10 +42,10 @@ a default in-memory Store for easy testing.
       * [skip](#skip)
       * [sort](#sort)
       * [toArray](#toarray)
-  * [Observer](#observer)
+  * [ViewDBObserver](#viewdbobserver)
     * [Methods](#methods-4)
       * [stop](#stop)
-  * [Merger](#merger)
+  * [merge](#merge)
 
 ## Purpose
 
@@ -117,10 +117,10 @@ userCollection.find({ name: 'Jeff' }, (err, users) => {
 
 ViewDB can be extended by plugins to intercept data manipulation. Two plugins are included in this repository:
 
-* [TimeStampPlugin](#timestampplugin)
+* [TimestampPlugin](#timestampplugin)
 * [VersioningPlugin](#versioningplugin)
 
-##### TimeStampPlugin
+##### TimestampPlugin
 
 Intercepts the `save`, `insert` & `findAndModify` _Collection_ methods with timestamps for creation and latest update.
 The time inserted is a unix timestamp in milliseconds. It provides the following changes.
@@ -138,7 +138,7 @@ When _finding and modifying_ an existing document, the `changeDateTime` value wi
 const viewDB = new ViewDB();
 
 // Apply the plugin to the ViewDB Store
-new TimeStampPlugin(viewDB);
+new TimestampPlugin(viewDB);
 
 const collection = viewDB.collection('user');
 
@@ -243,7 +243,7 @@ collection.ensureIndex({ 'contactMeans.identifier': 1 }, null, (err, result) => 
 
 ##### find
 
-Returns a [Cursor](#cursor) for the list of documents from the collection matching the query.
+Returns a [ViewDBCursor](#viewdbcursor) for the list of documents from the collection matching the query.
 
 ```js
 await cursor = collection.find({});
@@ -290,11 +290,11 @@ collection.save(updatedDocs, (err, savedDocs) => {
 
 A basic implementation of a [Collection](#collection-2) managing the data in memory.
 
-### Cursor
+### ViewDBCursor
 
 A result set of the queried [Collection](#collection-2). Contains methods to operate on the result set.
 
-Used through the [Collection.find](#find) method, but a Cursor can be constructed manually.
+Used through the [Collection.find](#find) method, but a ViewDBCursor can be constructed manually.
 
 ```js
 const collection = viewDB.collection('user');
@@ -304,14 +304,14 @@ const getDocuments = (query, callback) => {
   // Logic for retreving documents based on query and passing them to the callback
 };
 
-const cursor = new Cursor(collection, queryObj, cursorOptions, getDocuments);
+const cursor = new ViewDBCursor(collection, queryObj, cursorOptions, getDocuments);
 ```
 
 #### Methods
 
 ##### count
 
-Get the amount of matches for the [Cursor](#cursor).
+Get the amount of matches for the [ViewDBCursor](#viewdbcursor).
 
 ```js
 cursor.count((err, count) => {
@@ -339,7 +339,7 @@ cursor.limit(5).toArray((err, docs) => {
 
 ##### observe
 
-Retrieves an [Observer](#observer) listening for changes for the documents matched in the [Cursor](#cursor).
+Retrieves a [ViewDBObserver](#viewdbobserver) listening for changes for the documents matched in the [ViewDBCursor](#viewdbcursor).
 
 ```js
 const observeOptions = {
@@ -362,7 +362,7 @@ const observer = cursor.observe(observeOptions);
 
 ##### skip
 
-Amounts of documents in the [Cursor](#cursor) that should be skipped.
+Amounts of documents in the [ViewDBCursor](#viewdbcursor) that should be skipped.
 
 ```js
 // Get documents starting from the 6th match
@@ -389,15 +389,15 @@ cursor.toArray((err, docs) => {
 });
 ```
 
-### Observer
+### ViewDBObserver
 
-Observe changes to documents for a [Cursor](#cursor). With provide information about initial data, added, changed,
+Observe changes to documents for a [ViewDBCursor](#viewdbcursor). With provide information about initial data, added, changed,
 moved & removed data.
 
-Used through the [Collection.observe](#observe) method, but an Observer can be constructed manually.
+Used through the [Collection.observe](#observe) method, but a ViewDBObserver can be constructed manually.
 
 ```js
-const observer = new Observe(query, cursorOptions, collection, observerOptions);
+const observer = new ViewDBObserver(query, cursorOptions, collection, observerOptions);
 ```
 
 #### Methods
@@ -411,6 +411,6 @@ const observer = collection.find({}).observe(observeOptions);
 observer.stop();
 ```
 
-### Merger
+### merge
 
 Check the provided data and provide information about how the values have changed.

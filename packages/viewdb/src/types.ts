@@ -58,7 +58,7 @@ export type GetDocumentsFn = (queryObject: QueryObject, callback: Callback<VDocu
  * Required members are used by Cursor and Observer.
  * Optional members represent common store capabilities.
  */
-export interface CollectionLike {
+export interface Collection {
   /** Create a cursor for the given query */
   find(query: Record<string, any>, options?: Record<string, any>): any;
   /** Internal: retrieve documents matching the query object */

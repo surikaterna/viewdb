@@ -3,6 +3,6 @@ export default defineConfig({
   test: {
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
-    include: ["test/collection.ts", "test/shared.ts"],
+    include: ["test/IndexedDBCollection.ts", "test/IndexedDBStore.shared.ts"],
   },
 });

@@ -1,6 +1,6 @@
 import LokiPartitioningAdapter from "./adapter/LokiPartitioningAdapter";
-import Collection from "./collection";
 import LokiCordovaFSAdapter from "./cordova/LokiCordovaFSAdapter";
-import Store from "./store";
+import LokiJSCollection from "./LokiJSCollection";
+import LokiJSStore from "./LokiJSStore";
 
-export { Collection, LokiCordovaFSAdapter, LokiPartitioningAdapter, Store };
+export { LokiCordovaFSAdapter, LokiJSCollection, LokiJSStore, LokiPartitioningAdapter };

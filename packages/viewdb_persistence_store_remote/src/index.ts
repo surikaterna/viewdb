@@ -1,7 +1,17 @@
-import SocketClient from "./client/rr_client";
-import Client from "./client/store";
-import Hybrid from "./hybrid/store";
-import RestClient from "./rest_client/rest_client";
-import Server from "./server/server";
+import RemoteStore from "./client/RemoteStore";
+import RequestResponseClient from "./client/RequestResponseClient";
+import HybridStore from "./hybrid/HybridStore";
+import RestClient from "./rest_client/RestClient";
+import ViewDBSocketServer from "./server/ViewDBSocketServer";
 
-export { Client, Hybrid, RestClient, Server, SocketClient };
+export {
+  HybridStore,
+  HybridStore as Hybrid,
+  RemoteStore,
+  RemoteStore as Client,
+  RequestResponseClient,
+  RequestResponseClient as SocketClient,
+  RestClient,
+  ViewDBSocketServer,
+  ViewDBSocketServer as Server,
+};

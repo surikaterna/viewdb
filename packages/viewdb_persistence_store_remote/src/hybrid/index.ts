@@ -1,2 +1,4 @@
-import Store from "./store";
-export default Store;
+import HybridStore from "./HybridStore";
+
+export { HybridStore };
+export default HybridStore;

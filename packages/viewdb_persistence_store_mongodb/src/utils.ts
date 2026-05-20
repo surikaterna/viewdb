@@ -64,9 +64,9 @@ function nodeify<T>(promise: Promise<T>, cb?: Function): Promise<T | void> {
 }
 
 /**
- * Performs a MongoDb $project
- * @param document MongoDb like document
- * @param projectObject MongoDb like project object
+ * Performs a MongoDB $project
+ * @param document MongoDB like document
+ * @param projectObject MongoDB like project object
  * @returns projected version of the document
  */
 function projectDocument(document: Record<string, any>, projectObject: Record<string, any>): Record<string, any> {

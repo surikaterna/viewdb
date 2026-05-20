@@ -1,13 +1,13 @@
-import Cursor from "./cursor";
-import InMemoryStore from "./inmemory/store";
-import merge from "./merger";
-import Observer from "./observe";
+import InMemoryStore from "./inmemory/InMemoryStore";
+import merge from "./merge";
 import * as plugins from "./plugins";
-import ViewDB from "./viewdb";
+import ViewDB from "./ViewDB";
+import ViewDBCursor from "./ViewDBCursor";
+import ViewDBObserver from "./ViewDBObserver";
 
 export type {
   Callback,
-  CollectionLike,
+  Collection,
   GetDocumentsFn,
   MergeOptions,
   ObserveHandle,
@@ -17,4 +17,13 @@ export type {
   SortSpec,
   VDocument,
 } from "./types";
-export { Cursor, InMemoryStore, merge, Observer, plugins, ViewDB };
+export {
+  InMemoryStore,
+  merge,
+  plugins,
+  ViewDB,
+  ViewDBCursor,
+  ViewDBCursor as Cursor,
+  ViewDBObserver,
+  ViewDBObserver as Observer,
+};

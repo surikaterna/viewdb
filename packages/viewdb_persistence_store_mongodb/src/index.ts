@@ -1,2 +1,4 @@
-import Store from "./store";
-export default Store;
+import MongoDBStore from "./MongoDBStore";
+
+export { MongoDBStore };
+export default MongoDBStore;

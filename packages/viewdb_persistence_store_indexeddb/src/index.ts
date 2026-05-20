@@ -1,2 +1,4 @@
-import Store from "./store";
-export default Store;
+import IndexedDBStore from "./IndexedDBStore";
+
+export { IndexedDBStore };
+export default IndexedDBStore;

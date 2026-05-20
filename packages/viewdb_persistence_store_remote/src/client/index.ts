@@ -1,2 +1,4 @@
-import Store from "./store";
-export default Store;
+import RemoteStore from "./RemoteStore";
+
+export { RemoteStore };
+export default RemoteStore;

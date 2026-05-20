@@ -1,2 +1,2 @@
-import ViewDbSocketServer from "./server";
-export default ViewDbSocketServer;
+import ViewDBSocketServer from "./ViewDBSocketServer";
+export default ViewDBSocketServer;

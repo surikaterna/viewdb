@@ -1,0 +1,24 @@
+import { runStoreTests } from "viewdb-store-tests";
+import { LokiJSStore } from "..";
+
+runStoreTests({
+  name: "lokijs",
+  createStore: function (done) {
+    const store = new LokiJSStore("test-shared", { inMemoryOnly: true, disableThrottle: true });
+    store.open().then(function () {
+      done(store);
+    });
+  },
+  destroyStore: function (store, done) {
+    store.collection("test_shared").drop(function () {
+      store.close(function () {
+        store.clearAllIntervals();
+        done();
+      });
+    });
+  },
+  suites: ["crud", "query", "cursor", "count", "observe"],
+  observeOptions: {
+    settleDelay: 50,
+  },
+});

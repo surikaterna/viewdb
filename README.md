@@ -17,7 +17,7 @@ The API is callback-based. All packages compile to CommonJS (ES2018 target).
 ## Quick Start
 
 ```js
-const ViewDB = require('viewdb');
+import ViewDB from "viewdb";
 
 // Default in-memory store
 const db = new ViewDB();
@@ -33,10 +33,10 @@ collection.insert([{ _id: '1', name: 'foo' }], function (err) {
 Using a persistence store:
 
 ```js
-const ViewDB = require('viewdb');
-const { Store } = require('viewdb_persistence_store_lokijs');
+import ViewDB from "viewdb";
+import { LokiJSStore } from "viewdb_persistence_store_lokijs";
 
-const store = new Store('mydb', { inMemoryOnly: true });
+const store = new LokiJSStore('mydb', { inMemoryOnly: true });
 const db = new ViewDB(store);
 ```
 
@@ -45,16 +45,16 @@ const db = new ViewDB(store);
 `ViewDB` accepts a `Store` in its constructor. The default is `InMemoryStore`.
 
 ```
-ViewDB -> Store -> Collection -> Cursor / Observer
+ViewDB -> Store -> Collection -> ViewDBCursor / ViewDBObserver
 ```
 
 **Store** provides `.open()`, `.close()`, and `.collection(name)`.
 
 **Collection** provides `.find(query)`, `.insert(docs, cb)`, `.save(docs, cb)`, `.remove(query, cb)`, `.drop(cb)`, and `.ensureIndex()`.
 
-**Cursor** is returned by `.find()`. It supports `.toArray(cb)`, `.sort()`, `.skip()`, `.limit()`, `.count(cb)`, and `.observe(callbacks)`.
+**ViewDBCursor** (also exported as `Cursor`) is returned by `.find()`. It supports `.toArray(cb)`, `.sort()`, `.skip()`, `.limit()`, `.count(cb)`, and `.observe(callbacks)`.
 
-**Observer** is returned by `.observe()`. It returns a handle with `.stop()`. Callbacks: `init`, `added`, `changed`, `removed`.
+**ViewDBObserver** (also exported as `Observer`) is created by `.observe()`. It returns a handle with `.stop()`. Callbacks: `init`, `added`, `changed`, `removed`.
 
 ```js
 const handle = collection.find({ active: true }).observe({
@@ -81,7 +81,7 @@ handle.stop();
 Plugins attach via constructor and modify the database instance directly.
 
 ```js
-const ViewDB = require('viewdb');
+import ViewDB from "viewdb";
 const db = new ViewDB();
 
 new ViewDB.plugins.TimestampPlugin(db); // adds createdAt/updatedAt
