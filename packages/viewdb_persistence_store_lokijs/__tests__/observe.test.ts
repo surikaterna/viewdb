@@ -2,7 +2,7 @@ import _ from "lodash";
 import { Store } from "..";
 
 describe("Collection", function () {
-  var store;
+  let store;
   beforeEach(
     () =>
       new Promise<void>((resolve) => {
@@ -28,8 +28,8 @@ describe("Collection", function () {
   it("#observe with insert", () =>
     new Promise<void>((resolve) => {
       store.open().then(function () {
-        var cursor = store.collection("dollhouse").find({});
-        var handle = cursor.observe({
+        const cursor = store.collection("dollhouse").find({});
+        const handle = cursor.observe({
           added: function (x) {
             expect(x._id).toBe("echo");
             setTimeout(() => {
@@ -44,9 +44,9 @@ describe("Collection", function () {
   it("#observe with implicit remove", () =>
     new Promise<void>((resolve) => {
       store.open().then(function () {
-        var cursor = store.collection("dollhouse").find({ _id: "echo", status: "confirmed" });
-        var haveAdded = false;
-        var handle = cursor.observe({
+        const cursor = store.collection("dollhouse").find({ _id: "echo", status: "confirmed" });
+        let haveAdded = false;
+        const handle = cursor.observe({
           added: function (x) {
             haveAdded = true;
           },
@@ -65,8 +65,8 @@ describe("Collection", function () {
     new Promise<void>((resolve) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" }, function () {
-          var cursor = store.collection("dollhouse").find({});
-          var handle = cursor.observe({
+          const cursor = store.collection("dollhouse").find({});
+          const handle = cursor.observe({
             removed: function (x) {
               expect(x._id).toBe("echo");
               handle.stop();
@@ -81,7 +81,7 @@ describe("Collection", function () {
     new Promise<void>((resolve) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
-        var cursor = store.collection("dollhouse").find({ _id: "echo2" });
+        const cursor = store.collection("dollhouse").find({ _id: "echo2" });
         cursor.observe({
           added: function (x) {
             expect(x._id).toBe("echo2");
@@ -94,8 +94,8 @@ describe("Collection", function () {
   it("#observe with query and update", () =>
     new Promise<void>((resolve) => {
       store.open().then(function () {
-        var cursor = store.collection("dollhouse").find({ _id: "echo" });
-        var handle = cursor.observe({
+        const cursor = store.collection("dollhouse").find({ _id: "echo" });
+        const handle = cursor.observe({
           added: function (x) {
             expect(x.age).toBe(10);
             expect(x._id).toBe("echo");
@@ -119,10 +119,10 @@ describe("Collection", function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "echo2" });
         store.collection("dollhouse").insert({ _id: "echo3" });
-        var cursor = store.collection("dollhouse").find({});
-        var skip = 0;
+        const cursor = store.collection("dollhouse").find({});
+        let skip = 0;
         cursor.limit(1);
-        var realDone = _.after(3, function () {
+        const realDone = _.after(3, function () {
           cursor.toArray(function (err, res) {
             expect(res.length).toBe(0);
             setTimeout(() => {
@@ -131,7 +131,7 @@ describe("Collection", function () {
             }, 10);
           });
         });
-        var handle = cursor.observe({
+        const handle = cursor.observe({
           added: function (x) {
             cursor.skip(++skip);
             realDone();
@@ -142,8 +142,8 @@ describe("Collection", function () {
   it("#observe with no results", () =>
     new Promise<void>((resolve) => {
       store.open().then(function () {
-        var cursor = store.collection("dollhouse").find({});
-        var handle = cursor.observe({
+        const cursor = store.collection("dollhouse").find({});
+        const handle = cursor.observe({
           init: function (coll) {
             expect(coll.length).toBe(0);
             setTimeout(() => {
@@ -158,8 +158,8 @@ describe("Collection", function () {
     new Promise<void>((resolve) => {
       store.collection("dollhouse").insert({ _id: "echo" }, function () {
         store.open().then(function () {
-          var cursor = store.collection("dollhouse").find({});
-          var handle = cursor.observe({
+          const cursor = store.collection("dollhouse").find({});
+          const handle = cursor.observe({
             init: function (coll) {
               expect(coll.length).toBe(1);
               setTimeout(() => {
@@ -174,8 +174,8 @@ describe("Collection", function () {
   it("#observe with one insert after init", () =>
     new Promise<void>((resolve) => {
       store.open().then(function () {
-        var cursor = store.collection("dollhouse").find({});
-        var handle = cursor.observe({
+        const cursor = store.collection("dollhouse").find({});
+        const handle = cursor.observe({
           init: function (coll) {
             expect(coll.length).toBe(0);
           },

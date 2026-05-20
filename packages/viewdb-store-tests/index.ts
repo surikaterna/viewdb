@@ -4,7 +4,7 @@ import cursor from "./suites/cursor";
 import observe from "./suites/observe";
 import query from "./suites/query";
 
-var suiteMap = {
+const suiteMap = {
   crud: crud,
   query: query,
   cursor: cursor,
@@ -13,8 +13,8 @@ var suiteMap = {
 };
 
 function runStoreTests(config) {
-  var suites = config.suites || ["crud", "query", "cursor", "count", "observe"];
-  var defaults = { settleDelay: 50 };
+  const suites = config.suites || ["crud", "query", "cursor", "count", "observe"];
+  const defaults = { settleDelay: 50 };
   config.observeOptions = Object.assign(defaults, config.observeOptions || {});
 
   describe(config.name + " shared store tests", function () {

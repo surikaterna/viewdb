@@ -7,7 +7,7 @@ import HybridStore from "../../src/hybrid/store";
 import ViewDbSocketServer from "../../src/server/server";
 
 describe("Remote server/client", function () {
-  var clientVdb, remote, socketServer, socketClient, clientStore, client;
+  let clientVdb, remote, socketServer, socketClient, clientStore, client;
   beforeEach(
     () =>
       new Promise<void>((resolve, reject) => {
@@ -17,7 +17,7 @@ describe("Remote server/client", function () {
         clientStore = new Store(client);
         clientVdb = new ViewDb(clientStore);
         remote = new ViewDb();
-        var vdbSocketServer = new ViewDbSocketServer(remote, socketServer);
+        const vdbSocketServer = new ViewDbSocketServer(remote, socketServer);
         resolve();
       })
   );
@@ -45,8 +45,8 @@ describe("Remote server/client", function () {
         });
     }));
   it("#remote cursor sort should not trigger refresh when not observing", function () {
-    var collection = clientVdb.collection("dollhouse");
-    var changes = 0;
+    const collection = clientVdb.collection("dollhouse");
+    let changes = 0;
     collection.on("change", function () {
       changes++;
     });
@@ -139,7 +139,7 @@ describe("Remote server/client", function () {
     new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
-      var cursor = clientVdb.collection("dollhouse").find({ _id: { $in: ["echo2", "echo3"] } });
+      const cursor = clientVdb.collection("dollhouse").find({ _id: { $in: ["echo2", "echo3"] } });
       cursor.observe({
         init: function (init) {
           init.length.should.equal(1);
@@ -154,8 +154,8 @@ describe("Remote server/client", function () {
   it("#remote collection observe should call init again on reconnected", () =>
     new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo2" });
-      var cursor = clientVdb.collection("dollhouse").find({ _id: { $in: ["echo2", "echo3"] } });
-      var inits = 0;
+      const cursor = clientVdb.collection("dollhouse").find({ _id: { $in: ["echo2", "echo3"] } });
+      let inits = 0;
       cursor.observe({
         init: function (init) {
           inits++;
@@ -173,8 +173,8 @@ describe("Remote server/client", function () {
   it("#remote collection observe should continue to work on reconnected", () =>
     new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo2" });
-      var cursor = clientVdb.collection("dollhouse").find({ _id: { $in: ["echo2", "echo3"] } });
-      var inits = 0;
+      const cursor = clientVdb.collection("dollhouse").find({ _id: { $in: ["echo2", "echo3"] } });
+      let inits = 0;
       cursor.observe({
         init: function (init) {
           inits++;
@@ -199,12 +199,12 @@ describe("Remote server/client", function () {
   it("#remote reconnected should work with hybrid", () =>
     new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo2" });
-      var local = new ViewDb();
-      var hybrid = new ViewDb(new (HybridStore as any)(local, clientStore, { throttleObserveRefresh: 0 }));
-      var list = [];
-      var changes = 0;
+      const local = new ViewDb();
+      const hybrid = new ViewDb(new (HybridStore as any)(local, clientStore, { throttleObserveRefresh: 0 }));
+      let list = [];
+      let changes = 0;
       hybrid.open().then(function () {
-        var cursor = hybrid.collection("dollhouse").find({ _id: { $in: ["echo2"] } });
+        const cursor = hybrid.collection("dollhouse").find({ _id: { $in: ["echo2"] } });
         cursor.observe({
           init: function (init) {
             list = init;

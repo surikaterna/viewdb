@@ -4,7 +4,7 @@ import { Store } from "..";
 runStoreTests({
   name: "lokijs",
   createStore: function (done) {
-    var store = new Store("test-shared", { inMemoryOnly: true, disableThrottle: true });
+    const store = new Store("test-shared", { inMemoryOnly: true, disableThrottle: true });
     store.open().then(function () {
       done(store);
     });

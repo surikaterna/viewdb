@@ -4,10 +4,10 @@ import merge from "../src/merger";
 describe("Merger", () => {
   it("#merge with remove element", () =>
     new Promise<void>((resolve, reject) => {
-      var l1: any[] = [{ a: 1 }, "b", "d"];
-      var l2: any[] = [{ a: 1 }, "b"];
+      const l1: any[] = [{ a: 1 }, "b", "d"];
+      const l2: any[] = [{ a: 1 }, "b"];
 
-      var res = merge(l1, l2, {
+      const res = merge(l1, l2, {
         removed: function (e) {
           expect(e).toBe("d");
           resolve();
@@ -21,10 +21,10 @@ describe("Merger", () => {
     }));
   it("#merge with remove complex element", () =>
     new Promise<void>((resolve, reject) => {
-      var l1: any[] = [{ a: 1 }, "b", "d", { e: 1 }];
-      var l2: any[] = [{ a: 1 }, "b"];
-      var removed: any[] = [];
-      var res = merge(l1, l2, {
+      const l1: any[] = [{ a: 1 }, "b", "d", { e: 1 }];
+      const l2: any[] = [{ a: 1 }, "b"];
+      const removed: any[] = [];
+      const res = merge(l1, l2, {
         removed: function (e) {
           removed.push(e);
         },
@@ -40,10 +40,10 @@ describe("Merger", () => {
 
   it("#merge with objects instead of arrays", () =>
     new Promise<void>((resolve, reject) => {
-      var l1: any = { 0: { a: 1 }, 1: "b", 2: "d", 3: { e: 1 } };
-      var l2: any[] = [{ a: 1 }, "b"];
-      var removed: any[] = [];
-      var res = merge(l1, l2, {
+      const l1: any = { 0: { a: 1 }, 1: "b", 2: "d", 3: { e: 1 } };
+      const l2: any[] = [{ a: 1 }, "b"];
+      const removed: any[] = [];
+      const res = merge(l1, l2, {
         removed: function (e) {
           removed.push(e);
         },
@@ -59,10 +59,10 @@ describe("Merger", () => {
 
   it("#merge with one add element", () =>
     new Promise<void>((resolve, reject) => {
-      var l1: any[] = [{ a: 1 }, "b"];
-      var l2: any[] = [{ a: 1 }, "b", "c"];
+      const l1: any[] = [{ a: 1 }, "b"];
+      const l2: any[] = [{ a: 1 }, "b", "c"];
 
-      var res = merge(l1, l2, {
+      const res = merge(l1, l2, {
         added: function (e) {
           expect(e).toBe("c");
           resolve();
@@ -75,10 +75,10 @@ describe("Merger", () => {
     }));
   it("#merge with one complex add element", () =>
     new Promise<void>((resolve, reject) => {
-      var l1: any[] = [{ a: 1 }, "b"];
-      var l2: any[] = [{ a: 1 }, "b", { c: 1 }];
+      const l1: any[] = [{ a: 1 }, "b"];
+      const l2: any[] = [{ a: 1 }, "b", { c: 1 }];
 
-      var res = merge(l1, l2, {
+      const res = merge(l1, l2, {
         added: function (e) {
           expect(_.isEqual(e, { c: 1 })).toBe(true);
           resolve();
@@ -91,10 +91,10 @@ describe("Merger", () => {
     }));
   it("#merge with one move element", () =>
     new Promise<void>((resolve, reject) => {
-      var l1: any[] = [{ a: 1 }, "b", { c: 1 }];
-      var l2: any[] = [{ a: 1 }, { c: 1 }, "b"];
-      var moved: any[] = [];
-      var res = merge(l1, l2, {
+      const l1: any[] = [{ a: 1 }, "b", { c: 1 }];
+      const l2: any[] = [{ a: 1 }, { c: 1 }, "b"];
+      const moved: any[] = [];
+      const res = merge(l1, l2, {
         added: function () {
           reject(new Error("should not be called"));
         },
@@ -113,9 +113,9 @@ describe("Merger", () => {
     }));
   it("#merge with one changing elements", () =>
     new Promise<void>((resolve, reject) => {
-      var l1 = [{ _id: 1, a: "Hello" }];
-      var l2 = [{ _id: 1, a: "Hej" }];
-      var res = merge(l1, l2, {
+      const l1 = [{ _id: 1, a: "Hello" }];
+      const l2 = [{ _id: 1, a: "Hej" }];
+      const res = merge(l1, l2, {
         added: function () {
           reject(new Error("should not be called"));
         },
@@ -136,28 +136,28 @@ describe("Merger", () => {
 
   it("#merge true and false array", () =>
     new Promise<void>((resolve, reject) => {
-      var l1 = [true, false];
-      var l2 = [false, true];
-      var res = merge(l1, l2);
+      const l1 = [true, false];
+      const l2 = [false, true];
+      const res = merge(l1, l2);
       expect(_.isEqual(l2, res)).toBe(true);
       resolve();
     }));
   it("#merge complex moves", () =>
     new Promise<void>((resolve, reject) => {
-      var l1 = [
+      const l1 = [
         { _id: 1, a: "Hello1" },
         { _id: 2, a: "Hello2" },
         { _id: 3, a: "Hello3" },
         { _id: 4, a: "Hello4" },
       ];
-      var l2 = [
+      const l2 = [
         { _id: 4, a: "Hej4" },
         { _id: 3, a: "Hej3" },
         { _id: 2, a: "Hej2" },
         { _id: 1, a: "Hej1" },
       ];
 
-      var res = merge(
+      const res = merge(
         l1,
         l2,
         _.defaults(
@@ -174,13 +174,13 @@ describe("Merger", () => {
     }));
   it("#merge complex moves and add and remove", () =>
     new Promise<void>((resolve, reject) => {
-      var l1 = [
+      const l1 = [
         { _id: 1, a: "Hello1" },
         { _id: 2, a: "Hello2" },
         { _id: 3, a: "Hello3" },
         { _id: 4, a: "Hello4" },
       ];
-      var l2 = [
+      const l2 = [
         { _id: 4, a: "Hej4" },
         { _id: 99, a: "Hej99" },
         { _id: 2, a: "Hej2" },
@@ -188,7 +188,7 @@ describe("Merger", () => {
         { _id: 100, a: "Hej100" },
       ];
 
-      var res = merge(
+      const res = merge(
         l1,
         l2,
         _.defaults(

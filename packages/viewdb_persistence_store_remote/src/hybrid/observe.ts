@@ -74,7 +74,7 @@ class HybridObserver {
   _cacheUpdaterInterval: ReturnType<typeof setInterval> | null;
 
   constructor(localCursor: any, remoteCursor: any, collectionOptions: any, options: any) {
-    var self = this;
+    const self = this;
 
     this._initialized = false;
     this._localCursor = localCursor;
@@ -92,9 +92,9 @@ class HybridObserver {
     this._reconciledCache = [];
 
     // make sure refresh is only called once every x ms
-    var _refresh = _.throttle(this.refresh.bind(this), collectionOptions.throttleObserveRefresh);
+    const _refresh = _.throttle(this.refresh.bind(this), collectionOptions.throttleObserveRefresh);
 
-    var remoteOptions = buildOptions(this._remoteCache, _refresh, this._removed, true);
+    const remoteOptions = buildOptions(this._remoteCache, _refresh, this._removed, true);
     if (!this._getCache) {
       this._localHandle = this._localCursor.observe(buildOptions(this._localCache, _refresh, this._removed, false));
       this._remoteHandle = this._remoteCursor.observe(remoteOptions);
@@ -108,7 +108,7 @@ class HybridObserver {
         self._remoteHandle = self._remoteCursor.observe(remoteOptions);
       });
 
-      var cacheUpdater = function () {
+      const cacheUpdater = function () {
         self._cacheCallback(self._remoteCache);
       };
 
@@ -133,21 +133,21 @@ class HybridObserver {
   }
 
   refresh(): void {
-    var self = this;
-    var remoteCache = this._remoteCache;
+    const self = this;
+    let remoteCache = this._remoteCache;
     if (this._removed.length > 0) {
       remoteCache = _.filter(this._remoteCache, function (doc: any) {
         return !_.includes(self._removed, doc._id);
       });
     }
-    var result = reconcile(this._localCache, remoteCache);
+    const result = reconcile(this._localCache, remoteCache);
 
     if (!this._initialized && this._options.init) {
       this._initialized = true;
       self._reconciledCache = result;
       this._options.init(result);
     } else {
-      var old = self._reconciledCache;
+      const old = self._reconciledCache;
       this._reconciledCache = merge(
         old,
         result,

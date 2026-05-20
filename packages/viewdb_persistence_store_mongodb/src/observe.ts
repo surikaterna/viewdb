@@ -23,13 +23,13 @@ class Observer {
   _kuery: any;
 
   constructor(query: any, queryOptions: any, collection: any, options: any, oplogListener?: any) {
-    var self = this;
+    const self = this;
     self._queryOptions = queryOptions;
 
     if (!oplogListener) {
       return new LegacyObserver(query, queryOptions, collection, options) as any;
     }
-    var namespace = collection._collection.s.namespace;
+    const namespace = collection._collection.s.namespace;
     this._query = query;
     this._options = options;
     this._collection = collection;
@@ -41,7 +41,7 @@ class Observer {
       self.listener = oplogListener.listen(namespace, self._onOperation, self);
     });
 
-    var dispose = function () {
+    const dispose = function () {
       if (self.listener) {
         self.listener.dispose();
       }
@@ -55,8 +55,8 @@ class Observer {
   }
 
   loadInitial(cb: () => void): void {
-    var self = this;
-    var newQuery = _.merge(this._query, self._queryOptions);
+    const self = this;
+    const newQuery = _.merge(this._query, self._queryOptions);
     this._collection._getDocuments(newQuery, function (err: Error | null, result?: any[]) {
       const documents = result || [];
       if (self._options.init) {
@@ -91,20 +91,20 @@ class Observer {
   }
 
   _checkKuery(coll: any[]): boolean {
-    var res = this._kuery.find(coll);
+    const res = this._kuery.find(coll);
     return res && res.length > 0;
   }
 
   _onInsert(doc: any): void {
-    var index = this._cache!.indexOf(doc.o._id);
-    var match = this._checkKuery([doc.o]);
+    const index = this._cache!.indexOf(doc.o._id);
+    const match = this._checkKuery([doc.o]);
     if (match) {
       if (index > -1) {
         // already in cache - user has been notified by loadInitial method
       } else {
-        var length = this._cache!.push(doc.o._id);
-        var document = doc.o;
-        var project = this._queryOptions.project;
+        const length = this._cache!.push(doc.o._id);
+        let document = doc.o;
+        const project = this._queryOptions.project;
 
         if (project) {
           document = projectDocument(document, project);
@@ -118,13 +118,13 @@ class Observer {
   }
 
   _onUpdate(doc: any): void {
-    var match = this._checkKuery([doc.o]);
+    const match = this._checkKuery([doc.o]);
     if (match) {
-      var index = this._cache!.indexOf(doc.o._id);
+      let index = this._cache!.indexOf(doc.o._id);
       if (index !== -1) {
         this._cache![index] = doc.o._id;
       } else {
-        var length = this._cache!.push(doc.o._id);
+        const length = this._cache!.push(doc.o._id);
         index = length - 1;
       }
       if (this._options.changed) {
@@ -136,7 +136,7 @@ class Observer {
   }
 
   _onRemove(doc: any): void {
-    var index = this._cache!.indexOf(doc.o._id);
+    const index = this._cache!.indexOf(doc.o._id);
     if (index > -1) {
       this._cache!.splice(index, 1);
       if (this._options.removed) {
@@ -146,7 +146,7 @@ class Observer {
   }
 }
 
-var comparator = function (a: { _id: string }, b: { _id: string }) {
+const comparator = function (a: { _id: string }, b: { _id: string }) {
   return a._id === b._id;
 };
 

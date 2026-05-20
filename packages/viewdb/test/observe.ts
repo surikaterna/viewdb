@@ -4,10 +4,10 @@ import { ViewDB as ViewDb } from "..";
 describe("Observe", () => {
   it("#observe with insert", () =>
     new Promise<void>((resolve, reject) => {
-      var store = new ViewDb();
+      const store = new ViewDb();
       store.open().then(function () {
-        var cursor = store.collection("dollhouse").find({});
-        var handle = cursor.observe({
+        const cursor = store.collection("dollhouse").find({});
+        const handle = cursor.observe({
           added: function (x) {
             expect(x._id).toBe("echo");
             handle.stop();
@@ -19,10 +19,10 @@ describe("Observe", () => {
     }));
   it("#observe with query and insert", () =>
     new Promise<void>((resolve, reject) => {
-      var store = new ViewDb();
+      const store = new ViewDb();
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
-        var cursor = store.collection("dollhouse").find({ _id: "echo2" });
+        const cursor = store.collection("dollhouse").find({ _id: "echo2" });
         cursor.observe({
           added: function (x) {
             expect(x._id).toBe("echo2");
@@ -34,10 +34,10 @@ describe("Observe", () => {
     }));
   it("#observe with query and update", () =>
     new Promise<void>((resolve, reject) => {
-      var store = new ViewDb();
+      const store = new ViewDb();
       store.open().then(function () {
-        var cursor = store.collection("dollhouse").find({ _id: "echo" });
-        var handle = cursor.observe({
+        const cursor = store.collection("dollhouse").find({ _id: "echo" });
+        const handle = cursor.observe({
           added: function (x) {
             expect(x.age).toBe(10);
             expect(x._id).toBe("echo");
@@ -57,22 +57,22 @@ describe("Observe", () => {
     }));
   it("#observe with query and skip", () =>
     new Promise<void>((resolve, reject) => {
-      var store = new ViewDb();
+      const store = new ViewDb();
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "echo2" });
         store.collection("dollhouse").insert({ _id: "echo3" });
-        var cursor = store.collection("dollhouse").find({});
-        var skip = 0;
+        const cursor = store.collection("dollhouse").find({});
+        let skip = 0;
         cursor.limit(1);
-        var realDone = _.after(3, function () {
+        const realDone = _.after(3, function () {
           cursor.toArray(function (err, res) {
             expect(res.length).toBe(0);
             handle.stop();
             resolve();
           });
         });
-        var handle = cursor.observe({
+        const handle = cursor.observe({
           added: function () {
             cursor.skip(++skip);
             realDone();
@@ -82,10 +82,10 @@ describe("Observe", () => {
     }));
   it("#observe with no results", () =>
     new Promise<void>((resolve, reject) => {
-      var store = new ViewDb();
+      const store = new ViewDb();
       store.open().then(function () {
-        var cursor = store.collection("dollhouse").find({});
-        var handle = cursor.observe({
+        const cursor = store.collection("dollhouse").find({});
+        const handle = cursor.observe({
           init: function (coll) {
             expect(coll.length).toBe(0);
             handle.stop();
@@ -96,11 +96,11 @@ describe("Observe", () => {
     }));
   it("#observe with init after one insert", () =>
     new Promise<void>((resolve, reject) => {
-      var store = new ViewDb();
+      const store = new ViewDb();
       store.collection("dollhouse").insert({ _id: "echo" }, function () {
         store.open().then(function () {
-          var cursor = store.collection("dollhouse").find({});
-          var handle = cursor.observe({
+          const cursor = store.collection("dollhouse").find({});
+          const handle = cursor.observe({
             init: function (coll) {
               expect(coll.length).toBe(1);
               handle.stop();
@@ -112,10 +112,10 @@ describe("Observe", () => {
     }));
   it("#observe with one insert after init", () =>
     new Promise<void>((resolve, reject) => {
-      var store = new ViewDb();
+      const store = new ViewDb();
       store.open().then(function () {
-        var cursor = store.collection("dollhouse").find({});
-        var handle = cursor.observe({
+        const cursor = store.collection("dollhouse").find({});
+        const handle = cursor.observe({
           init: function (coll) {
             expect(coll.length).toBe(0);
           },

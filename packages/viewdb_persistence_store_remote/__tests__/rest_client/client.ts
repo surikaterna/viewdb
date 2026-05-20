@@ -4,7 +4,7 @@ import should from "should";
 import { RestClient as Client, Client as Store } from "../..";
 import mockResponse from "./mock-response.json";
 
-var testOptions = {
+const testOptions = {
   pollInterval: 15,
 };
 
@@ -14,7 +14,7 @@ describe("RestClient", function () {
   });
   it("#request should work", () =>
     new Promise<void>((resolve, reject) => {
-      var restClient = new Client("http://www.example.com/", {}, testOptions);
+      const restClient = new Client("http://www.example.com/", {}, testOptions);
       nock("http://www.example.com").get("/party?q=%7B%22name%22%3A%22Firstname%22%7D").reply(200, mockResponse);
 
       restClient.request({ find: { name: "Firstname" }, collection: "party" }, function (err, result) {
@@ -25,14 +25,14 @@ describe("RestClient", function () {
 
   it("#skiplimit url should be correct", () =>
     new Promise<void>((resolve, reject) => {
-      var restClient = new Client("http://www.example.com/", {}, testOptions);
+      const restClient = new Client("http://www.example.com/", {}, testOptions);
       nock("http://www.example.com")
         .get("/party?q=%7B%22name%22%3A%22Firstname%22%7D&skip=50&limit=77")
         .reply(function () {
           resolve();
           return [201, mockResponse, {}];
         });
-      var store = new Store(restClient);
+      const store = new Store(restClient);
       store
         .collection("party")
         .find({ name: "Firstname" })
@@ -43,9 +43,12 @@ describe("RestClient", function () {
 
   it("#observe should work", () =>
     new Promise<void>((resolve, reject) => {
-      var restClient = new Client("http://www.example.com/", {}, testOptions);
-      var handle;
-      var realDone = _.after(2, function () {
+      const restClient = new Client("http://www.example.com/", {}, testOptions);
+      const handle = restClient.subscribe(
+        { observe: { name: "a" }, collection: "shipment", events: {}, skip: 1, limit: 100 },
+        function () {}
+      );
+      const realDone = _.after(2, function () {
         handle.stop();
         resolve();
       });
@@ -58,17 +61,12 @@ describe("RestClient", function () {
         });
 
       // {observe:this._query, collection:this._collection._name, events:events}
-      handle = restClient.subscribe(
-        { observe: { name: "a" }, collection: "shipment", events: {}, skip: 1, limit: 100 },
-        function () {}
-      );
     }));
 
   it("#observe should stop when calling stop", () =>
     new Promise<void>((resolve, reject) => {
       const restClient = new Client("http://www.example.com/", {}, testOptions);
       let hitCount = 0;
-      let stop;
 
       nock("http://www.example.com")
         .persist() // keep nock alive after first call
@@ -83,7 +81,7 @@ describe("RestClient", function () {
         { observe: { name: "a" }, collection: "parcel", events: {} },
         function () {}
       );
-      stop = _.after(1, observer.stop);
+      const stop = _.after(1, observer.stop);
 
       setTimeout(function () {
         hitCount.should.equal(1);

@@ -47,7 +47,7 @@ class HybridCollection {
   }
 
   insert(doc: any, callback?: any): any {
-    var self = this;
+    const self = this;
     return this._local.insert(doc, function (err: Error | null, result: any) {
       if (self._options.syncWrites) {
         self._remote.insert(doc, callback);
@@ -59,7 +59,7 @@ class HybridCollection {
   }
 
   remove(query: any, options?: any, callback?: any): any {
-    var self = this;
+    const self = this;
     return this._local.remove(query, options, function (err: Error | null, result: any) {
       if (self._options.syncWrites) {
         self._remote.remove(query, options);
@@ -78,19 +78,19 @@ class HybridCollection {
     project: Record<string, 0 | 1> | undefined,
     documents: any[]
   ): void {
-    var self = this;
+    const self = this;
 
     if (!this._options.cacheQueries) {
       return;
     }
 
-    var cachedDateTime = new Date().getTime();
-    var documentIds: any[] = [];
+    const cachedDateTime = new Date().getTime();
+    const documentIds: any[] = [];
     _.forEach(documents, function (document: any) {
       documentIds.push(document._id);
 
-      var isProjected = !_.isEmpty(project);
-      var collection = self._local;
+      const isProjected = !_.isEmpty(project);
+      let collection = self._local;
       if (isProjected) {
         collection = self._projectedDocumentCollection;
       }
@@ -101,7 +101,7 @@ class HybridCollection {
       });
     });
 
-    var queryHash = cacheUtils.generateQueryHash(query, self._name, skip, limit, sort, project);
+    const queryHash = cacheUtils.generateQueryHash(query, self._name, skip, limit, sort, project);
     this._cacheCollection.save(
       { _id: queryHash, createDateTime: cachedDateTime, resultSet: documentIds },
       { skipVersioning: true, skipTimestamp: true }
@@ -116,15 +116,15 @@ class HybridCollection {
     project: Record<string, 0 | 1> | undefined,
     callback: any
   ): void {
-    var self = this;
+    const self = this;
     this._getCachedIds(query, skip, limit, sort, function (ids: any) {
       if (!ids) {
         callback(undefined);
         return;
       }
 
-      var collection = self._local;
-      var isProjected = !_.isEmpty(project);
+      let collection = self._local;
+      const isProjected = !_.isEmpty(project);
       if (isProjected) {
         collection = self._projectedDocumentCollection;
       }
@@ -156,16 +156,16 @@ class HybridCollection {
       return;
     }
 
-    var queryHash = cacheUtils.generateQueryHash(query, this._name, skip, limit, sort);
-    var minimumChangeDateTime = new Date();
+    const queryHash = cacheUtils.generateQueryHash(query, this._name, skip, limit, sort);
+    const minimumChangeDateTime = new Date();
     minimumChangeDateTime.setMinutes(minimumChangeDateTime.getMinutes() - this._options.cacheLifeTime);
-    var minTimeEpoch = minimumChangeDateTime.getTime();
+    const minTimeEpoch = minimumChangeDateTime.getTime();
 
     this._cacheCollection.find({ _id: queryHash, createDateTime: { $gt: minTimeEpoch } }).toArray(function (
       err: Error | null,
       result: any
     ) {
-      var hasResult = result && result[0];
+      const hasResult = result && result[0];
 
       if (!hasResult) {
         callback(undefined);

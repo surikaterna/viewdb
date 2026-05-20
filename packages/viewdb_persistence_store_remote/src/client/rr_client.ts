@@ -2,7 +2,7 @@ import debug from "debug";
 import _ from "lodash";
 import { VdbSocket } from "../types";
 
-var warn = debug("viewdb:warn");
+const warn = debug("viewdb:warn");
 
 class Client {
   _socket: VdbSocket | undefined;
@@ -22,16 +22,16 @@ class Client {
     this._socket = socket;
     this._requests = {};
     this._requestId = 10;
-    var self = this;
+    const self = this;
     this._socket.on("/vdb/response", function (event: any) {
       if (event.e) {
         throw new Error(event.e);
       }
-      var request = self._requests[event.i];
+      const request = self._requests[event.i];
       if (_.isUndefined(request)) {
         warn("Response for unregistered request", event);
       } else {
-        var callback = request.cb;
+        const callback = request.cb;
         callback(null, event.p);
         if (!request.k) {
           // non persistent request
@@ -42,7 +42,7 @@ class Client {
   }
 
   request(payload: any, callback?: any, persistent?: boolean): number {
-    var req: any = {
+    const req: any = {
       i: this._requestId++,
       p: payload,
     };
@@ -52,8 +52,8 @@ class Client {
   }
 
   subscribe(payload: any, callback: any): { stop: () => void } {
-    var self = this;
-    var i = this.request(payload, callback, true);
+    const self = this;
+    const i = this.request(payload, callback, true);
     return {
       stop: function () {
         delete self._requests[i];
@@ -64,11 +64,11 @@ class Client {
   // to signal that a socket reconnection have been made, and that observers need to start over.
   // - socket owner is responsible to ensure that proper authentication/setup have been made before calling this function.
   onClientReconnected(): void {
-    var self = this;
+    const self = this;
     _.forEach(this._requests, function (request: any, index: any) {
       if (request.k) {
         // persistent aka observe
-        var callback = request.cb;
+        const callback = request.cb;
         callback("reconnected");
       } else {
         delete self._requests[index];

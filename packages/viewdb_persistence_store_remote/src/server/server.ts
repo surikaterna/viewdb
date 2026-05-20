@@ -12,8 +12,8 @@ function sendChange(socket: VdbSocket, change: any, request: any): void {
 
 class ViewDbSocketServer {
   constructor(viewdb: any, socket: VdbSocket, queryDecorator?: any, globalLimit?: number, readPreference?: any) {
-    var _observers: Record<string, { i: number; handle: { stop: () => void } }> = {};
-    var _queryDecorator: any;
+    const _observers: Record<string, { i: number; handle: { stop: () => void } }> = {};
+    let _queryDecorator: any;
     if (!queryDecorator) {
       _queryDecorator = function (_col: any, q: any, cb: any) {
         cb(q);
@@ -30,7 +30,7 @@ class ViewDbSocketServer {
     socket.on("/vdb/request", function (request: any) {
       if (request.p.find) {
         _queryDecorator(request.p.collection, request.p.find, function (decoratedQuery: any) {
-          var cursor = viewdb.collection(request.p.collection).find(decoratedQuery);
+          const cursor = viewdb.collection(request.p.collection).find(decoratedQuery);
           if (readPreference && cursor.setReadPreference) {
             cursor.setReadPreference(readPreference);
           }
@@ -65,7 +65,7 @@ class ViewDbSocketServer {
         });
       } else if (request.p.count) {
         _queryDecorator(request.p.collection, request.p.count, function (decoratedQuery: any) {
-          var cursor = viewdb.collection(request.p.collection).find(decoratedQuery);
+          const cursor = viewdb.collection(request.p.collection).find(decoratedQuery);
           if (readPreference && cursor.setReadPreference) {
             cursor.setReadPreference(readPreference);
           }
@@ -88,9 +88,9 @@ class ViewDbSocketServer {
           });
         });
       } else if (request.p.observe) {
-        var observeId = request.p.id;
+        const observeId = request.p.id;
         _queryDecorator(request.p.collection, request.p.observe, function (decoratedQuery: any) {
-          var cursor = viewdb.collection(request.p.collection).find(decoratedQuery);
+          const cursor = viewdb.collection(request.p.collection).find(decoratedQuery);
           if (readPreference && cursor.setReadPreference) {
             cursor.setReadPreference(readPreference);
           }
@@ -108,7 +108,7 @@ class ViewDbSocketServer {
           if (request.p.project) {
             cursor.project(request.p.project);
           }
-          var observeOptions: any = {
+          const observeOptions: any = {
             init: function (result: any) {
               sendChange(socket, { i: { r: result } }, request);
             },
@@ -149,7 +149,7 @@ class ViewDbSocketServer {
             }
           }
 
-          var observeHandle = cursor.observe(observeOptions);
+          const observeHandle = cursor.observe(observeOptions);
           _observers[observeId] = {
             i: request.i,
             handle: observeHandle,
@@ -163,7 +163,7 @@ class ViewDbSocketServer {
           cursor.close(function (_err: Error | null) {});
         });
       } else if (request.p["observe.stop"]) {
-        var handle = request.p["observe.stop"].h;
+        const handle = request.p["observe.stop"].h;
         if (handle) {
           if (_observers[handle]) {
             _observers[handle].handle.stop();

@@ -5,7 +5,7 @@ import Observe from "./observe";
 import reconcile from "./reconcile";
 import TimeTracker from "./timeTracker";
 
-var LOG = LoggerFactory.getLogger("viewdb:remote:hybrid-cursor");
+const LOG = LoggerFactory.getLogger("viewdb:remote:hybrid-cursor");
 
 class HybridCursor {
   _query: any;
@@ -34,16 +34,16 @@ class HybridCursor {
   }
 
   _toArray(callback: any): void {
-    var self = this;
-    var localData: any[] | null = null;
-    var remoteData: any[] | null = null;
-    var localErr: Error | null = null;
-    var remoteErr: Error | null = null;
-    var kuery = new Kuery(this._query);
-    var sort = this._sort;
-    var limit = this._limit;
-    var skip = this._skip;
-    var project = this._project;
+    const self = this;
+    let localData: any[] | null = null;
+    let remoteData: any[] | null = null;
+    let localErr: Error | null = null;
+    let remoteErr: Error | null = null;
+    const kuery = new Kuery(this._query);
+    const sort = this._sort;
+    const limit = this._limit;
+    const skip = this._skip;
+    const project = this._project;
 
     if (sort) {
       kuery.sort(sort);
@@ -65,7 +65,7 @@ class HybridCursor {
       }
       remoteData = result;
       if (localData) {
-        var combinedResult = kuery.find(reconcile(localData, remoteData!));
+        const combinedResult = kuery.find(reconcile(localData, remoteData!));
         callback(null, combinedResult);
         if (_.isFunction(self._onCacheUpdateCallback)) {
           self._onCacheUpdateCallback(self._query, skip, limit, sort, project, combinedResult);
@@ -82,7 +82,7 @@ class HybridCursor {
       localData = result;
       if (remoteData || remoteErr) {
         if (!(remoteErr && self._options.throwRemoteErr)) {
-          var combinedResult = kuery.find(reconcile(localData!, remoteData || []));
+          const combinedResult = kuery.find(reconcile(localData!, remoteData || []));
           callback(null, combinedResult);
           if (_.isFunction(self._onCacheUpdateCallback)) {
             self._onCacheUpdateCallback(self._query, skip, limit, sort, project, combinedResult);
@@ -116,14 +116,14 @@ class HybridCursor {
   }
 
   toArray(callback: any): void {
-    var self = this;
-    var timeTracker = new TimeTracker();
-    var wrappedCallback = callback;
+    const self = this;
+    const timeTracker = new TimeTracker();
+    let wrappedCallback = callback;
 
     if (this._options.loggingEnabled) {
       wrappedCallback = function () {
         timeTracker.stop();
-        var queryTime = timeTracker.getExecutionTime();
+        const queryTime = timeTracker.getExecutionTime();
         if (queryTime > self._options.queryMaxTime) {
           LOG.warn(
             "Query %j, took longer than allowed max time of %s seconds.",
@@ -195,17 +195,17 @@ class HybridCursor {
   }
 
   _count(options: any, callback: any): void {
-    var self = this;
-    var localCount: any = null;
-    var remoteCount: any = null;
+    const self = this;
+    let localCount: any = null;
+    let remoteCount: any = null;
 
-    var timeTracker = new TimeTracker();
-    var wrappedCallback = callback;
+    const timeTracker = new TimeTracker();
+    let wrappedCallback = callback;
 
     if (this._options.loggingEnabled) {
       wrappedCallback = function () {
         timeTracker.stop();
-        var queryTime = timeTracker.getExecutionTime();
+        const queryTime = timeTracker.getExecutionTime();
         if (queryTime > self._options.queryMaxTime) {
           LOG.warn(
             "Count query %j, took longer than allowed max time of %s seconds.",
@@ -248,7 +248,7 @@ class HybridCursor {
   }
 
   count(options?: any, callback?: any): void {
-    var self = this;
+    const self = this;
     if (_.isFunction(options)) {
       callback = options;
       options = undefined;
@@ -276,9 +276,9 @@ class HybridCursor {
   }
 
   observe(options: any): any {
-    var sort = this._sort;
-    var limit = this._limit;
-    var skip = this._skip;
+    const sort = this._sort;
+    const limit = this._limit;
+    const skip = this._skip;
 
     if (sort) {
       this._local.sort(sort);
@@ -296,7 +296,7 @@ class HybridCursor {
       this._remote.project(this._project);
     }
 
-    var modifiedOptions = options;
+    let modifiedOptions = options;
     if (this._options.cacheQueries) {
       modifiedOptions = Object.assign({}, options, {
         cacheCallback: this._onObserverCacheUpdate.bind(this),

@@ -3,7 +3,7 @@ import { projectDocument } from "../src/utils";
 describe("Project document", function () {
   it("#Should pick property", () =>
     new Promise<void>((resolve) => {
-      var result = projectDocument({ alfa: "abc" }, { alfa: 1 });
+      const result = projectDocument({ alfa: "abc" }, { alfa: 1 });
 
       expect(result).toEqual({ alfa: "abc" });
       resolve();
@@ -11,7 +11,7 @@ describe("Project document", function () {
 
   it("#Should pick property from nested object", () =>
     new Promise<void>((resolve) => {
-      var result = projectDocument(
+      const result = projectDocument(
         { alfa: { bravo: { charlie: 1, delta: 2 }, echo: 3 } },
         { alfa: { bravo: { delta: 1 } } }
       );
@@ -22,7 +22,7 @@ describe("Project document", function () {
 
   it("#Should pick property from nested array", () =>
     new Promise<void>((resolve) => {
-      var result = projectDocument(
+      const result = projectDocument(
         {
           alfa: {
             bravo: [
@@ -41,7 +41,7 @@ describe("Project document", function () {
 
   it("#Should pick nested property from nested array", () =>
     new Promise<void>((resolve) => {
-      var result = projectDocument(
+      const result = projectDocument(
         {
           alfa: {
             bravo: [
@@ -61,7 +61,7 @@ describe("Project document", function () {
 
   it("#Should support exclude paths", () =>
     new Promise<void>((resolve) => {
-      var result = projectDocument({ alfa: 1, bravo: 2, charlie: 3, delta: 4 }, { bravo: 0 });
+      const result = projectDocument({ alfa: 1, bravo: 2, charlie: 3, delta: 4 }, { bravo: 0 });
 
       expect(result).toEqual({ alfa: 1, charlie: 3, delta: 4 });
       resolve();
@@ -69,7 +69,7 @@ describe("Project document", function () {
 
   it("#Should support multiple exclude paths", () =>
     new Promise<void>((resolve) => {
-      var result = projectDocument(
+      const result = projectDocument(
         { alfa: 1, bravo: 2, charlie: 3, delta: { echo: 4, foxtrot: 5 } },
         { bravo: 0, delta: { echo: 0 } }
       );

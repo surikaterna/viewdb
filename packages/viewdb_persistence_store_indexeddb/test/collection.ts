@@ -4,11 +4,11 @@ import Store from "../src/store";
 import getDb from "./util";
 
 describe("Collection", function () {
-  var store;
+  let store;
   beforeEach(
     () =>
       new Promise<void>((resolve, reject) => {
-        var idb = getDb();
+        const idb = getDb();
         store = new Store(idb);
         resolve();
       })
@@ -19,7 +19,7 @@ describe("Collection", function () {
         if (store) {
           store.close().then(function () {
             // destroy the world by t bruun
-            var idb = store._idb;
+            const idb = store._idb;
             idb._databases.clear();
             resolve();
           });
@@ -129,7 +129,7 @@ describe("Collection", function () {
   it('#find with complex key {"name.first":"echo"} should return correct document', () =>
     new Promise<void>((resolve, reject) => {
       store.open().then(function () {
-        var promises = [
+        const promises = [
           store.collection("dollhouse").insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }),
           store.collection("dollhouse").insert({ _id: "sierra", name: { first: "SIERRA", last: "TV" } }),
         ];

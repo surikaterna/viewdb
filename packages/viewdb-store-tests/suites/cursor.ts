@@ -1,10 +1,10 @@
 import assert from "assert";
 
 export default function (config) {
-  var COLL = "test_shared";
+  const COLL = "test_shared";
 
   describe("cursor", function () {
-    var store;
+    let store;
 
     beforeEach(function () {
       return new Promise<void>(function (resolve) {
@@ -22,7 +22,7 @@ export default function (config) {
     });
 
     function insertFour(cb) {
-      var col = store.collection(COLL);
+      const col = store.collection(COLL);
       col.insert({ _id: "alpha" }, function () {
         col.insert({ _id: "beta" }, function () {
           col.insert({ _id: "cosworth" }, function () {

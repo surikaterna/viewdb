@@ -34,10 +34,10 @@ describe("Observe", function () {
 
   it("#observe with query and update", () =>
     new Promise<void>((resolve, reject) => {
-      var store = getVDb();
+      const store = getVDb();
       store.open().then(function () {
-        var cursor = store.collection(COLLECTION_NAME).find({ _id: "echo" });
-        var handle = cursor.observe({
+        const cursor = store.collection(COLLECTION_NAME).find({ _id: "echo" });
+        const handle = cursor.observe({
           added: function (x) {
             expect(x.age).toBe(10);
             expect(x._id).toBe("echo");
@@ -56,11 +56,11 @@ describe("Observe", function () {
     }));
   it("#observe with insert", () =>
     new Promise<void>((resolve, reject) => {
-      var handle;
-      var store = getVDb();
+      let handle;
+      const store = getVDb();
       store.open().then(function () {
-        var collection = store.collection(COLLECTION_NAME);
-        var cursor = collection.find({});
+        const collection = store.collection(COLLECTION_NAME);
+        const cursor = collection.find({});
         handle = cursor.observe({
           added: function (x) {
             expect(x._id).toBe("echo");
@@ -73,11 +73,11 @@ describe("Observe", function () {
     }));
   it("#observe with remove", () =>
     new Promise<void>((resolve, reject) => {
-      var realDone = _.after(2, resolve);
-      var store = getVDb();
+      const realDone = _.after(2, resolve);
+      const store = getVDb();
       store.open().then(function () {
-        var cursor = store.collection(COLLECTION_NAME).find({});
-        var handle = cursor.observe({
+        const cursor = store.collection(COLLECTION_NAME).find({});
+        const handle = cursor.observe({
           added: function (x) {
             expect(x._id).toBe("echo");
             realDone();
@@ -87,7 +87,7 @@ describe("Observe", function () {
             realDone();
           },
         });
-        var coll = store.collection(COLLECTION_NAME);
+        const coll = store.collection(COLLECTION_NAME);
         coll.insert({ _id: "echo" }, function () {
           coll.remove({ _id: "echo" }, function () {});
         });
@@ -95,11 +95,11 @@ describe("Observe", function () {
     }));
   it("#observe with query and insert", () =>
     new Promise<void>((resolve, reject) => {
-      var store = getVDb();
+      const store = getVDb();
       store.open().then(function () {
         store.collection(COLLECTION_NAME).insert({ _id: "echo1" }, function () {
-          var cursor = store.collection(COLLECTION_NAME).find({ _id: "echo2" });
-          var handle = cursor.observe({
+          const cursor = store.collection(COLLECTION_NAME).find({ _id: "echo2" });
+          const handle = cursor.observe({
             added: function (x) {
               expect(x._id).toBe("echo2");
               resolve();
@@ -114,16 +114,15 @@ describe("Observe", function () {
     }));
   it("#observe with query and skip", () =>
     new Promise<void>((resolve, reject) => {
-      var store = getVDb();
+      const store = getVDb();
       store.open().then(function () {
         store.collection(COLLECTION_NAME).insert({ _id: "echo" });
         store.collection(COLLECTION_NAME).insert({ _id: "echo2" });
         store.collection(COLLECTION_NAME).insert({ _id: "echo3" });
-        var cursor = store.collection(COLLECTION_NAME).find({});
-        var skip = 0;
-        var handle;
+        const cursor = store.collection(COLLECTION_NAME).find({});
+        let skip = 0;
         cursor.limit(1);
-        var realDone = _.after(3, function () {
+        const realDone = _.after(3, function () {
           cursor.toArray(function (err, res) {
             expect(res).toHaveLength(0);
             handle.stop();
@@ -131,7 +130,7 @@ describe("Observe", function () {
           });
         });
 
-        handle = cursor.observe({
+        const handle = cursor.observe({
           added: function () {
             cursor.skip(++skip);
             realDone();

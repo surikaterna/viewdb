@@ -5,11 +5,11 @@ import Store from "../../src/hybrid/store";
 describe("Store", function () {
   it("should cache", () =>
     new Promise<void>((resolve, reject) => {
-      var localStore = new LocalStore();
-      var remoteStore = new LocalStore();
+      const localStore = new LocalStore();
+      const remoteStore = new LocalStore();
 
       remoteStore.collection("alfa").insert({ id: "abc" }, function () {
-        var hcursor = new Store(localStore, remoteStore, { cacheQueries: true });
+        const hcursor = new Store(localStore, remoteStore, { cacheQueries: true });
         hcursor
           .collection("alfa")
           .find({})
@@ -35,11 +35,11 @@ describe("Store", function () {
         this._project = project;
         return this;
       };
-      var localStore = new LocalStore();
-      var remoteStore = new LocalStore();
+      const localStore = new LocalStore();
+      const remoteStore = new LocalStore();
 
       remoteStore.collection("alfa").insert({ id: "abc", property: "def" }, function () {
-        var hcursor = new Store(localStore, remoteStore, { cacheQueries: true });
+        const hcursor = new Store(localStore, remoteStore, { cacheQueries: true });
         hcursor
           .collection("alfa")
           .find({ id: "abc" })
@@ -91,11 +91,11 @@ describe("Store", function () {
 
   it("should call remote if cache is no longer correct", () =>
     new Promise<void>((resolve, reject) => {
-      var localStore = new LocalStore();
-      var remoteStore = new LocalStore();
+      const localStore = new LocalStore();
+      const remoteStore = new LocalStore();
 
       remoteStore.collection("alfa").insert({ id: "abc" }, function () {
-        var hcursor = new Store(localStore, remoteStore, { cacheQueries: true });
+        const hcursor = new Store(localStore, remoteStore, { cacheQueries: true });
 
         hcursor
           .collection("alfa")
@@ -112,7 +112,7 @@ describe("Store", function () {
             }
           });
 
-        var iterations = 0;
+        let iterations = 0;
         setTimeout(function () {
           hcursor._local._collections._cache._documents[0].resultSet = ["xyz"];
           hcursor._collections._cache._documents.resultSet = ["xyz"];

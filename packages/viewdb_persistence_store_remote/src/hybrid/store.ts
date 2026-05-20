@@ -17,7 +17,7 @@ interface HybridStoreOptions {
   loggingEnabled?: boolean;
 }
 
-var defaultOptions: HybridStoreOptions = {
+const defaultOptions: HybridStoreOptions = {
   syncWrites: false, // if local writes should be sent over the wire to remote
   cacheReads: true, // when reading remote documents should they be stored in the local db
   localFirst: true, // when reading documents should we return the locally cached ones first and then the remote ones when they arrive
@@ -52,8 +52,8 @@ class HybridStore {
   }
 
   open(): Promise<HybridStore> {
-    var self = this;
-    var storesToOpen: any[] = [];
+    const self = this;
+    const storesToOpen: any[] = [];
     if (this._local.open) {
       storesToOpen.push(this._local.open());
     }
@@ -67,14 +67,14 @@ class HybridStore {
   }
 
   collection(name: string, callback?: (collection: any) => void): any {
-    var collection = this._collections[name];
+    let collection = this._collections[name];
     if (!collection) {
-      var local = this._local.collection(name);
+      const local = this._local.collection(name);
 
       if (this._options.localOnlyCollections.has(name)) {
         this._collections[name] = local;
       } else {
-        var remote = this._remote.collection(name);
+        const remote = this._remote.collection(name);
         this._collections[name] = new Collection(
           local,
           remote,
@@ -94,10 +94,10 @@ class HybridStore {
   }
 
   _cleanCachedData(): void {
-    var self = this;
-    var minimumChangeDateTime = new Date();
+    const self = this;
+    const minimumChangeDateTime = new Date();
     minimumChangeDateTime.setMinutes(minimumChangeDateTime.getMinutes() - this._options.cacheLifeTime);
-    var maxTimeEpoch = minimumChangeDateTime.getTime();
+    const maxTimeEpoch = minimumChangeDateTime.getTime();
 
     // Clean cached query first to prevent query not pointing at anything
     this._cleanCollection(this._collections[this._options.cacheCollectionName], maxTimeEpoch, "createDateTime");
@@ -112,7 +112,7 @@ class HybridStore {
   }
 
   _cleanCollection(collection: any, maxEpoch: number, propertyName?: string): void {
-    var comparisonPropertyName = propertyName || "_insertedAt";
+    const comparisonPropertyName = propertyName || "_insertedAt";
     collection.remove({ [comparisonPropertyName]: { $lt: maxEpoch } }, null, function () {});
   }
 }

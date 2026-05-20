@@ -2,7 +2,7 @@ import _ from "lodash";
 import { Store } from "..";
 
 describe("Collection", function () {
-  var store;
+  let store;
   beforeEach(
     () =>
       new Promise<void>((resolve) => {
@@ -110,7 +110,7 @@ describe("Collection", function () {
   it('#find with complex key {"name.first":"echo"} should return correct document', () =>
     new Promise<void>((resolve, reject) => {
       store.open().then(function () {
-        var promises = [
+        const promises = [
           store.collection("dollhouse").insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }),
           store.collection("dollhouse").insert({ _id: "sierra", name: { first: "SIERRA", last: "TV" } }),
         ];

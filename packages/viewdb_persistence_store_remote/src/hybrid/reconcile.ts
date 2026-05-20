@@ -12,25 +12,25 @@ function reconcile<T extends VersionedDoc = VersionedDoc>(local: T[], remote: T[
   // 1. If has .version take one with highest version
   // 2. If no version prefer remote
 
-  var localIds = _.map(local, "_id");
-  var remoteIds = _.map(remote, "_id");
+  const localIds = _.map(local, "_id");
+  const remoteIds = _.map(remote, "_id");
 
-  var newIds = _.xor(localIds, remoteIds);
-  var inBothIds = _.intersection(localIds, remoteIds);
+  const newIds = _.xor(localIds, remoteIds);
+  const inBothIds = _.intersection(localIds, remoteIds);
 
-  var alldocs = local.concat(remote);
+  const alldocs = local.concat(remote);
 
   // add all new docs
-  var result = _.filter(alldocs, function (doc: T) {
+  const result = _.filter(alldocs, function (doc: T) {
     return _.includes(newIds, doc._id);
   });
-  var localSame = _(local)
+  const localSame = _(local)
     .filter(function (doc: T) {
       return _.includes(inBothIds, doc._id);
     })
     .sortBy("_id")
     .value();
-  var remoteSame = _(remote)
+  const remoteSame = _(remote)
     .filter(function (doc: T) {
       return _.includes(inBothIds, doc._id);
     })
@@ -39,7 +39,7 @@ function reconcile<T extends VersionedDoc = VersionedDoc>(local: T[], remote: T[
 
   // TODO; optimize so not a scan per id is needed
   _.forEach(localSame, function (localDoc: T, n: number) {
-    var remoteDoc = remoteSame[n];
+    const remoteDoc = remoteSame[n];
 
     if (!_.isUndefined(localDoc?.version) && !_.isUndefined(remoteDoc?.version)) {
       result.push(localDoc.version > remoteDoc.version ? localDoc : remoteDoc);

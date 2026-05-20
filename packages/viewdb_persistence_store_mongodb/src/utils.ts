@@ -9,8 +9,8 @@ function _excludeKey(key: string | number | boolean): boolean {
 }
 
 function _projectLayer(document: Record<string, any>, projectObject: Record<string, any>): Record<string, any> {
-  var projectedLayer: any = {};
-  var deletionKeys: string[] = [];
+  let projectedLayer: any = {};
+  const deletionKeys: string[] = [];
 
   _.forEach(projectObject, function (value: any, key: string) {
     if (_excludeKey(value)) {
@@ -37,7 +37,7 @@ function _projectLayer(document: Record<string, any>, projectObject: Record<stri
   return projectedLayer;
 }
 
-var nextTick: (cb: () => void) => void;
+let nextTick: (cb: () => void) => void;
 if (typeof setImmediate === "function") {
   nextTick = setImmediate;
 } else if (typeof process === "object" && process && process.nextTick) {

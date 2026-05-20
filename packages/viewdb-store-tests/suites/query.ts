@@ -1,10 +1,10 @@
 import assert from "assert";
 
 export default function (config) {
-  var COLL = "test_shared";
+  const COLL = "test_shared";
 
   describe("query", function () {
-    var store;
+    let store;
 
     beforeEach(function () {
       return new Promise<void>(function (resolve) {
@@ -41,8 +41,8 @@ export default function (config) {
 
     it("find by nested key returns correct document", function () {
       return new Promise<void>(function (resolve, reject) {
-        var doc1 = { _id: "echo", name: { first: "ECHO", last: "TV" } };
-        var doc2 = { _id: "sierra", name: { first: "SIERRA", last: "TV" } };
+        const doc1 = { _id: "echo", name: { first: "ECHO", last: "TV" } };
+        const doc2 = { _id: "sierra", name: { first: "SIERRA", last: "TV" } };
         store.collection(COLL).insert(doc1, function () {
           store.collection(COLL).insert(doc2, function () {
             store

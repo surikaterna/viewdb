@@ -16,7 +16,7 @@ class Store {
   }
 
   collection(name: string, callback?: (collection: Collection) => void): Collection {
-    var collection = this._collections[name];
+    let collection = this._collections[name];
     if (!collection) {
       collection = this._collections[name] = new Collection(this._client, name);
     }

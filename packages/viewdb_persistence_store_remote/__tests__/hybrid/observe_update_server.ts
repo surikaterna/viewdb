@@ -8,7 +8,7 @@ import HybridStore from "../../src/hybrid/store";
 import ViewDbSocketServer from "../../src/server/server";
 
 describe("Observe-Update Remote", function () {
-  var clientRemote, serverViewdb, socketServer, socketClient, clientStore, client, clientLocal, hybrid;
+  let clientRemote, serverViewdb, socketServer, socketClient, clientStore, client, clientLocal, hybrid;
   beforeEach(
     () =>
       new Promise<void>((resolve, reject) => {
@@ -16,7 +16,7 @@ describe("Observe-Update Remote", function () {
         socketClient = socketServer.socketClient;
         client = new Client(socketClient);
         serverViewdb = new ViewDb();
-        var vdbSocketServer = new ViewDbSocketServer(serverViewdb, socketServer);
+        const vdbSocketServer = new ViewDbSocketServer(serverViewdb, socketServer);
 
         clientLocal = new ViewDb(); // client local viewdb (typically IndexedDb)
         clientStore = new Store(client);
@@ -28,8 +28,8 @@ describe("Observe-Update Remote", function () {
   );
   it("#viewdb server+hybrid setup should work", () =>
     new Promise<void>((resolve, reject) => {
-      var id = "1",
-        called = 0;
+      const id = "1";
+      let called = 0;
       serverViewdb.collection("dollhouse").insert({ _id: id });
       hybrid
         .collection("dollhouse")
@@ -44,12 +44,12 @@ describe("Observe-Update Remote", function () {
     }));
   it("#old docs should be removed on updateQuery", () =>
     new Promise<void>((resolve, reject) => {
-      var id = "1";
+      let id = "1";
       serverViewdb.collection("dollhouse").insert({ _id: id });
-      var hybridCursor = hybrid.collection("dollhouse").find({ _id: id });
-      var realDone = _.after(6, resolve);
+      const hybridCursor = hybrid.collection("dollhouse").find({ _id: id });
+      const realDone = _.after(6, resolve);
 
-      var handle = hybridCursor.observe({
+      const handle = hybridCursor.observe({
         init: function () {
           realDone(); // 1 call
         },
@@ -72,11 +72,11 @@ describe("Observe-Update Remote", function () {
     }));
   it("#update query from client", () =>
     new Promise<void>((resolve, reject) => {
-      var id = "1";
+      let id = "1";
       serverViewdb.collection("dollhouse").insert({ _id: id });
-      var hybridCursor = hybrid.collection("dollhouse").find({ _id: id });
+      const hybridCursor = hybrid.collection("dollhouse").find({ _id: id });
 
-      var handle = hybridCursor.observe({
+      const handle = hybridCursor.observe({
         added: function (x) {
           x._id.should.equal(id);
           if (x._id === "3") {
@@ -94,10 +94,10 @@ describe("Observe-Update Remote", function () {
   it("#observe-update with update from server $in query", () =>
     new Promise<void>((resolve, reject) => {
       serverViewdb.collection("dollhouse").insert({ _id: "1" });
-      var realDone = _.after(2, resolve);
-      var hybridCursor = hybrid.collection("dollhouse").find({ _id: { $in: ["1", "2"] } });
+      const realDone = _.after(2, resolve);
+      const hybridCursor = hybrid.collection("dollhouse").find({ _id: { $in: ["1", "2"] } });
 
-      var handle = hybridCursor.observe({
+      const handle = hybridCursor.observe({
         added: function (x) {
           if (x._id === "3") {
             handle.stop();

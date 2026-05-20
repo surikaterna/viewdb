@@ -21,7 +21,7 @@ describe("Reconcile", function () {
     reconcileAny([{ _id: "1" }, { _id: "2" }], [{ _id: "1" }, { _id: "2" }]).length.should.equal(2);
   });
   it("#reconcile should return remote docs if local and remote docs do match", function () {
-    var result = reconcileAny(
+    const result = reconcileAny(
       [{ _id: "1" }, { _id: "2" }],
       [
         { _id: "1", a: 1 },
@@ -32,7 +32,7 @@ describe("Reconcile", function () {
     result[1].should.have.property("a");
   });
   it("#reconcile should return local docs if local and remote docs do match and local version higher", function () {
-    var result = reconcileAny(
+    const result = reconcileAny(
       [
         { _id: "1", version: 2 },
         { _id: "2", version: 2 },
@@ -46,7 +46,7 @@ describe("Reconcile", function () {
     result[1].should.not.have.property("a");
   });
   it("#reconcile should return remote docs if local and remote docs do match and remote version higher", function () {
-    var result = reconcileAny(
+    const result = reconcileAny(
       [
         { _id: "1", version: 1 },
         { _id: "2", version: 1 },
@@ -60,15 +60,15 @@ describe("Reconcile", function () {
     result[1].should.have.property("a");
   });
   it("#reconcile should work timely with large arrays", function () {
-    var local = [],
-      remote = [];
-    for (var i = 0; i < 1000; i++) {
+    const local = [];
+    const remote = [];
+    for (let i = 0; i < 1000; i++) {
       local.push({ _id: String(i), version: 1 });
       remote.push({ _id: String(i), version: 1 });
     }
-    var start = new Date().getTime();
-    var result = reconcileAny(local, remote);
-    var end = new Date().getTime();
+    const start = new Date().getTime();
+    const result = reconcileAny(local, remote);
+    const end = new Date().getTime();
     (end - start).should.be.below(500);
   });
   it("#reconcile should not break if local contain duplicates, and should update to newest version of local copy", function () {

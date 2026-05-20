@@ -2,7 +2,7 @@ import assert from "assert";
 
 // Inline replacement for _.after(n, fn) — no lodash dependency
 function after(n, fn) {
-  var count = 0;
+  let count = 0;
   return function () {
     if (++count >= n) {
       fn.apply(this, arguments);
@@ -11,11 +11,11 @@ function after(n, fn) {
 }
 
 export default function (config) {
-  var COLL = "test_shared";
-  var delay = config.observeOptions.settleDelay;
+  const COLL = "test_shared";
+  const delay = config.observeOptions.settleDelay;
 
   describe("observe", function () {
-    var store;
+    let store;
 
     beforeEach(function () {
       return new Promise<void>(function (resolve) {
@@ -34,8 +34,8 @@ export default function (config) {
 
     it("init fires with empty collection", function () {
       return new Promise<void>(function (resolve) {
-        var cursor = store.collection(COLL).find({});
-        var handle = cursor.observe({
+        const cursor = store.collection(COLL).find({});
+        const handle = cursor.observe({
           init: function (coll) {
             assert.strictEqual(coll.length, 0);
             setTimeout(function () {
@@ -49,8 +49,8 @@ export default function (config) {
 
     it("added fires on insert", function () {
       return new Promise<void>(function (resolve) {
-        var cursor = store.collection(COLL).find({});
-        var handle = cursor.observe({
+        const cursor = store.collection(COLL).find({});
+        const handle = cursor.observe({
           added: function (x) {
             assert.strictEqual(x._id, "echo");
             setTimeout(function () {
@@ -66,8 +66,8 @@ export default function (config) {
     it("removed fires on remove", function () {
       return new Promise<void>(function (resolve) {
         store.collection(COLL).insert({ _id: "echo" }, function () {
-          var cursor = store.collection(COLL).find({});
-          var handle = cursor.observe({
+          const cursor = store.collection(COLL).find({});
+          const handle = cursor.observe({
             removed: function (x) {
               assert.strictEqual(x._id, "echo");
               handle.stop();
@@ -82,8 +82,8 @@ export default function (config) {
     it("added fires for matching query on insert", function () {
       return new Promise<void>(function (resolve) {
         store.collection(COLL).insert({ _id: "echo" }, function () {
-          var cursor = store.collection(COLL).find({ _id: "echo2" });
-          var handle = cursor.observe({
+          const cursor = store.collection(COLL).find({ _id: "echo2" });
+          const handle = cursor.observe({
             added: function (x) {
               assert.strictEqual(x._id, "echo2");
               setTimeout(function () {
@@ -99,8 +99,8 @@ export default function (config) {
 
     it("changed fires on update", function () {
       return new Promise<void>(function (resolve) {
-        var cursor = store.collection(COLL).find({ _id: "echo" });
-        var handle = cursor.observe({
+        const cursor = store.collection(COLL).find({ _id: "echo" });
+        const handle = cursor.observe({
           added: function (x) {
             assert.strictEqual(x.age, 10);
           },
@@ -122,10 +122,10 @@ export default function (config) {
         store.collection(COLL).insert({ _id: "echo" }, function () {
           store.collection(COLL).insert({ _id: "echo2" }, function () {
             store.collection(COLL).insert({ _id: "echo3" }, function () {
-              var cursor = store.collection(COLL).find({});
-              var skip = 0;
+              const cursor = store.collection(COLL).find({});
+              let skip = 0;
               cursor.limit(1);
-              var realDone = after(3, function () {
+              const realDone = after(3, function () {
                 cursor.toArray(function (err, res) {
                   assert.strictEqual(res.length, 0);
                   setTimeout(function () {
@@ -134,7 +134,7 @@ export default function (config) {
                   }, delay);
                 });
               });
-              var handle = cursor.observe({
+              const handle = cursor.observe({
                 added: function () {
                   cursor.skip(++skip);
                   realDone();

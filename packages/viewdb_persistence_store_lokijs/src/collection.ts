@@ -223,7 +223,7 @@ class Collection extends EventEmitter {
   _getDocuments(query: any, callback: any) {
     const qry = query.query || query;
     LOG.info("Collection: %s - Executing query: %j", this.name, qry);
-    var chain = this.collection.chain().find(qry);
+    let chain = this.collection.chain().find(qry);
     if (query.sort) {
       const parsedSort = parseSort(query.sort);
       chain = chain.compoundsort(parsedSort);

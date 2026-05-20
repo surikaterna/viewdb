@@ -78,7 +78,7 @@ class LokiPartitioningAdapter {
    * @memberof LokiPartitioningAdapter
    */
   loadDatabase(dbname: any, callback: any) {
-    var self = this;
+    const self = this;
     this.dbname = dbname;
     this.dbref = new Loki(dbname);
 
@@ -128,8 +128,8 @@ class LokiPartitioningAdapter {
    * @param {function} callback - adapter callback to return load result to caller
    */
   loadNextPartition(partition: any, callback: any) {
-    var keyname = this.dbname + "." + partition;
-    var self = this;
+    const keyname = this.dbname + "." + partition;
+    const self = this;
 
     if (this.options.paging === true) {
       this.pageIterator.pageIndex = 0;
@@ -138,7 +138,7 @@ class LokiPartitioningAdapter {
     }
 
     this.adapter.loadDatabase(keyname, function (result: any) {
-      var data = self.dbref.deserializeCollection(result, {
+      const data = self.dbref.deserializeCollection(result, {
         delimited: true,
         collectionIndex: partition,
       });
@@ -159,8 +159,8 @@ class LokiPartitioningAdapter {
    */
   loadNextPage(callback: any) {
     // calculate name for next saved page in sequence
-    var keyname = this.dbname + "." + this.pageIterator.collection + "." + this.pageIterator.pageIndex;
-    var self = this;
+    const keyname = this.dbname + "." + this.pageIterator.collection + "." + this.pageIterator.pageIndex;
+    const self = this;
 
     // load whatever page is next in sequence
     this.adapter.loadDatabase(keyname, function (result: any) {
@@ -174,11 +174,11 @@ class LokiPartitioningAdapter {
       // ** end Surikat override **
 
       result = ""; // free up memory now that we have split it into array
-      var dlen = data.length;
-      var idx;
+      let dlen = data.length;
+      let idx;
 
       // detect if last page by presence of final empty string element and remove it if so
-      var isLastPage = data[dlen - 1] === "";
+      const isLastPage = data[dlen - 1] === "";
       if (isLastPage) {
         data.pop();
         dlen = data.length;
@@ -223,9 +223,9 @@ class LokiPartitioningAdapter {
    */
   exportDatabase(dbname: any, dbref: any, callback: any) {
     // eslint-disable-next-line
-    var self = this;
-    var idx,
-      clen = dbref.collections.length;
+    let self = this;
+    let idx;
+    const clen = dbref.collections.length;
 
     this.dbref = dbref;
     this.dbname = dbname;
@@ -249,9 +249,9 @@ class LokiPartitioningAdapter {
    * @param {function} callback - adapter callback to return load result to caller
    */
   saveNextPartition(callback: any) {
-    var self = this;
-    var partition = this.dirtyPartitions?.shift();
-    var keyname = this.dbname + (partition === -1 ? "" : "." + partition);
+    const self = this;
+    const partition = this.dirtyPartitions?.shift();
+    const keyname = this.dbname + (partition === -1 ? "" : "." + partition);
 
     // if we are doing paging and this is collection partition
     if (this.options.paging && partition !== -1) {
@@ -273,7 +273,7 @@ class LokiPartitioningAdapter {
     }
 
     // otherwise this is 'non-paged' partioning...
-    var result = this.dbref.serializeDestructured({
+    const result = this.dbref.serializeDestructured({
       partitioned: true,
       delimited: true,
       partition: partition,
@@ -299,18 +299,18 @@ class LokiPartitioningAdapter {
    * @param {function} callback - adapter callback to return load result to caller
    */
   saveNextPage(callback: any) {
-    var self = this;
-    var coll = this.dbref.collections[this.pageIterator.collection];
-    var keyname = this.dbname + "." + this.pageIterator.collection + "." + this.pageIterator.pageIndex;
-    var pageLen = 0,
-      cdlen = coll.data.length,
+    const self = this;
+    const coll = this.dbref.collections[this.pageIterator.collection];
+    const keyname = this.dbname + "." + this.pageIterator.collection + "." + this.pageIterator.pageIndex;
+    let pageLen = 0;
+    const cdlen = coll.data.length,
       delimlen = this.options.delimiter.length;
-    var serializedObject = "",
+    let serializedObject = "",
       pageBuilder = "";
-    var doneWithPartition = false,
+    let doneWithPartition = false,
       doneWithPage = false;
 
-    var pageSaveCallback = function (err: any) {
+    const pageSaveCallback = function (err: any) {
       pageBuilder = "";
 
       if (err) {

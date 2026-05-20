@@ -3,7 +3,7 @@ import debug from "debug";
 import _ from "lodash";
 import { VdbClient } from "../types";
 
-var warn = debug("viewdb:warn");
+const warn = debug("viewdb:warn");
 
 import { merge } from "viewdb";
 
@@ -30,11 +30,11 @@ class Client implements VdbClient {
   }
 
   _callRestService(path: string, payload: any, callback: any): void {
-    var params: string[] = [];
+    const params: string[] = [];
     _.forEach(Object.keys(payload), function (key: string) {
       params.push(key + "=" + encodeURIComponent(JSON.stringify(payload[key])));
     });
-    var uri = this._baseUri + "/" + path;
+    let uri = this._baseUri + "/" + path;
     if (params.length > 0) {
       uri += "?" + params.join("&");
     }
@@ -54,7 +54,7 @@ class Client implements VdbClient {
 
   request(payload: any, callback?: any): void {
     if (!payload["observe.stop"]) {
-      var request: any = { q: payload.find || payload.observe };
+      const request: any = { q: payload.find || payload.observe };
       if (payload.skip) {
         request.skip = payload.skip;
       }
@@ -72,15 +72,15 @@ class Client implements VdbClient {
   }
 
   subscribe(payload: any, callback: any): { stop: () => void } {
-    var self = this;
-    var cache: any[] = [];
+    const self = this;
+    const cache: any[] = [];
     payload.find = payload.observe;
     function poll() {
       self.request(payload, function (err: Error | null, result: any) {
         if (err) {
           callback(err);
         }
-        var delta: any[] = [];
+        const delta: any[] = [];
         merge(
           cache,
           result,
@@ -115,7 +115,7 @@ class Client implements VdbClient {
       });
     }
 
-    var pollId = setInterval(poll, this._pollInterval);
+    const pollId = setInterval(poll, this._pollInterval);
     // do first call now
     poll();
     return {

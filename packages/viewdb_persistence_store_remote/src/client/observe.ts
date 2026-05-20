@@ -2,17 +2,17 @@ import _ from "lodash";
 import { Logger } from "slf";
 import { v4 as uuid } from "uuid";
 
-var LOG = Logger.getLogger("viewdb:remote:observe");
+const LOG = Logger.getLogger("viewdb:remote:observe");
 
-var buildParams = function (defaults: any, query: any, collection: any): any {
-  var skip: any, limit: any, sort: any, project: any;
+const buildParams = function (defaults: any, query: any, collection: any): any {
+  let skip: any, limit: any, sort: any, project: any;
   if (query.query) {
     skip = query.skip;
     limit = query.limit;
     sort = query.sort;
     project = query.project;
   }
-  var params: any = _.defaults(
+  const params: any = _.defaults(
     {
       id: uuid(),
       observe: query.query || query,
@@ -33,10 +33,10 @@ class Observer {
   handles: string[] = [];
 
   constructor(collection: any, options: any, query: any) {
-    var remoteHandle: any = null;
-    var self = this;
+    let remoteHandle: any = null;
+    const self = this;
     self.handles = [];
-    var events = {
+    const events = {
       i: !_.isNil(options.init),
       a: !_.isNil(options.added),
       r: !_.isNil(options.removed),
@@ -44,9 +44,9 @@ class Observer {
       m: !_.isNil(options.moved),
     };
 
-    var params = buildParams({ events: events }, query, collection);
-    var startObserver = function (): { stop: () => void } {
-      var handle = collection._client.subscribe(params, function (err: Error | null, result: any) {
+    const params = buildParams({ events: events }, query, collection);
+    const startObserver = function (): { stop: () => void } {
+      const handle = collection._client.subscribe(params, function (err: Error | null, result: any) {
         if (err) {
           handle.stop();
           startObserver();

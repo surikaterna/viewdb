@@ -89,7 +89,7 @@ class LokiCordovaFSAdapter {
     (window as any).resolveLocalFileSystemURL(
       this.location,
       (dir: any) => {
-        let fileName = this.options.prefix + "__" + dbname;
+        const fileName = this.options.prefix + "__" + dbname;
         dir.getFile(
           fileName,
           { create: true },
@@ -120,7 +120,7 @@ class LokiCordovaFSAdapter {
     (window as any).resolveLocalFileSystemURL(
       this.location,
       (dir: any) => {
-        let fileName = this.options.prefix + "__" + name;
+        const fileName = this.options.prefix + "__" + name;
         dir.getFile(fileName, { create: true }, handleSuccess, handleError);
       },
       (err: any) => {

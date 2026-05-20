@@ -1,10 +1,10 @@
 import assert from "assert";
 
 export default function (config) {
-  var COLL = "test_shared";
+  const COLL = "test_shared";
 
   describe("count", function () {
-    var store;
+    let store;
 
     beforeEach(function () {
       return new Promise<void>(function (resolve) {

@@ -4,7 +4,7 @@ import Cursor from "../src/cursor";
 describe("Cursor", () => {
   it("#toArray", () =>
     new Promise<void>((resolve, reject) => {
-      var cursor = new Cursor(null, {}, null, function (query, callback) {
+      const cursor = new Cursor(null, {}, null, function (query, callback) {
         callback(null, [{ v: 1 }, { v: 2 }, { v: 3 }, { v: 4 }]);
       });
       cursor.toArray(function (err, result) {
@@ -14,10 +14,10 @@ describe("Cursor", () => {
     }));
   it("#forEach", () =>
     new Promise<void>((resolve, reject) => {
-      var cursor = new Cursor(null, {}, null, function (query, callback) {
+      const cursor = new Cursor(null, {}, null, function (query, callback) {
         callback(null, [{ v: 1 }, { v: 2 }, { v: 3 }, { v: 4 }]);
       });
-      var calls = 0;
+      let calls = 0;
       cursor.forEach(function (result) {
         expect(result).toBeTruthy();
         calls++;
@@ -29,9 +29,9 @@ describe("Cursor", () => {
     }));
   it("#skip", () =>
     new Promise<void>((resolve, reject) => {
-      var db = new ViewDB();
-      var collection = db.collection("documents");
-      for (var i = 0; i < 10; i++) {
+      const db = new ViewDB();
+      const collection = db.collection("documents");
+      for (let i = 0; i < 10; i++) {
         collection.insert({ a: "a", id: i });
       }
       collection
@@ -44,9 +44,9 @@ describe("Cursor", () => {
     }));
   it("#limit", () =>
     new Promise<void>((resolve, reject) => {
-      var db = new ViewDB();
-      var collection = db.collection("documents");
-      for (var i = 0; i < 10; i++) {
+      const db = new ViewDB();
+      const collection = db.collection("documents");
+      for (let i = 0; i < 10; i++) {
         collection.insert({ a: "a", id: i });
       }
       collection
@@ -60,9 +60,9 @@ describe("Cursor", () => {
     }));
   it("#sort", () =>
     new Promise<void>((resolve, reject) => {
-      var db = new ViewDB();
-      var collection = db.collection("documents");
-      for (var i = 0; i < 10; i++) {
+      const db = new ViewDB();
+      const collection = db.collection("documents");
+      for (let i = 0; i < 10; i++) {
         collection.insert({ a: "a", id: i });
       }
       collection
@@ -75,9 +75,9 @@ describe("Cursor", () => {
     }));
   it("#sort desc", () =>
     new Promise<void>((resolve, reject) => {
-      var db = new ViewDB();
-      var collection = db.collection("documents");
-      for (var i = 0; i < 10; i++) {
+      const db = new ViewDB();
+      const collection = db.collection("documents");
+      for (let i = 0; i < 10; i++) {
         collection.insert({ a: "a", id: i });
       }
       collection
@@ -90,9 +90,9 @@ describe("Cursor", () => {
     }));
   it("#skip/limit", () =>
     new Promise<void>((resolve, reject) => {
-      var db = new ViewDB();
-      var collection = db.collection("documents");
-      for (var i = 0; i < 10; i++) {
+      const db = new ViewDB();
+      const collection = db.collection("documents");
+      for (let i = 0; i < 10; i++) {
         collection.insert({ a: "a", id: i });
       }
       collection

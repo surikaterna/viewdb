@@ -18,7 +18,7 @@ class Collection extends EventEmitter {
 
   find(query: any, options?: any): any {
     if (this._isIdentityQuery(query)) {
-      var id = query.id;
+      const id = query.id;
       return [];
     }
     return new Cursor(this, { query: query }, options, this._getDocuments.bind(this));
@@ -37,18 +37,18 @@ class Collection extends EventEmitter {
   }
 
   _buildParams(query: any, method?: string): Record<string, any> {
-    var q = query.query || query;
-    var skip: number | undefined;
-    var limit: number | undefined;
-    var sort: Record<string, 1 | -1> | undefined;
-    var project: Record<string, 0 | 1> | undefined;
+    const q = query.query || query;
+    let skip: number | undefined;
+    let limit: number | undefined;
+    let sort: Record<string, 1 | -1> | undefined;
+    let project: Record<string, 0 | 1> | undefined;
     if (query.query) {
       skip = query.skip;
       limit = query.limit;
       sort = query.sort;
       project = query.project;
     }
-    var params: any = {
+    const params: any = {
       collection: this._name,
       skip: skip,
       limit: limit,
@@ -66,7 +66,7 @@ class Collection extends EventEmitter {
   }
 
   _getDocuments(query: any, callback: (err: Error | null, result?: any) => void): void {
-    var params = this._buildParams(query);
+    const params = this._buildParams(query);
     this._client.request(params, function (err: Error | null, res: any) {
       if (err) {
         callback(err);
@@ -86,7 +86,7 @@ class Collection extends EventEmitter {
       options = {};
     }
 
-    var params: any = {
+    const params: any = {
       id: uuid(),
       count: query,
       collection: this._name,

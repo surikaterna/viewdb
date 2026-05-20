@@ -3,7 +3,7 @@ import { Logger } from "slf";
 import { v4 as uuid } from "uuid";
 import Observer from "./observe";
 
-var LOG = Logger.getLogger("viewdb:remote:cursor");
+const LOG = Logger.getLogger("viewdb:remote:cursor");
 
 import { Cursor } from "viewdb";
 
@@ -28,10 +28,10 @@ class RemoteCursor extends Cursor {
       options = {};
     }
 
-    var skip = _.get(this, "_query.skip", _.get(options, "skip", 0));
-    var limit = _.get(this, "_query.limit", _.get(options, "limit", 0));
+    const skip = _.get(this, "_query.skip", _.get(options, "skip", 0));
+    const limit = _.get(this, "_query.limit", _.get(options, "limit", 0));
 
-    var params: any = {
+    const params: any = {
       id: uuid(),
       count: this._query.query || this._query,
       collection: (this._collection as any)._name,
@@ -65,7 +65,7 @@ class RemoteCursor extends Cursor {
   }
 
   observe(options: any): { stop: () => void } {
-    var self = this;
+    const self = this;
     if (self._isObserving) {
       LOG.error(
         "Already observing this cursor. Collection: %s - Query: %j",
@@ -76,7 +76,7 @@ class RemoteCursor extends Cursor {
     }
     self._isObserving = true;
 
-    var refreshListener = function () {
+    const refreshListener = function () {
       LOG.info("restarting observer due to change");
       self._handle.stop();
       self._handle = new Observer(self._collection, options, self._query) as any;

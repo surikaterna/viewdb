@@ -19,7 +19,7 @@ class Collection extends EventEmitter {
   }
 
   find(query: any, options?: any): Cursor {
-    var cursor = (this._collection as any).find.apply(this._collection, arguments);
+    const cursor = (this._collection as any).find.apply(this._collection, arguments);
     return new Cursor(this, { query: query }, options, cursor, this._oplogListener);
   }
 
@@ -55,12 +55,12 @@ class Collection extends EventEmitter {
   }
 
   updateMany(query: any, update: any, options?: any, cb?: (err: Error | null, result?: any) => void): any {
-    var self = this;
+    const self = this;
     if (isFunction(options)) {
       cb = options;
       options = undefined;
     }
-    var promise = this._collection.updateMany(query, update, options);
+    const promise = this._collection.updateMany(query, update, options);
     return nodeify(
       promise.then(function (res: any) {
         self.emit("change", { updateMany: update });
@@ -71,12 +71,12 @@ class Collection extends EventEmitter {
   }
 
   updateOne(query: any, update: any, options?: any, cb?: (err: Error | null, result?: any) => void): any {
-    var self = this;
+    const self = this;
     if (isFunction(options)) {
       cb = options;
       options = undefined;
     }
-    var promise = this._collection.updateOne(query, update, options);
+    const promise = this._collection.updateOne(query, update, options);
     return nodeify(
       promise.then(function (res: any) {
         self.emit("change", { updateOne: update });
@@ -88,12 +88,12 @@ class Collection extends EventEmitter {
 
   remove(query: any, options?: any, cb?: (err: Error | null, result?: any) => void): any {
     console.warn("Deprecated: use deleteMany or deleteOne instead");
-    var self = this;
+    const self = this;
     if (isFunction(options)) {
       cb = options;
       options = undefined;
     }
-    var promise = this._collection.deleteMany(query, options);
+    const promise = this._collection.deleteMany(query, options);
     return nodeify(
       promise.then(function (res: any) {
         self.emit("change", { remove: query });
@@ -104,7 +104,7 @@ class Collection extends EventEmitter {
   }
 
   deleteMany(query: any, options?: any): any {
-    var self = this;
+    const self = this;
     return this._collection.deleteMany(query, options).then(function (res: any) {
       self.emit("change", { remove: query });
       return res;
@@ -112,7 +112,7 @@ class Collection extends EventEmitter {
   }
 
   deleteOne(query: any, options?: any): any {
-    var self = this;
+    const self = this;
     return this._collection.deleteOne(query, options).then(function (res: any) {
       self.emit("change", { remove: query });
       return res;
@@ -120,19 +120,19 @@ class Collection extends EventEmitter {
   }
 
   insert(docs: any, cb?: (err: Error | null, docs?: any) => void): any {
-    var self = this;
-    var onFulfilled = function () {
+    const self = this;
+    const onFulfilled = function () {
       self.emit("change", { insert: docs });
       if (isFunction(cb)) {
         cb(null, docs);
       }
     };
-    var onRejected = function (err: Error) {
+    const onRejected = function (err: Error) {
       if (isFunction(cb)) {
         cb(err);
       }
     };
-    var promise;
+    let promise;
     if (isArray(docs)) {
       promise = this._collection.insertMany(docs).then(onFulfilled).catch(onRejected);
     } else {
@@ -142,7 +142,7 @@ class Collection extends EventEmitter {
   }
 
   save(docs: any, cb?: (err: Error | null, docs?: any) => void): any {
-    var self = this;
+    const self = this;
     if (!isArray(docs)) {
       docs = [docs];
     }
@@ -170,8 +170,8 @@ class Collection extends EventEmitter {
   }
 
   drop(cb?: (err: Error | null, result?: any) => void): any {
-    var self = this;
-    var promise = this._collection.drop();
+    const self = this;
+    const promise = this._collection.drop();
     return nodeify(
       promise.then(function (res: any) {
         self.emit("change", { drop: true });
@@ -190,8 +190,8 @@ class Collection extends EventEmitter {
   }
 
   _getDocuments(queryObject: any, callback: (err: Error | null, result?: any[]) => void): void {
-    var query = queryObject.query || queryObject;
-    var cursor = this._collection.find(query);
+    const query = queryObject.query || queryObject;
+    const cursor = this._collection.find(query);
     if (queryObject.skip) {
       cursor.skip(queryObject.skip);
     }

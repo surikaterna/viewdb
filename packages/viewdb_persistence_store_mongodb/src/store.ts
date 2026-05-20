@@ -19,16 +19,16 @@ class Store {
   }
 
   open(callback?: (err: Error | null, value?: Store) => void): any {
-    var self = this;
+    const self = this;
     return Promise.resolve(self).nodeify(callback);
   }
 
   collection(collectionName: string, callback?: (coll: any) => void): any {
-    var coll = this._collections[collectionName];
+    let coll = this._collections[collectionName];
     if (coll === undefined) {
       if (this._oplogEnabled && this._oplogListener) {
-        var dbName = _.get(this._mongodb, "databaseName");
-        var namespaceFilter;
+        const dbName = _.get(this._mongodb, "databaseName");
+        let namespaceFilter;
         if (dbName) {
           namespaceFilter = dbName + "." + collectionName;
         }
