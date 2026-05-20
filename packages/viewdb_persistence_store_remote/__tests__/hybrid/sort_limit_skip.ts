@@ -1,7 +1,7 @@
 import _ from "lodash";
 import should from "should";
 import { ViewDB as ViewDb } from "viewdb";
-import { Hybrid as HybridStore } from "../..";
+import HybridStore from "../../src/hybrid/store";
 
 describe("Sort / Limit / Skip", function () {
   var local = null;
@@ -10,10 +10,10 @@ describe("Sort / Limit / Skip", function () {
 
   beforeEach(
     () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         local = new ViewDb();
         remote = new ViewDb();
-        hybrid = new ViewDb(new HybridStore(local, remote, { throttleObserveRefresh: 0 }));
+        hybrid = new ViewDb(new (HybridStore as any)(local, remote, { throttleObserveRefresh: 0 }));
         hybrid.open().then(function () {
           resolve();
         });
@@ -21,14 +21,14 @@ describe("Sort / Limit / Skip", function () {
   );
 
   it("#toArray with sort / limit", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var NUMBER_OF_DOCS = 20;
       var LIMIT = 5;
       hybrid.open().then(function () {
         var onPopulated = _.after(NUMBER_OF_DOCS, function () {
           var cursor = hybrid
             .collection("dollhouse")
-            .find({ _id: { $gte: 0 } })
+            .find({ _id: { $gte: "0" } })
             .sort({ age: 1 })
             .limit(LIMIT);
           cursor.toArray(

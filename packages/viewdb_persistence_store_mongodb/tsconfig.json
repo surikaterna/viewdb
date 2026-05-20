@@ -1,14 +1,14 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "target": "ES5",
-    "outDir": "dist",
-    "rootDir": "src",
-    "composite": true,
-    "types": ["node", "lodash"],
-    "typeRoots": ["../../node_modules/@types", "../shared-types"]
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    "rootDir": ".",
+    "strict": false,
+    "types": ["node", "lodash", "vitest/globals"]
   },
-  "references": [{ "path": "../viewdb" }],
-  "include": ["src", "../shared-types"],
-  "exclude": ["node_modules", "dist", "__tests__"]
+  "include": ["src", "__tests__", "globalSetup.ts", "vitest.setup.ts", "../shared-types"],
+  "exclude": ["node_modules", "dist"]
 }

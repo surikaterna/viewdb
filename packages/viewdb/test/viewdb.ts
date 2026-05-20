@@ -3,7 +3,7 @@ import { ViewDB } from "..";
 describe("ViewDB", () => {
   describe("#count", () => {
     it("should return 0 for empty collection", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var db = new ViewDB();
         var collection = db.collection("documents");
         // Perform a total count command
@@ -15,7 +15,7 @@ describe("ViewDB", () => {
   });
   describe("#insert", () => {
     it("should store a document and include it in count", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var db = new ViewDB();
         var collection = db.collection("documents");
         collection.insert({ a: 1 }, function (err) {
@@ -30,7 +30,7 @@ describe("ViewDB", () => {
         });
       }));
     it("should add id on insert if missing", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var db = new ViewDB();
         var collection = db.collection("documents");
         collection.insert({ a: 1 }, function () {
@@ -41,7 +41,7 @@ describe("ViewDB", () => {
         });
       }));
     it("should fail at storing a previously stored document", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var db = new ViewDB();
         var collection = db.collection("documents");
         collection.insert({ _id: 1, a: 1 });
@@ -52,7 +52,7 @@ describe("ViewDB", () => {
       }));
 
     it("should fail at storing an empty document", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var db = new ViewDB();
         var collection = db.collection("documents");
         collection.insert(1, function (err) {
@@ -61,7 +61,7 @@ describe("ViewDB", () => {
         });
       }));
     it("#insert bulk should work", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var db = new ViewDB();
         var collection = db.collection("documents");
         collection.insert([{ a: 1 }, { b: 2 }], function () {
@@ -74,7 +74,7 @@ describe("ViewDB", () => {
   });
   describe("#save", () => {
     it("should save multiple", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var db = new ViewDB();
         var collection = db.collection("documents");
         collection.insert(
@@ -101,7 +101,7 @@ describe("ViewDB", () => {
         );
       }));
     it("should add id on insert if missing", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var db = new ViewDB();
         var collection = db.collection("documents");
         collection.save({ a: 1 });
@@ -112,7 +112,7 @@ describe("ViewDB", () => {
         });
       }));
     it("should add document on save", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var db = new ViewDB();
         var collection = db.collection("documents");
         collection.save({ a: 1 }, function () {
@@ -125,7 +125,7 @@ describe("ViewDB", () => {
         });
       }));
     it("should merge if id exists", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var db = new ViewDB();
         var collection = db.collection("documents");
         collection.save({ a: 1 }, function (err, docs) {
@@ -141,7 +141,7 @@ describe("ViewDB", () => {
   });
   describe("#find", () => {
     it("find all documents", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var db = new ViewDB();
         var collection = db.collection("documents");
         collection.insert({ a: 1 }, function () {
@@ -153,7 +153,7 @@ describe("ViewDB", () => {
         });
       }));
     it("find one document", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var db = new ViewDB();
         var collection = db.collection("documents");
         collection.insert({ a: 1 }, function (err, ids) {
@@ -165,7 +165,7 @@ describe("ViewDB", () => {
         });
       }));
     it("should return empty collection if query does not match", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var db = new ViewDB();
         var collection = db.collection("documents");
         collection.insert({ a: 1 }, function () {
@@ -178,7 +178,7 @@ describe("ViewDB", () => {
   });
   describe("#remove", () => {
     it("should remove one document matching a query", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var db = new ViewDB();
         var collection = db.collection("documents");
         collection.insert({ a: 1, name: "hello" }, function () {
@@ -192,7 +192,7 @@ describe("ViewDB", () => {
       }));
 
     it("shouldnt do anything when no documents are matched against the query", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var db = new ViewDB();
         var collection = db.collection("documents");
         collection.insert({ a: 1, name: "hello" }, function () {
@@ -207,7 +207,7 @@ describe("ViewDB", () => {
   });
   describe("#drop", () => {
     it("should remove all documents", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new ViewDB();
         store.open().then(function () {
           store.collection("dollhouse").insert({ _id: "echo" });

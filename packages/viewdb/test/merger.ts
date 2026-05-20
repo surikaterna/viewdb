@@ -3,9 +3,9 @@ import merge from "../src/merger";
 
 describe("Merger", () => {
   it("#merge with remove element", () =>
-    new Promise((resolve, reject) => {
-      var l1 = [{ a: 1 }, "b", "d"];
-      var l2 = [{ a: 1 }, "b"];
+    new Promise<void>((resolve, reject) => {
+      var l1: any[] = [{ a: 1 }, "b", "d"];
+      var l2: any[] = [{ a: 1 }, "b"];
 
       var res = merge(l1, l2, {
         removed: function (e) {
@@ -20,10 +20,10 @@ describe("Merger", () => {
       //		console.log(_.difference(l1,l2));
     }));
   it("#merge with remove complex element", () =>
-    new Promise((resolve, reject) => {
-      var l1 = [{ a: 1 }, "b", "d", { e: 1 }];
-      var l2 = [{ a: 1 }, "b"];
-      var removed = [];
+    new Promise<void>((resolve, reject) => {
+      var l1: any[] = [{ a: 1 }, "b", "d", { e: 1 }];
+      var l2: any[] = [{ a: 1 }, "b"];
+      var removed: any[] = [];
       var res = merge(l1, l2, {
         removed: function (e) {
           removed.push(e);
@@ -39,10 +39,10 @@ describe("Merger", () => {
     }));
 
   it("#merge with objects instead of arrays", () =>
-    new Promise((resolve, reject) => {
-      var l1 = { 0: { a: 1 }, 1: "b", 2: "d", 3: { e: 1 } };
-      var l2 = [{ a: 1 }, "b"];
-      var removed = [];
+    new Promise<void>((resolve, reject) => {
+      var l1: any = { 0: { a: 1 }, 1: "b", 2: "d", 3: { e: 1 } };
+      var l2: any[] = [{ a: 1 }, "b"];
+      var removed: any[] = [];
       var res = merge(l1, l2, {
         removed: function (e) {
           removed.push(e);
@@ -58,9 +58,9 @@ describe("Merger", () => {
     }));
 
   it("#merge with one add element", () =>
-    new Promise((resolve, reject) => {
-      var l1 = [{ a: 1 }, "b"];
-      var l2 = [{ a: 1 }, "b", "c"];
+    new Promise<void>((resolve, reject) => {
+      var l1: any[] = [{ a: 1 }, "b"];
+      var l2: any[] = [{ a: 1 }, "b", "c"];
 
       var res = merge(l1, l2, {
         added: function (e) {
@@ -74,9 +74,9 @@ describe("Merger", () => {
       expect(_.isEqual(l2, res)).toBe(true);
     }));
   it("#merge with one complex add element", () =>
-    new Promise((resolve, reject) => {
-      var l1 = [{ a: 1 }, "b"];
-      var l2 = [{ a: 1 }, "b", { c: 1 }];
+    new Promise<void>((resolve, reject) => {
+      var l1: any[] = [{ a: 1 }, "b"];
+      var l2: any[] = [{ a: 1 }, "b", { c: 1 }];
 
       var res = merge(l1, l2, {
         added: function (e) {
@@ -90,10 +90,10 @@ describe("Merger", () => {
       expect(_.isEqual(l2, res)).toBe(true);
     }));
   it("#merge with one move element", () =>
-    new Promise((resolve, reject) => {
-      var l1 = [{ a: 1 }, "b", { c: 1 }];
-      var l2 = [{ a: 1 }, { c: 1 }, "b"];
-      var moved = [];
+    new Promise<void>((resolve, reject) => {
+      var l1: any[] = [{ a: 1 }, "b", { c: 1 }];
+      var l2: any[] = [{ a: 1 }, { c: 1 }, "b"];
+      var moved: any[] = [];
       var res = merge(l1, l2, {
         added: function () {
           reject(new Error("should not be called"));
@@ -112,7 +112,7 @@ describe("Merger", () => {
       resolve();
     }));
   it("#merge with one changing elements", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var l1 = [{ _id: 1, a: "Hello" }];
       var l2 = [{ _id: 1, a: "Hej" }];
       var res = merge(l1, l2, {
@@ -135,7 +135,7 @@ describe("Merger", () => {
     }));
 
   it("#merge true and false array", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var l1 = [true, false];
       var l2 = [false, true];
       var res = merge(l1, l2);
@@ -143,7 +143,7 @@ describe("Merger", () => {
       resolve();
     }));
   it("#merge complex moves", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var l1 = [
         { _id: 1, a: "Hello1" },
         { _id: 2, a: "Hello2" },
@@ -173,7 +173,7 @@ describe("Merger", () => {
       resolve();
     }));
   it("#merge complex moves and add and remove", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var l1 = [
         { _id: 1, a: "Hello1" },
         { _id: 2, a: "Hello2" },

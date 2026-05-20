@@ -18,7 +18,7 @@ export default function (config) {
     var store;
 
     beforeEach(function () {
-      return new Promise(function (resolve) {
+      return new Promise<void>(function (resolve) {
         config.createStore(function (s) {
           store = s;
           resolve();
@@ -27,13 +27,13 @@ export default function (config) {
     });
 
     afterEach(function () {
-      return new Promise(function (resolve) {
+      return new Promise<void>(function (resolve) {
         config.destroyStore(store, resolve);
       });
     });
 
     it("init fires with empty collection", function () {
-      return new Promise(function (resolve) {
+      return new Promise<void>(function (resolve) {
         var cursor = store.collection(COLL).find({});
         var handle = cursor.observe({
           init: function (coll) {
@@ -48,7 +48,7 @@ export default function (config) {
     });
 
     it("added fires on insert", function () {
-      return new Promise(function (resolve) {
+      return new Promise<void>(function (resolve) {
         var cursor = store.collection(COLL).find({});
         var handle = cursor.observe({
           added: function (x) {
@@ -64,7 +64,7 @@ export default function (config) {
     });
 
     it("removed fires on remove", function () {
-      return new Promise(function (resolve) {
+      return new Promise<void>(function (resolve) {
         store.collection(COLL).insert({ _id: "echo" }, function () {
           var cursor = store.collection(COLL).find({});
           var handle = cursor.observe({
@@ -80,7 +80,7 @@ export default function (config) {
     });
 
     it("added fires for matching query on insert", function () {
-      return new Promise(function (resolve) {
+      return new Promise<void>(function (resolve) {
         store.collection(COLL).insert({ _id: "echo" }, function () {
           var cursor = store.collection(COLL).find({ _id: "echo2" });
           var handle = cursor.observe({
@@ -98,7 +98,7 @@ export default function (config) {
     });
 
     it("changed fires on update", function () {
-      return new Promise(function (resolve) {
+      return new Promise<void>(function (resolve) {
         var cursor = store.collection(COLL).find({ _id: "echo" });
         var handle = cursor.observe({
           added: function (x) {
@@ -118,7 +118,7 @@ export default function (config) {
     });
 
     it("observe with skip updates correctly", function () {
-      return new Promise(function (resolve) {
+      return new Promise<void>(function (resolve) {
         store.collection(COLL).insert({ _id: "echo" }, function () {
           store.collection(COLL).insert({ _id: "echo2" }, function () {
             store.collection(COLL).insert({ _id: "echo3" }, function () {

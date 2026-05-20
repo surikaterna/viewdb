@@ -30,7 +30,7 @@ describe("mongodb_persistence", () => {
 
   describe("Collection", function () {
     it("#find with empty array should return 0 docs", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new Store(getDb());
         store.open().then(function () {
           store
@@ -43,7 +43,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#find with setReadPreference", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new Store(getDb());
         store.open().then(function () {
           var cursor = store.collection(COLLECTION_NAME).find({});
@@ -55,7 +55,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#insert two documents with same key should throw", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "echo" }, function () {
@@ -70,7 +70,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#update documents already existing", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "existing" }, () => {
@@ -88,7 +88,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#update one document", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "existing" }, () => {
@@ -163,7 +163,7 @@ describe("mongodb_persistence", () => {
     });
 
     it("#update many documents", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert(
@@ -196,7 +196,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#find {} should return single inserted document", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "echo" }, function () {
@@ -211,7 +211,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#find {} should return multiple inserted documents", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new Store(getDb());
         store.open().then(function () {
           // store.collection(COLLECTION_NAME).insert([{ _id: 'echo' }, { _id: 'sierra' }]);
@@ -228,7 +228,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it('#find {_id:"echo"} should return correct document', () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "echo" }, function () {
@@ -246,7 +246,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it('#find with complex key {"name.first":"echo"} should return correct document', () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }, function () {
@@ -266,7 +266,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#find with project should return correct projection", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }, () => {
@@ -287,7 +287,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#drop should remove all documents", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "echo" }, function () {
@@ -316,7 +316,7 @@ describe("mongodb_persistence", () => {
     });
 
     it("#remove should remove one document", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }, function () {
@@ -346,7 +346,7 @@ describe("mongodb_persistence", () => {
       });
     };
     it("#skip/limit", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new Store(getDb());
         var collection = store.collection(COLLECTION_NAME);
         populate(collection, 0, function () {
@@ -362,7 +362,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#count", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new Store(getDb());
         var collection = store.collection(COLLECTION_NAME);
         populate(collection, 0, function () {
@@ -373,7 +373,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#count should apply skip", () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var store = new Store(getDb());
         var collection = store.collection(COLLECTION_NAME);
         populate(collection, 0, function () {

@@ -7,7 +7,7 @@ export default function (config) {
     var store;
 
     beforeEach(function () {
-      return new Promise(function (resolve) {
+      return new Promise<void>(function (resolve) {
         config.createStore(function (s) {
           store = s;
           resolve();
@@ -16,13 +16,13 @@ export default function (config) {
     });
 
     afterEach(function () {
-      return new Promise(function (resolve) {
+      return new Promise<void>(function (resolve) {
         config.destroyStore(store, resolve);
       });
     });
 
     it("count all returns total number of documents", function () {
-      return new Promise(function (resolve, reject) {
+      return new Promise<void>(function (resolve, reject) {
         store.collection(COLL).insert({ _id: "echo" }, function () {
           store.collection(COLL).insert({ _id: "sierra" }, function () {
             store
@@ -39,7 +39,7 @@ export default function (config) {
     });
 
     it("count with filter returns filtered count", function () {
-      return new Promise(function (resolve, reject) {
+      return new Promise<void>(function (resolve, reject) {
         store.collection(COLL).insert({ _id: "echo" }, function () {
           store.collection(COLL).insert({ _id: "sierra" }, function () {
             store
@@ -56,7 +56,7 @@ export default function (config) {
     });
 
     it("count with skip returns reduced count", function () {
-      return new Promise(function (resolve, reject) {
+      return new Promise<void>(function (resolve, reject) {
         store.collection(COLL).insert({ _id: "echo" }, function () {
           store.collection(COLL).insert({ _id: "sierra" }, function () {
             store

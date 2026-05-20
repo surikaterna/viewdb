@@ -7,7 +7,7 @@ export default function (config) {
     var store;
 
     beforeEach(function () {
-      return new Promise(function (resolve) {
+      return new Promise<void>(function (resolve) {
         config.createStore(function (s) {
           store = s;
           resolve();
@@ -16,13 +16,13 @@ export default function (config) {
     });
 
     afterEach(function () {
-      return new Promise(function (resolve) {
+      return new Promise<void>(function (resolve) {
         config.destroyStore(store, resolve);
       });
     });
 
     it("find by _id returns correct document", function () {
-      return new Promise(function (resolve, reject) {
+      return new Promise<void>(function (resolve, reject) {
         store.collection(COLL).insert({ _id: "echo" }, function () {
           store.collection(COLL).insert({ _id: "sierra" }, function () {
             store
@@ -40,7 +40,7 @@ export default function (config) {
     });
 
     it("find by nested key returns correct document", function () {
-      return new Promise(function (resolve, reject) {
+      return new Promise<void>(function (resolve, reject) {
         var doc1 = { _id: "echo", name: { first: "ECHO", last: "TV" } };
         var doc2 = { _id: "sierra", name: { first: "SIERRA", last: "TV" } };
         store.collection(COLL).insert(doc1, function () {
@@ -60,7 +60,7 @@ export default function (config) {
     });
 
     it("find with $in returns matching documents", function () {
-      return new Promise(function (resolve, reject) {
+      return new Promise<void>(function (resolve, reject) {
         store.collection(COLL).insert({ _id: "echo" }, function () {
           store.collection(COLL).insert({ _id: "sierra" }, function () {
             store

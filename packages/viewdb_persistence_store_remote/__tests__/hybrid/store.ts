@@ -4,7 +4,7 @@ import Store from "../../src/hybrid/store";
 
 describe("Store", function () {
   it("should cache", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var localStore = new LocalStore();
       var remoteStore = new LocalStore();
 
@@ -30,7 +30,7 @@ describe("Store", function () {
     }));
 
   it("should cache projected data separate", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       Cursor.prototype.project = function (project) {
         this._project = project;
         return this;
@@ -90,7 +90,7 @@ describe("Store", function () {
     }));
 
   it("should call remote if cache is no longer correct", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var localStore = new LocalStore();
       var remoteStore = new LocalStore();
 

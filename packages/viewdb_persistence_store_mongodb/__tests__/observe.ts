@@ -33,7 +33,7 @@ describe("Observe", function () {
   });
 
   it("#observe with query and update", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var store = getVDb();
       store.open().then(function () {
         var cursor = store.collection(COLLECTION_NAME).find({ _id: "echo" });
@@ -55,7 +55,7 @@ describe("Observe", function () {
       });
     }));
   it("#observe with insert", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var handle;
       var store = getVDb();
       store.open().then(function () {
@@ -72,7 +72,7 @@ describe("Observe", function () {
       });
     }));
   it("#observe with remove", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var realDone = _.after(2, resolve);
       var store = getVDb();
       store.open().then(function () {
@@ -94,7 +94,7 @@ describe("Observe", function () {
       });
     }));
   it("#observe with query and insert", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var store = getVDb();
       store.open().then(function () {
         store.collection(COLLECTION_NAME).insert({ _id: "echo1" }, function () {
@@ -113,7 +113,7 @@ describe("Observe", function () {
       });
     }));
   it("#observe with query and skip", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var store = getVDb();
       store.open().then(function () {
         store.collection(COLLECTION_NAME).insert({ _id: "echo" });

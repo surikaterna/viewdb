@@ -9,6 +9,7 @@
   "scripts": {
     "build": "turbo run build",
     "test": "turbo run test",
+    "type-check": "turbo run type-check",
     "check-style": "biome check --write .",
     "check-style:ci": "biome check .",
     "changeset": "changeset",

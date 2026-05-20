@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES5",
+    "lib": ["ES2018", "DOM"],
+    "outDir": "dist",
+    "rootDir": "src",
+    "composite": true,
+    "types": ["node", "lodash"],
+    "typeRoots": ["../../node_modules/@types", "../../node_modules", "../shared-types"]
+  },
+  "references": [{ "path": "../viewdb/tsconfig.build.json" }],
+  "include": ["src", "../shared-types"],
+  "exclude": ["node_modules", "dist", "test"]
+}

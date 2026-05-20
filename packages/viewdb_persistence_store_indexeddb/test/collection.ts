@@ -7,7 +7,7 @@ describe("Collection", function () {
   var store;
   beforeEach(
     () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         var idb = getDb();
         store = new Store(idb);
         resolve();
@@ -15,7 +15,7 @@ describe("Collection", function () {
   );
   afterEach(
     () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         if (store) {
           store.close().then(function () {
             // destroy the world by t bruun
@@ -30,7 +30,7 @@ describe("Collection", function () {
   // console.log('deleted 2');
 
   it("#find with empty array should return 0 docs", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store
           .collection("dollhouse")
@@ -42,7 +42,7 @@ describe("Collection", function () {
       });
     }));
   it("#insert two documents with same key should throw", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "echo" }, function (err, result) {
@@ -55,7 +55,7 @@ describe("Collection", function () {
       });
     }));
   it("#insert two documents with same key but in different collections should work", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse2").insert({ _id: "echo" }, function (err, result) {
@@ -70,7 +70,7 @@ describe("Collection", function () {
     }));
 
   it("#update documents already existing", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").save({ _id: "echo", version: 2 });
@@ -85,7 +85,7 @@ describe("Collection", function () {
       });
     }));
   it("#find {} should return single inserted document", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store
@@ -98,7 +98,7 @@ describe("Collection", function () {
       });
     }));
   it("#find {} should return multiple inserted documents", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "sierra" });
@@ -112,7 +112,7 @@ describe("Collection", function () {
       });
     }));
   it('#find {_id:"echo"} should return correct document', () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "sierra" });
@@ -127,7 +127,7 @@ describe("Collection", function () {
       });
     }));
   it('#find with complex key {"name.first":"echo"} should return correct document', () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         var promises = [
           store.collection("dollhouse").insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }),
@@ -150,7 +150,7 @@ describe("Collection", function () {
       });
     }));
   it("#drop should remove all documents", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").drop();
@@ -165,7 +165,7 @@ describe("Collection", function () {
       });
     }));
   it("#sort should sort on a property", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "alpha" });
         store.collection("dollhouse").insert({ _id: "beta" });
@@ -183,7 +183,7 @@ describe("Collection", function () {
       });
     }));
   it("#sort should sort on a property, descending", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "alpha" });
         store.collection("dollhouse").insert({ _id: "beta" });
@@ -201,7 +201,7 @@ describe("Collection", function () {
       });
     }));
   it("#insert documents via bulk", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert([{ _id: "echo" }, { _id: "sierra" }]);
         store
@@ -214,7 +214,7 @@ describe("Collection", function () {
       });
     }));
   it("#update documents via bulk", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert([{ _id: "echo" }, { _id: "sierra" }]);
         store.collection("dollhouse").save([
@@ -233,7 +233,7 @@ describe("Collection", function () {
       });
     }));
   it("#count should return number of documents", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "sierra" });
@@ -247,7 +247,7 @@ describe("Collection", function () {
       });
     }));
   it("#count should return number of documents with filter", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "sierra" });
@@ -262,7 +262,7 @@ describe("Collection", function () {
     }));
   // viewdb@0.12.0 always applies skip/limit to count() — the applySkipLimit parameter was removed
   it("#count should include skip", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "sierra" });
@@ -280,35 +280,35 @@ describe("Collection", function () {
   // viewdb@0.12.0 always applies skip/limit to count(), matching MongoDB driver behavior.
   // The opt-in applySkipLimit parameter no longer exists, so skip is never ignored.
   it('#find {_id:"echo"} should use primary key index', () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse")._isIdentityQuery({ _id: "echo" }).should.equal(true);
         resolve();
       });
     }));
   it('#find {id:"echo"} should use primary key index', () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse")._isIdentityQuery({ id: "echo" }).should.equal(true);
         resolve();
       });
     }));
   it('#find {xid:"echo"} should not use primary key index', () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse")._isIdentityQuery({ xid: "echo" }).should.equal(false);
         resolve();
       });
     }));
   it('#find {id:"echo", age:12} should not use primary key index', () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse")._isIdentityQuery({ id: "echo", age: 12 }).should.equal(false);
         resolve();
       });
     }));
   it('#find {_id: $in ["echo"]} should return correct document', () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "sierra" });
@@ -323,7 +323,7 @@ describe("Collection", function () {
       });
     }));
   it('#_getByKey {id:"echo"} should return value', () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "sierra" });
@@ -335,7 +335,7 @@ describe("Collection", function () {
       });
     }));
   it('#_getByKey {id:"echo-no-match"} should return 0 value', () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "sierra" });

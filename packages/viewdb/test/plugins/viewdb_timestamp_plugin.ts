@@ -5,11 +5,11 @@ const ViewDBVersioningPlugin = plugins.VersioningPlugin;
 
 describe("Viewdb timestamp plugin", () => {
   it("should add changeDateTime and createDateTime timestamp on insert", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbTimestampPlugin(viewDb);
       new ViewDBVersioningPlugin(viewDb);
-      var obj = { id: "123" };
+      var obj: any = { id: "123" };
       var collection = viewDb.collection("test");
       var currentTime = new Date().valueOf();
 
@@ -18,7 +18,7 @@ describe("Viewdb timestamp plugin", () => {
         collection.insert(obj, function () {
           collection.find({ id: "123" }).toArray(function (err, objects) {
             var object = objects[0];
-            expect(object.createDateTime).exists;
+            expect(object.createDateTime).toBeDefined();
             if (currentTime < object.createDateTime) {
               resolve();
             } else {
@@ -29,7 +29,7 @@ describe("Viewdb timestamp plugin", () => {
       }, 5);
     }));
   it("should add changeDateTime and createDateTime timestamp on bulk insert", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbTimestampPlugin(viewDb);
       new ViewDBVersioningPlugin(viewDb);
@@ -42,7 +42,7 @@ describe("Viewdb timestamp plugin", () => {
           collection.find({}).toArray(function (err, objects) {
             var hasError = false;
             objects.forEach(function (object) {
-              expect(object.createDateTime).exists;
+              expect(object.createDateTime).toBeDefined();
               if (currentTime >= object.createDateTime) {
                 hasError = true;
               }
@@ -53,7 +53,7 @@ describe("Viewdb timestamp plugin", () => {
       });
     }));
   it("should update changeDateTime on builk save", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbTimestampPlugin(viewDb);
       new ViewDBVersioningPlugin(viewDb);
@@ -87,11 +87,11 @@ describe("Viewdb timestamp plugin", () => {
       // wait 1ms until update operation to check for lastModified updated
     }));
   it("should update changeDateTime on save", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbTimestampPlugin(viewDb);
       new ViewDBVersioningPlugin(viewDb);
-      var obj = { id: "123" };
+      var obj: any = { id: "123" };
       var insertTime;
       var collection = viewDb.collection("test");
 
@@ -115,11 +115,11 @@ describe("Viewdb timestamp plugin", () => {
     }));
 
   it("should skip changing timestamp with skipTimestamp option on save", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbTimestampPlugin(viewDb);
       new ViewDBVersioningPlugin(viewDb);
-      var obj = { id: "123" };
+      var obj: any = { id: "123" };
       var insertTime;
       var collection = viewDb.collection("test");
 
@@ -144,11 +144,11 @@ describe("Viewdb timestamp plugin", () => {
     }));
 
   it("should work together with version plugin", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbTimestampPlugin(viewDb);
       new ViewDBVersioningPlugin(viewDb);
-      var obj = { id: "123" };
+      var obj: any = { id: "123" };
       var collection = viewDb.collection("test");
       collection.insert(obj);
       obj.name = "Pelle";
@@ -158,8 +158,8 @@ describe("Viewdb timestamp plugin", () => {
         var object = objects[0];
         expect(object.version).toBe(0);
         expect(object.name).toBe("Pelle");
-        expect(object.createDateTime).exists;
-        expect(object.changeDateTime).exists;
+        expect(object.createDateTime).toBeDefined();
+        expect(object.changeDateTime).toBeDefined();
         resolve();
       });
     }));

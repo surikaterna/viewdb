@@ -13,7 +13,7 @@ describe("RestClient", function () {
     nock.cleanAll();
   });
   it("#request should work", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var restClient = new Client("http://www.example.com/", {}, testOptions);
       nock("http://www.example.com").get("/party?q=%7B%22name%22%3A%22Firstname%22%7D").reply(200, mockResponse);
 
@@ -24,7 +24,7 @@ describe("RestClient", function () {
     }));
 
   it("#skiplimit url should be correct", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var restClient = new Client("http://www.example.com/", {}, testOptions);
       nock("http://www.example.com")
         .get("/party?q=%7B%22name%22%3A%22Firstname%22%7D&skip=50&limit=77")
@@ -42,7 +42,7 @@ describe("RestClient", function () {
     }));
 
   it("#observe should work", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var restClient = new Client("http://www.example.com/", {}, testOptions);
       var handle;
       var realDone = _.after(2, function () {
@@ -65,7 +65,7 @@ describe("RestClient", function () {
     }));
 
   it("#observe should stop when calling stop", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       const restClient = new Client("http://www.example.com/", {}, testOptions);
       let hitCount = 0;
       let stop;
@@ -92,7 +92,7 @@ describe("RestClient", function () {
     }));
 
   it("#observe should notify changes", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       const restClient = new Client("http://www.example.com", {}, testOptions);
 
       // mock returning response with data - dies after one hit

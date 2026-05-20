@@ -1,16 +1,16 @@
 import should from "should";
 import SocketMock from "socket.io-mock";
 import { ViewDB as ViewDb } from "viewdb";
-import { Hybrid as HybridStore } from "../..";
 import Client from "../../src/client/rr_client";
 import Store from "../../src/client/store";
+import HybridStore from "../../src/hybrid/store";
 import ViewDbSocketServer from "../../src/server/server";
 
 describe("Remote server/client", function () {
   var clientVdb, remote, socketServer, socketClient, clientStore, client;
   beforeEach(
     () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         socketServer = new SocketMock();
         socketClient = socketServer.socketClient;
         client = new Client(socketClient);
@@ -22,7 +22,7 @@ describe("Remote server/client", function () {
       })
   );
   it("#socketMock should work", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       socketClient.on("ping", function (message) {
         message.should.equal("Hello");
         socketClient.emit("pong", "heya");
@@ -34,7 +34,7 @@ describe("Remote server/client", function () {
       socketServer.emit("ping", "Hello");
     }));
   it("#remote query", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo", test: "success" });
       clientVdb
         .collection("dollhouse")
@@ -56,7 +56,7 @@ describe("Remote server/client", function () {
     changes.should.equal(0);
   });
   it("#remote cursor count", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
       clientVdb
@@ -68,7 +68,7 @@ describe("Remote server/client", function () {
         });
     }));
   it("#remote cursor count should use skip/limit from cursor", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
       remote.collection("dollhouse").insert({ _id: "echo3" });
@@ -83,7 +83,7 @@ describe("Remote server/client", function () {
         });
     }));
   it("#remote cursor count should use skip from options", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
       remote.collection("dollhouse").insert({ _id: "echo3" });
@@ -96,7 +96,7 @@ describe("Remote server/client", function () {
         });
     }));
   it("#remote cursor count should use limit from options", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
       remote.collection("dollhouse").insert({ _id: "echo3" });
@@ -109,7 +109,7 @@ describe("Remote server/client", function () {
         });
     }));
   it("#remote collection count", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
       clientVdb.collection("dollhouse").count({ _id: "echo" }, function (err, res) {
@@ -118,7 +118,7 @@ describe("Remote server/client", function () {
       });
     }));
   it("#remote collection count with skip", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
       clientVdb.collection("dollhouse").count({}, { skip: 1 }, function (err, res) {
@@ -127,7 +127,7 @@ describe("Remote server/client", function () {
       });
     }));
   it("#remote collection count with limit", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
       clientVdb.collection("dollhouse").count({}, { limit: 1 }, function (err, res) {
@@ -136,7 +136,7 @@ describe("Remote server/client", function () {
       });
     }));
   it("#remote collection observe", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
       var cursor = clientVdb.collection("dollhouse").find({ _id: { $in: ["echo2", "echo3"] } });
@@ -152,7 +152,7 @@ describe("Remote server/client", function () {
       remote.collection("dollhouse").insert({ _id: "echo3" });
     }));
   it("#remote collection observe should call init again on reconnected", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo2" });
       var cursor = clientVdb.collection("dollhouse").find({ _id: { $in: ["echo2", "echo3"] } });
       var inits = 0;
@@ -171,7 +171,7 @@ describe("Remote server/client", function () {
       });
     }));
   it("#remote collection observe should continue to work on reconnected", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo2" });
       var cursor = clientVdb.collection("dollhouse").find({ _id: { $in: ["echo2", "echo3"] } });
       var inits = 0;
@@ -197,10 +197,10 @@ describe("Remote server/client", function () {
       });
     }));
   it("#remote reconnected should work with hybrid", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo2" });
       var local = new ViewDb();
-      var hybrid = new ViewDb(new HybridStore(local, clientStore, { throttleObserveRefresh: 0 }));
+      var hybrid = new ViewDb(new (HybridStore as any)(local, clientStore, { throttleObserveRefresh: 0 }));
       var list = [];
       var changes = 0;
       hybrid.open().then(function () {

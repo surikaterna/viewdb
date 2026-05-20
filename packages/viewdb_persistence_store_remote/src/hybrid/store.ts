@@ -13,6 +13,8 @@ interface HybridStoreOptions {
   localOnlyCollections: Set<string>;
   cacheCollectionName: string;
   projectedDocumentsCollection: string;
+  queryMaxTime?: number;
+  loggingEnabled?: boolean;
 }
 
 var defaultOptions: HybridStoreOptions = {
@@ -49,7 +51,7 @@ class HybridStore {
     }
   }
 
-  open(): PromiseLike<HybridStore> {
+  open(): Promise<HybridStore> {
     var self = this;
     var storesToOpen: any[] = [];
     if (this._local.open) {

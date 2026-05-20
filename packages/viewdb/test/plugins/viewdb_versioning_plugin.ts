@@ -6,10 +6,10 @@ const ViewDbVersioningPlugin = plugins.VersioningPlugin;
 
 describe("Viewdb versioning plugin", () => {
   it("should add version on insert", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbVersioningPlugin(viewDb);
-      var obj = { id: "123" };
+      var obj: any = { id: "123" };
 
       var collection = viewDb.collection("test");
       collection.insert(obj);
@@ -22,7 +22,7 @@ describe("Viewdb versioning plugin", () => {
       });
     }));
   it("should add version on builk insert", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbVersioningPlugin(viewDb);
 
@@ -36,10 +36,10 @@ describe("Viewdb versioning plugin", () => {
       });
     }));
   it("should increase version on save", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbVersioningPlugin(viewDb);
-      var obj = { id: "123" };
+      var obj: any = { id: "123" };
 
       var collection = viewDb.collection("test");
       collection.insert(obj);
@@ -55,7 +55,7 @@ describe("Viewdb versioning plugin", () => {
     }));
 
   it("should increase version on bulk save", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbVersioningPlugin(viewDb);
 
@@ -66,7 +66,7 @@ describe("Viewdb versioning plugin", () => {
       ]);
       collection.find({}).toArray(function (err, objects) {
         _.forEach(objects, function (o, i) {
-          o.name = i === 0 ? "Pelle" : "Kalle";
+          (o as any).name = Number(i) === 0 ? "Pelle" : "Kalle";
         });
         collection.save(objects, function () {
           collection.find({}).toArray(function (err, objects) {
@@ -80,10 +80,10 @@ describe("Viewdb versioning plugin", () => {
       });
     }));
   it("should skip changing version with skipVersioning option on save", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbVersioningPlugin(viewDb);
-      var obj = { id: "123" };
+      var obj: any = { id: "123" };
 
       var collection = viewDb.collection("test");
       collection.insert(obj);
@@ -98,10 +98,10 @@ describe("Viewdb versioning plugin", () => {
       });
     }));
   it("should add version on save", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbVersioningPlugin(viewDb);
-      var obj = { id: "123" };
+      var obj: any = { id: "123" };
 
       var collection = viewDb.collection("test");
       collection.insert(obj);

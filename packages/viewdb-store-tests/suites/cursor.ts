@@ -7,7 +7,7 @@ export default function (config) {
     var store;
 
     beforeEach(function () {
-      return new Promise(function (resolve) {
+      return new Promise<void>(function (resolve) {
         config.createStore(function (s) {
           store = s;
           resolve();
@@ -16,7 +16,7 @@ export default function (config) {
     });
 
     afterEach(function () {
-      return new Promise(function (resolve) {
+      return new Promise<void>(function (resolve) {
         config.destroyStore(store, resolve);
       });
     });
@@ -33,7 +33,7 @@ export default function (config) {
     }
 
     it("sort ascending returns first element correctly", function () {
-      return new Promise(function (resolve, reject) {
+      return new Promise<void>(function (resolve, reject) {
         insertFour(function () {
           store
             .collection(COLL)
@@ -49,7 +49,7 @@ export default function (config) {
     });
 
     it("sort descending returns first element correctly", function () {
-      return new Promise(function (resolve, reject) {
+      return new Promise<void>(function (resolve, reject) {
         insertFour(function () {
           store
             .collection(COLL)
@@ -65,7 +65,7 @@ export default function (config) {
     });
 
     it("skip and limit return correct subset", function () {
-      return new Promise(function (resolve, reject) {
+      return new Promise<void>(function (resolve, reject) {
         insertFour(function () {
           store
             .collection(COLL)

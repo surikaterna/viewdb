@@ -1,6 +1,6 @@
 import should from "should";
 import { ViewDB as ViewDb } from "viewdb";
-import { Hybrid as HybridStore } from "../..";
+import HybridStore from "../../src/hybrid/store";
 
 describe("Observe", function () {
   var local = null;
@@ -9,10 +9,10 @@ describe("Observe", function () {
 
   beforeEach(
     () =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         local = new ViewDb();
         remote = new ViewDb();
-        hybrid = new ViewDb(new HybridStore(local, remote, { throttleObserveRefresh: 0 }));
+        hybrid = new ViewDb(new (HybridStore as any)(local, remote, { throttleObserveRefresh: 0 }));
         hybrid.open().then(function () {
           resolve();
         });
@@ -20,7 +20,7 @@ describe("Observe", function () {
   );
 
   it("#observe with local insert", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var cursor = hybrid.collection("dollhouse").find({});
       var handle = cursor.observe({
         added: function (x) {
@@ -32,7 +32,7 @@ describe("Observe", function () {
       local.collection("dollhouse").insert({ _id: "echo" });
     }));
   it("#observe with query and local insert", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       var cursor = hybrid.collection("dollhouse").find({ _id: "echo2" });
       var handle = cursor.observe({
@@ -45,7 +45,7 @@ describe("Observe", function () {
       local.collection("dollhouse").insert({ _id: "echo2" });
     }));
   it("#observe called twice with one local and one remote insert", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       var cursor = hybrid.collection("dollhouse").find({ _id: "echo2" });
       var called = 0;
@@ -66,7 +66,7 @@ describe("Observe", function () {
       remote.collection("dollhouse").insert({ _id: "echo2", remote: true });
     }));
   it("#observe with query and update", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var store = new ViewDb();
       store.open().then(function () {
         var cursor = store.collection("dollhouse").find({ _id: "echo" });
@@ -89,7 +89,7 @@ describe("Observe", function () {
       });
     }));
   it("#observe with both empty local and remote result", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       var cursor = hybrid.collection("dollhouse").find({ _id: "echo2" });
       var handle = cursor.observe({
         init: function (r) {
@@ -104,9 +104,9 @@ describe("Observe", function () {
       });
     }));
   it("#should cache query if setting is enabled", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       hybrid = new ViewDb(
-        new HybridStore(local, remote, {
+        new (HybridStore as any)(local, remote, {
           throttleObserveRefresh: 0,
           cacheQueries: true,
           queryMaxTime: 2,

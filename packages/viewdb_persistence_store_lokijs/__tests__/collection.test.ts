@@ -5,14 +5,14 @@ describe("Collection", function () {
   var store;
   beforeEach(
     () =>
-      new Promise((resolve) => {
+      new Promise<void>((resolve) => {
         store = new Store("test-suite", { inMemoryOnly: true });
         resolve();
       })
   );
   afterEach(
     () =>
-      new Promise((resolve) => {
+      new Promise<void>((resolve) => {
         if (store) {
           store.collection("dollhouse").drop(function () {
             store.collection("dollhouse2").drop(function () {
@@ -26,7 +26,7 @@ describe("Collection", function () {
       })
   );
   it("#find with empty array should return 0 docs", () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       store.open().then(function () {
         store
           .collection("dollhouse")
@@ -38,7 +38,7 @@ describe("Collection", function () {
       });
     }));
   it("#insert two documents with same key but in different collections should work", () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse2").insert({ _id: "echo" }, function (err, result) {
@@ -51,7 +51,7 @@ describe("Collection", function () {
       });
     }));
   it("#update documents already existing", () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").save({ _id: "echo", version: 2 });
@@ -66,7 +66,7 @@ describe("Collection", function () {
       });
     }));
   it("#find {} should return single inserted document", () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store
@@ -79,7 +79,7 @@ describe("Collection", function () {
       });
     }));
   it("#find {} should return multiple inserted documents", () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "sierra" });
@@ -93,7 +93,7 @@ describe("Collection", function () {
       });
     }));
   it('#find {_id:"echo"} should return correct document', () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "sierra" });
@@ -108,7 +108,7 @@ describe("Collection", function () {
       });
     }));
   it('#find with complex key {"name.first":"echo"} should return correct document', () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       store.open().then(function () {
         var promises = [
           store.collection("dollhouse").insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }),
@@ -131,7 +131,7 @@ describe("Collection", function () {
       });
     }));
   it("#drop should remove all documents", () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").drop();
@@ -145,7 +145,7 @@ describe("Collection", function () {
       });
     }));
   it("#sort should sort on a property", () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "alpha" });
         store.collection("dollhouse").insert({ _id: "beta" });
@@ -163,7 +163,7 @@ describe("Collection", function () {
       });
     }));
   it("#sort should sort on a property, descending", () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "alpha" });
         store.collection("dollhouse").insert({ _id: "beta" });
@@ -181,7 +181,7 @@ describe("Collection", function () {
       });
     }));
   it("#insert documents via bulk", () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       store.open().then(function () {
         store.collection("dollhouse").insert([{ _id: "echo" }, { _id: "sierra" }]);
         store
@@ -194,7 +194,7 @@ describe("Collection", function () {
       });
     }));
   it("#update documents via bulk", () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       store.open().then(function () {
         store.collection("dollhouse").insert([{ _id: "echo" }, { _id: "sierra" }], function () {
           store.collection("dollhouse").save([
@@ -211,7 +211,7 @@ describe("Collection", function () {
       });
     }));
   it("#count should return number of documents", () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "sierra" });
@@ -225,7 +225,7 @@ describe("Collection", function () {
       });
     }));
   it("#count should return number of documents with filter", () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "sierra" });
@@ -239,7 +239,7 @@ describe("Collection", function () {
       });
     }));
   it("#count should include skip", () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "sierra" });
@@ -254,7 +254,7 @@ describe("Collection", function () {
       });
     }));
   it("#count without skip should return total", () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "sierra" });
@@ -268,7 +268,7 @@ describe("Collection", function () {
       });
     }));
   it('#find {_id: $in ["echo"]} should return correct document', () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       store.open().then(function () {
         store.collection("dollhouse").insert({ _id: "echo" });
         store.collection("dollhouse").insert({ _id: "sierra" });
@@ -283,7 +283,7 @@ describe("Collection", function () {
       });
     }));
   it("#should allow to save with $ chars in _syncProfiles", () =>
-    new Promise((resolve) => {
+    new Promise<void>((resolve) => {
       store.open().then(function () {
         store
           .collection("_syncProfiles")

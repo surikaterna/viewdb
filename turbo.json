@@ -8,6 +8,9 @@
     "test": {
       "dependsOn": ["^build"]
     },
+    "type-check": {
+      "dependsOn": ["^type-check"]
+    },
     "//#check-style": {
       "cache": false
     },
