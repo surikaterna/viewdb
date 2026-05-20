@@ -1,15 +1,16 @@
 import Kuery from "kuery";
 import _ from "lodash";
 import merge from "./merge";
-import { Collection, ObserveOptions, QueryObject, VDocument } from "./types";
+import { Collection, ObserveOptions, Observer, QueryObject, VDocument } from "./types";
 
-class ViewDBObserver {
+class ViewDBObserver implements Observer {
   _query: QueryObject;
   _queryOptions: QueryObject;
   _options: ObserveOptions;
   _collection: Collection;
   _cache: VDocument[] | null;
   _refreshPending: boolean;
+  stop!: () => void;
 
   constructor(query: QueryObject, queryOptions: QueryObject, collection: Collection, options: ObserveOptions) {
     this._query = query;
@@ -44,12 +45,10 @@ class ViewDBObserver {
     collection.on("change", listener);
     this.refresh(true);
 
-    return {
-      stop: function () {
-        self._cache = null;
-        collection.removeListener("change", listener);
-      },
-    } as any;
+    this.stop = function () {
+      self._cache = null;
+      collection.removeListener("change", listener);
+    };
   }
 
   /**

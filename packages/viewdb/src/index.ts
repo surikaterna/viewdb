@@ -8,22 +8,16 @@ import ViewDBObserver from "./ViewDBObserver";
 export type {
   Callback,
   Collection,
+  Cursor,
   GetDocumentsFn,
   MergeOptions,
   ObserveHandle,
   ObserveOptions,
+  Observer,
   ProjectionSpec,
   QueryObject,
   SortSpec,
+  Store,
   VDocument,
 } from "./types";
-export {
-  InMemoryStore,
-  merge,
-  plugins,
-  ViewDB,
-  ViewDBCursor,
-  ViewDBCursor as Cursor,
-  ViewDBObserver,
-  ViewDBObserver as Observer,
-};
+export { InMemoryStore, merge, plugins, ViewDB, ViewDBCursor, ViewDBObserver };

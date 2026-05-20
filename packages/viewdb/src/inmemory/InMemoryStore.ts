@@ -1,13 +1,14 @@
+import { Collection, Store } from "../types";
 import InMemoryCollection from "./InMemoryCollection";
 
-class InMemoryStore {
+class InMemoryStore implements Store {
   _collections: Record<string, InMemoryCollection>;
 
   constructor() {
     this._collections = {};
   }
 
-  collection(collectionName: string, callback?: (collection: InMemoryCollection) => void): InMemoryCollection {
+  collection(collectionName: string, callback?: (collection: Collection) => void): InMemoryCollection {
     let coll = this._collections[collectionName];
     if (coll === undefined) {
       coll = new InMemoryCollection(collectionName);

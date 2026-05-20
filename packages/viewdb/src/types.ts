@@ -46,6 +46,28 @@ export interface ObserveHandle {
   dispose?: () => void | Promise<void>;
 }
 
+/** Core cursor contract used by collections */
+export interface Cursor {
+  toArray(callback: Callback<VDocument[]>): void;
+  observe(options: ObserveOptions): ObserveHandle;
+  skip(skip: number): this;
+  limit(limit: number): this;
+  sort(sort: SortSpec): this;
+  project(project: ProjectionSpec): this;
+  count(callback: Callback<number>): void;
+  updateQuery?(query: Record<string, any>): void;
+  close?(callback: () => void): void;
+}
+
+/** Core observer contract returned from cursor.observe() */
+export interface Observer extends ObserveHandle {}
+
+/** Core store contract used by ViewDB */
+export interface Store {
+  open?(callback?: Callback<any>): Promise<any>;
+  collection(name: string, callback?: (coll: Collection) => void): Collection;
+}
+
 /**
  * Callback signature for _getDocuments implementations.
  * Used by Collection implementations across all stores.
@@ -60,7 +82,7 @@ export type GetDocumentsFn = (queryObject: QueryObject, callback: Callback<VDocu
  */
 export interface Collection {
   /** Create a cursor for the given query */
-  find(query: Record<string, any>, options?: Record<string, any>): any;
+  find(query: Record<string, any>, options?: Record<string, any>): Cursor;
   /** Internal: retrieve documents matching the query object */
   _getDocuments: GetDocumentsFn;
   /** EventEmitter: emit events (primarily 'change') */

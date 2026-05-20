@@ -1,15 +1,10 @@
 import InMemoryStore from "./inmemory/InMemoryStore";
-import { Callback, Collection } from "./types";
-
-interface ViewDBStore {
-  open?(callback?: Callback<any>): Promise<any>;
-  collection(name: string, callback?: (coll: Collection) => void): Collection;
-}
+import { Collection, Store } from "./types";
 
 class ViewDB {
-  _store: ViewDBStore;
+  _store: Store;
 
-  constructor(store?: ViewDBStore) {
+  constructor(store?: Store) {
     this._store = store || new InMemoryStore();
   }
 

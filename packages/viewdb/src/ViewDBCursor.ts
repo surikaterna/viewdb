@@ -2,6 +2,7 @@ import _ from "lodash";
 import {
   Callback,
   Collection,
+  Cursor,
   GetDocumentsFn,
   ObserveHandle,
   ObserveOptions,
@@ -12,7 +13,7 @@ import {
 } from "./types";
 import ViewDBObserver from "./ViewDBObserver";
 
-class ViewDBCursor {
+class ViewDBCursor implements Cursor {
   _collection: Collection;
   _query: QueryObject;
   _options: QueryObject;
