@@ -1,7 +1,8 @@
-var _ = require('lodash');
+import _ from 'lodash';
 
-var ViewDb = require('../..');
-var ViewDbVersioningPlugin = require('../..').plugins.VersioningPlugin;
+import { ViewDB as ViewDb, plugins } from '../..';
+
+const ViewDbVersioningPlugin = plugins.VersioningPlugin;
 
 describe('Viewdb versioning plugin', () => {
   it('should add version on insert', () =>

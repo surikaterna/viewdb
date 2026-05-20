@@ -1,5 +1,5 @@
-var should = require('should');
-var reconcile = require('../../dist/hybrid/reconcile');
+import should from 'should';
+import reconcile from '../../src/hybrid/reconcile';
 
 describe('Reconcile', function () {
   it('#reconcile should return remote docs if only remote', function () {

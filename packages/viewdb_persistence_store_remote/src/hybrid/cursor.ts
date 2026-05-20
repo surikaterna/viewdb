@@ -1,8 +1,8 @@
-import Kuery = require('kuery');
-import Observe = require('./observe');
-import reconcile = require('./reconcile');
-import _ = require('lodash');
-import TimeTracker = require('./timeTracker');
+import Kuery from 'kuery';
+import Observe from './observe';
+import reconcile from './reconcile';
+import _ from 'lodash';
+import TimeTracker from './timeTracker';
 import { LoggerFactory } from 'slf';
 
 var LOG = LoggerFactory.getLogger('viewdb:remote:hybrid-cursor');
@@ -288,4 +288,4 @@ class HybridCursor {
   }
 }
 
-export = HybridCursor;
+export default HybridCursor;

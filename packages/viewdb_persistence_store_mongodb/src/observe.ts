@@ -1,12 +1,10 @@
-import _ = require('lodash');
-import Kuery = require('kuery');
+import _ from 'lodash';
+import Kuery from 'kuery';
 import { projectDocument } from './utils';
 import { LoggerFactory } from 'slf';
-import type { ObserveOptions, ObserveHandle } from 'viewdb/dist/types';
+import type { ObserveOptions, ObserveHandle } from 'viewdb';
 
-var ViewDB = require('viewdb');
-var merge = ViewDB.merge;
-var LegacyObserver = ViewDB.Observer;
+import { merge, Observer as LegacyObserver } from 'viewdb';
 
 const log = LoggerFactory.getLogger('viewdb:mongodb:observer');
 
@@ -55,12 +53,13 @@ class Observer {
     var self = this;
     var newQuery = _.merge(this._query, self._queryOptions);
     this._collection._getDocuments(newQuery, function (err: Error | null, result?: any[]) {
+      const documents = result || [];
       if (self._options.init) {
-        self._options.init(result || []);
+        self._options.init(documents);
       } else {
-        merge(null, result, _.defaults({ comparatorId: comparator }, self._options));
+        merge(null, documents, _.defaults({ comparatorId: comparator }, self._options));
       }
-      self._cache = _.map(result, '_id');
+      self._cache = _.map(documents, '_id');
       cb();
     });
   }
@@ -146,4 +145,4 @@ var comparator = function (a: { _id: string }, b: { _id: string }) {
   return a._id === b._id;
 };
 
-export = Observer;
+export default Observer;

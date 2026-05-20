@@ -1,4 +1,4 @@
-import Observer = require('./observe');
+import Observer from './observe';
 import { nodeify } from './utils';
 import type { FindCursor, Document as MongoDocument } from 'mongodb';
 
@@ -78,4 +78,4 @@ class Cursor {
   }
 }
 
-export = Cursor;
+export default Cursor;

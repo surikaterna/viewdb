@@ -1,6 +1,6 @@
-var Store = require('../dist/store');
-var getDb = require('./util');
-var runStoreTests = require('viewdb-store-tests').runStoreTests;
+import Store from '../src/store';
+import getDb from './util';
+import { runStoreTests } from 'viewdb-store-tests';
 
 runStoreTests({
   name: 'indexeddb',

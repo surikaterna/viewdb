@@ -6,7 +6,7 @@
   So we should allow this to continue as if the data is empty string and it's the last page.
 */
 
-const Loki = require('lokijs');
+import Loki from 'lokijs';
 /**
  * An adapter for adapters.  Converts a non reference mode adapter into a reference mode adapter
  * which can perform destructuring and partioning.  Each collection will be stored in its own key/save and
@@ -353,4 +353,4 @@ class LokiPartitioningAdapter {
   }
 }
 
-export = LokiPartitioningAdapter;
+export default LokiPartitioningAdapter;

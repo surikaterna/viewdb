@@ -1,5 +1,5 @@
-import _ = require('lodash');
-import HybridCursor = require('./cursor');
+import _ from 'lodash';
+import HybridCursor from './cursor';
 import * as cacheUtils from '../cacheUtils';
 
 class HybridCollection {
@@ -151,4 +151,4 @@ class HybridCollection {
   }
 }
 
-export = HybridCollection;
+export default HybridCollection;

@@ -1,8 +1,8 @@
-import _ = require('lodash');
+import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
 import { EventEmitter } from 'events';
-import Kuery = require('kuery');
-import Cursor = require('../cursor');
+import Kuery from 'kuery';
+import Cursor from '../cursor';
 import { VDocument, QueryObject, Callback, CollectionLike } from '../types';
 
 class Collection extends EventEmitter implements CollectionLike {
@@ -104,4 +104,4 @@ class Collection extends EventEmitter implements CollectionLike {
   }
 }
 
-export = Collection;
+export default Collection;

@@ -1,12 +1,14 @@
 import { Logger } from 'slf';
 import { v4 as uuid } from 'uuid';
-import _ = require('lodash');
-import Observer = require('./observe');
+import _ from 'lodash';
+import Observer from './observe';
 
 var LOG = Logger.getLogger('viewdb:remote:cursor');
-var Cursor = require('viewdb').Cursor;
+import { Cursor } from 'viewdb';
 
 class RemoteCursor extends Cursor {
+  _handle!: { stop: () => void };
+
   constructor(collection: any, query: any, options: any, getDocuments: any) {
     super(collection, query, options, getDocuments);
   }
@@ -31,7 +33,7 @@ class RemoteCursor extends Cursor {
     var params: any = {
       id: uuid(),
       count: this._query.query || this._query,
-      collection: this._collection._name
+      collection: (this._collection as any)._name
     };
 
     if (applySkipLimit) {
@@ -39,7 +41,7 @@ class RemoteCursor extends Cursor {
       params.limit = limit;
     }
 
-    this._collection._client.request(params, function (err: Error | null, result: any) {
+    (this._collection as any)._client.request(params, function (err: Error | null, result: any) {
       callback!(err, result);
     });
   }
@@ -72,11 +74,11 @@ class RemoteCursor extends Cursor {
     var refreshListener = function () {
       LOG.info('restarting observer due to change');
       self._handle.stop();
-      self._handle = new Observer(self._collection, options, self._query);
+      self._handle = new Observer(self._collection, options, self._query) as any;
     };
     self._collection.on('change', refreshListener);
 
-    self._handle = new Observer(self._collection, options, self._query);
+    self._handle = new Observer(self._collection, options, self._query) as any;
     return {
       stop: function () {
         self._handle.stop();
@@ -86,4 +88,4 @@ class RemoteCursor extends Cursor {
   }
 }
 
-export = RemoteCursor;
+export default RemoteCursor;

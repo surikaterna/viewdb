@@ -1,4 +1,4 @@
-import _ = require('lodash');
+import _ from 'lodash';
 import { Logger } from 'slf';
 import { v4 as uuid } from 'uuid';
 
@@ -98,4 +98,4 @@ class Observer {
   }
 }
 
-export = Observer;
+export default Observer;

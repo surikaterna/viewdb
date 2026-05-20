@@ -1,8 +1,8 @@
-var crud = require('./suites/crud');
-var query = require('./suites/query');
-var cursor = require('./suites/cursor');
-var count = require('./suites/count');
-var observe = require('./suites/observe');
+import crud from './suites/crud';
+import query from './suites/query';
+import cursor from './suites/cursor';
+import count from './suites/count';
+import observe from './suites/observe';
 
 var suiteMap = {
   crud: crud,
@@ -27,4 +27,4 @@ function runStoreTests(config) {
   });
 }
 
-module.exports = { runStoreTests: runStoreTests };
+export { runStoreTests };

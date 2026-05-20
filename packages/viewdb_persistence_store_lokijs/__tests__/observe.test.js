@@ -1,5 +1,5 @@
-const _ = require('lodash');
-const { Store } = require('..');
+import _ from 'lodash';
+import { Store } from '..';
 
 describe('Collection', function () {
   var store;

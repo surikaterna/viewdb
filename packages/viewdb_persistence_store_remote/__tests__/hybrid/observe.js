@@ -1,6 +1,6 @@
-var should = require('should');
-var ViewDb = require('viewdb');
-var HybridStore = require('../..').Hybrid;
+import should from 'should';
+import { ViewDB as ViewDb } from 'viewdb';
+import { Hybrid as HybridStore } from '../..';
 
 describe('Observe', function () {
   var local = null;

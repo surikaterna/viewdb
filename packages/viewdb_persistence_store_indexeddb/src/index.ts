@@ -1,2 +1,2 @@
-import Store = require('./store');
-export = Store;
+import Store from './store';
+export default Store;

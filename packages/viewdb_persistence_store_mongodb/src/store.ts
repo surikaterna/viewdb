@@ -1,6 +1,6 @@
-import Promise = require('bluebird');
-import Collection = require('./collection');
-import _ = require('lodash');
+import Promise from 'bluebird';
+import Collection from './collection';
+import _ from 'lodash';
 import type { Db } from 'mongodb';
 
 class Store {
@@ -46,4 +46,4 @@ class Store {
   }
 }
 
-export = Store;
+export default Store;

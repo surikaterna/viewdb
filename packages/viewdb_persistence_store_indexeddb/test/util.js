@@ -1,5 +1,5 @@
-var indexeddbjs = require('fake-indexeddb');
+import indexeddbjs from 'fake-indexeddb';
 
-module.exports = function() {
+export default function () {
 	return indexeddbjs;
 };

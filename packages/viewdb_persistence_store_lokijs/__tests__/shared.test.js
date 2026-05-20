@@ -1,5 +1,5 @@
-var { Store } = require('..');
-var { runStoreTests } = require('viewdb-store-tests');
+import { Store } from '..';
+import { runStoreTests } from 'viewdb-store-tests';
 
 runStoreTests({
   name: 'lokijs',

@@ -1,5 +1,5 @@
-import Promise = require('bluebird');
-import Collection = require('./collection');
+import Promise from 'bluebird';
+import Collection from './collection';
 import { VdbClient } from '../types';
 
 class Store {
@@ -27,4 +27,4 @@ class Store {
   }
 }
 
-export = Store;
+export default Store;

@@ -1,6 +1,6 @@
-import _ = require('lodash');
-import Promise = require('bluebird');
-import Collection = require('./collection');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Collection from './collection';
 
 interface HybridStoreOptions {
   syncWrites: boolean;
@@ -113,4 +113,4 @@ class HybridStore {
   }
 }
 
-export = HybridStore;
+export default HybridStore;

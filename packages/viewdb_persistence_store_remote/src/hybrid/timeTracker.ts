@@ -23,4 +23,4 @@ class TimeTracker {
   }
 }
 
-export = TimeTracker;
+export default TimeTracker;

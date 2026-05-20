@@ -4,4 +4,4 @@ const parseSort = (mongoSort: any) => {
   return Object.keys(mongoSort).map((k) => [k, mongoSort[k] && mongoSort[k] > 0 ? false : true]);
 };
 
-export = parseSort;
+export default parseSort;

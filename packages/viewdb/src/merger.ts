@@ -1,4 +1,4 @@
-import _ = require('lodash');
+import _ from 'lodash';
 import { MergeOptions } from './types';
 
 function contains<T>(list: T[], element: T, comparator: (a: T, b: T) => boolean): T | undefined {
@@ -131,4 +131,4 @@ function merge<T>(asis: T[] | null, tobe: T[], options?: MergeOptions<T>): T[] {
   return list;
 }
 
-export = merge;
+export default merge;

@@ -1,4 +1,4 @@
-import _ = require('lodash');
+import _ from 'lodash';
 
 interface VersionedDoc {
   _id: string;
@@ -60,4 +60,4 @@ function reconcile<T extends VersionedDoc = VersionedDoc>(local: T[], remote: T[
   return result;
 }
 
-export = reconcile;
+export default reconcile;

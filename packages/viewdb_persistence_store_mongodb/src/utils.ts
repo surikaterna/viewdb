@@ -1,4 +1,4 @@
-import _ = require('lodash');
+import _ from 'lodash';
 
 function _includeKey(key: string | number | boolean): boolean {
   return key === '1' || key === true || key === 1;

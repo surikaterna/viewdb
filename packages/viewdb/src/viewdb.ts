@@ -1,4 +1,4 @@
-import InMemoryStore = require('./inmemory/store');
+import InMemoryStore from './inmemory/store';
 import { Callback, CollectionLike } from './types';
 
 interface ViewDBStore {
@@ -28,4 +28,4 @@ class ViewDB {
   }
 }
 
-export = ViewDB;
+export default ViewDB;

@@ -1,9 +1,9 @@
-var should = require('should');
-var _ = require('lodash');
-var ViewDb = require('viewdb');
-var ViewDbRemoteClient = require('../../').Client;
-var SocketClient = require('../../').SocketClient;
-var HybridStore = require('../..').Hybrid;
+import should from 'should';
+import _ from 'lodash';
+import { ViewDB as ViewDb } from 'viewdb';
+import { Client as ViewDbRemoteClient } from '../../';
+import { SocketClient } from '../../';
+import { Hybrid as HybridStore } from '../..';
 
 describe('Observe-Update', function () {
   var local = null;

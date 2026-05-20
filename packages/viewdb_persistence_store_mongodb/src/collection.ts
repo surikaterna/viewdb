@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { forEach, isFunction, isArray } from 'lodash';
-import Cursor = require('./cursor');
+import Cursor from './cursor';
 import { nodeify } from './utils';
 import type { Collection as MongoCollection, Document as MongoDocument } from 'mongodb';
 
@@ -209,4 +209,4 @@ class Collection extends EventEmitter {
   }
 }
 
-export = Collection;
+export default Collection;

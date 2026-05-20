@@ -1,5 +1,5 @@
-const { MongoClient, ReadPreference } = require('mongodb');
-const Store = require('../dist/store');
+import { MongoClient, ReadPreference } from 'mongodb';
+import Store from '../src/store';
 
 describe('mongodb_persistence', () => {
   const COLLECTION_NAME = 'collection';

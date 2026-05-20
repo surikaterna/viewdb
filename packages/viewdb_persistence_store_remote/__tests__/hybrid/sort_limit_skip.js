@@ -1,7 +1,7 @@
-var should = require('should');
-var ViewDb = require('viewdb');
-var HybridStore = require('../..').Hybrid;
-var _ = require('lodash');
+import should from 'should';
+import { ViewDB as ViewDb } from 'viewdb';
+import { Hybrid as HybridStore } from '../..';
+import _ from 'lodash';
 
 describe('Sort / Limit / Skip', function () {
   var local = null;

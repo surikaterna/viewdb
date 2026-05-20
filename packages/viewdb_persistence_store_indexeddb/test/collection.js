@@ -1,8 +1,8 @@
-var should = require('should');
+import should from 'should';
 
-var Store = require('../dist/store');
-var Collection = require('../dist/collection');
-var getDb = require('./util');
+import Store from '../src/store';
+import Collection from '../src/collection';
+import getDb from './util';
 
 describe('Collection', function () {
   var store;

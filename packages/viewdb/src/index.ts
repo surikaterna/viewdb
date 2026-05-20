@@ -1,19 +1,20 @@
-import ViewDB = require('./viewdb');
-import Cursor = require('./cursor');
-import Observer = require('./observe');
-import merge = require('./merger');
-import plugins = require('./plugins');
+import ViewDB from './viewdb';
+import Cursor from './cursor';
+import Observer from './observe';
+import merge from './merger';
+import InMemoryStore from './inmemory/store';
+import * as plugins from './plugins';
 
-// Preserve the exact CommonJS export shape:
-// module.exports = ViewDB (callable as constructor)
-// module.exports.Cursor = Cursor
-// module.exports.Observer = Observer
-// module.exports.merge = merge
-// module.exports.plugins = { TimestampPlugin, VersioningPlugin }
-
-export = Object.assign(ViewDB, {
-  Cursor,
-  Observer,
-  merge,
-  plugins
-});
+export { ViewDB, Cursor, Observer, merge, InMemoryStore, plugins };
+export type {
+  VDocument,
+  QueryObject,
+  SortSpec,
+  ProjectionSpec,
+  Callback,
+  MergeOptions,
+  ObserveOptions,
+  ObserveHandle,
+  GetDocumentsFn,
+  CollectionLike
+} from './types';

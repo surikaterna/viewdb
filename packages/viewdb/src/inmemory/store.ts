@@ -1,4 +1,4 @@
-import Collection = require('./collection');
+import Collection from './collection';
 
 class InMemoryStore {
   _collections: Record<string, Collection>;
@@ -20,4 +20,4 @@ class InMemoryStore {
   }
 }
 
-export = InMemoryStore;
+export default InMemoryStore;

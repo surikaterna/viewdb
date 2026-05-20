@@ -1,5 +1,5 @@
-import _ = require('lodash');
-import debug = require('debug');
+import _ from 'lodash';
+import debug from 'debug';
 import { VdbSocket } from '../types';
 
 var warn = debug('viewdb:warn');
@@ -77,4 +77,4 @@ class Client {
   }
 }
 
-export = Client;
+export default Client;

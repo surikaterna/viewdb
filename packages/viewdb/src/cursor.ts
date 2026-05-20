@@ -1,5 +1,5 @@
-import _ = require('lodash');
-import Observer = require('./observe');
+import _ from 'lodash';
+import Observer from './observe';
 import { QueryObject, SortSpec, ProjectionSpec, Callback, VDocument, ObserveOptions, ObserveHandle, CollectionLike, GetDocumentsFn } from './types';
 
 class Cursor {
@@ -96,4 +96,4 @@ class Cursor {
   }
 }
 
-export = Cursor;
+export default Cursor;

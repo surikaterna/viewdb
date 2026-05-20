@@ -1,10 +1,10 @@
-import debug = require('debug');
-import _ = require('lodash');
+import debug from 'debug';
+import _ from 'lodash';
+import axios from 'axios';
 import { VdbClient } from '../types';
 
 var warn = debug('viewdb:warn');
-var merge = require('viewdb').merge;
-var axios: any = require('axios');
+import { merge } from 'viewdb';
 
 class Client implements VdbClient {
   _pollInterval: number;
@@ -125,4 +125,4 @@ class Client implements VdbClient {
   }
 }
 
-export = Client;
+export default Client;

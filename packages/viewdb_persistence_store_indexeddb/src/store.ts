@@ -1,5 +1,5 @@
-import Promise = require('bluebird');
-import Collection = require('./collection');
+import Promise from 'bluebird';
+import Collection from './collection';
 
 class Store {
   _idb: IDBFactory;
@@ -77,4 +77,4 @@ class Store {
   }
 }
 
-export = Store;
+export default Store;

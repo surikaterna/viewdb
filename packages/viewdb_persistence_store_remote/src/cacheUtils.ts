@@ -1,4 +1,4 @@
-import SHA256 = require('crypto-js/sha256');
+import SHA256 from 'crypto-js/sha256';
 
 export function generateQueryHash(
   query: Record<string, any>,

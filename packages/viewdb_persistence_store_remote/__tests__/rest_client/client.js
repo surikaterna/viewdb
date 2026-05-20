@@ -1,9 +1,9 @@
-var nock = require('nock');
-var Client = require('../..').RestClient;
-var Store = require('../..').Client;
-var should = require('should');
-var mockResponse = require('./mock-response.json');
-var _ = require('lodash');
+import nock from 'nock';
+import { RestClient as Client } from '../..';
+import { Client as Store } from '../..';
+import should from 'should';
+import mockResponse from './mock-response.json';
+import _ from 'lodash';
 
 var testOptions = {
   pollInterval: 15

@@ -1,4 +1,4 @@
-var ViewDB = require('..');
+import { ViewDB } from '..';
 
 describe('ViewDB', () => {
   describe('#count', () => {

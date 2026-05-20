@@ -1,11 +1,11 @@
-var should = require('should');
-var ViewDb = require('viewdb');
-var _ = require('lodash');
-var ViewDbSocketServer = require('../../dist/server/server');
-var Store = require('../../dist/client/store');
-var Client = require('../../dist/client/rr_client');
-var SocketMock = require('socket.io-mock');
-var HybridStore = require('../..').Hybrid;
+import should from 'should';
+import { ViewDB as ViewDb } from 'viewdb';
+import _ from 'lodash';
+import ViewDbSocketServer from '../../src/server/server';
+import Store from '../../src/client/store';
+import Client from '../../src/client/rr_client';
+import SocketMock from 'socket.io-mock';
+import { Hybrid as HybridStore } from '../..';
 
 describe('Observe-Update Remote', function () {
   var clientRemote, serverViewdb, socketServer, socketClient, clientStore, client, clientLocal, hybrid;

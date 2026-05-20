@@ -1,4 +1,4 @@
-import _ = require('lodash');
+import _ from 'lodash';
 import { VdbSocket } from '../types';
 
 function sendChange(socket: VdbSocket, change: any, request: any): void {
@@ -181,4 +181,4 @@ class ViewDbSocketServer {
   }
 }
 
-export = ViewDbSocketServer;
+export default ViewDbSocketServer;

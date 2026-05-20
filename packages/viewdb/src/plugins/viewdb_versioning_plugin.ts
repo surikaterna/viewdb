@@ -1,4 +1,4 @@
-import _ = require('lodash');
+import _ from 'lodash';
 
 function _getVersion(version: number | undefined): number {
   if (_.isUndefined(version)) {
@@ -86,4 +86,4 @@ function ViewDBVersioningPlugin(viewDb: any): void {
   };
 }
 
-export = ViewDBVersioningPlugin;
+export default ViewDBVersioningPlugin;

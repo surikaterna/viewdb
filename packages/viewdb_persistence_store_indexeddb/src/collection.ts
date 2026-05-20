@@ -1,11 +1,10 @@
-import Promise = require('bluebird');
-import _ = require('lodash');
+import Promise from 'bluebird';
+import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
-import Kuery = require('kuery');
+import Kuery from 'kuery';
 import { EventEmitter } from 'events';
 
-var ViewDB = require('viewdb');
-var Cursor = ViewDB.Cursor;
+import { Cursor } from 'viewdb';
 
 class Collection extends EventEmitter {
   static Cursor: any = Cursor;
@@ -195,4 +194,4 @@ class Collection extends EventEmitter {
   }
 }
 
-export = Collection;
+export default Collection;

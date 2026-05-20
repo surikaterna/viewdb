@@ -1,2 +1,2 @@
-import ViewDbSocketServer = require('./server');
-export = ViewDbSocketServer;
+import ViewDbSocketServer from './server';
+export default ViewDbSocketServer;

@@ -1,4 +1,4 @@
-var assert = require('assert');
+import assert from 'assert';
 
 // Inline replacement for _.after(n, fn) — no lodash dependency
 function after(n, fn) {
@@ -10,7 +10,7 @@ function after(n, fn) {
   };
 }
 
-module.exports = function (config) {
+export default function (config) {
   var COLL = 'test_shared';
   var delay = config.observeOptions.settleDelay;
 

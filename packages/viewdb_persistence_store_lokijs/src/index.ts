@@ -1,6 +1,6 @@
-import Store = require('./store');
-import Collection = require('./collection');
-import LokiPartitioningAdapter = require('./adapter/LokiPartitioningAdapter');
-import LokiCordovaFSAdapter = require('./cordova/LokiCordovaFSAdapter');
+import Store from './store';
+import Collection from './collection';
+import LokiPartitioningAdapter from './adapter/LokiPartitioningAdapter';
+import LokiCordovaFSAdapter from './cordova/LokiCordovaFSAdapter';
 
-export = { Store, Collection, LokiPartitioningAdapter, LokiCordovaFSAdapter };
+export { Store, Collection, LokiPartitioningAdapter, LokiCordovaFSAdapter };

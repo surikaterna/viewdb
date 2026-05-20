@@ -1,7 +1,7 @@
-var Store = require('../../dist/hybrid/store');
-var LocalStore = require('viewdb/dist/inmemory/store');
-var should = require('should');
-var Cursor = require('viewdb').Cursor;
+import Store from '../../src/hybrid/store';
+import { InMemoryStore as LocalStore } from 'viewdb';
+import should from 'should';
+import { Cursor } from 'viewdb';
 
 describe('Store', function () {
   it('should cache', () =>

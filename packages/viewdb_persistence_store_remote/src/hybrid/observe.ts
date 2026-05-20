@@ -1,7 +1,7 @@
-import _ = require('lodash');
-import reconcile = require('./reconcile');
+import _ from 'lodash';
+import reconcile from './reconcile';
 
-var merge = require('viewdb').merge;
+import { merge } from 'viewdb';
 
 function pushArray<T>(arr: T[], arr2: T[]): void {
   arr.push.apply(arr, arr2);
@@ -166,4 +166,4 @@ class HybridObserver {
   }
 }
 
-export = HybridObserver;
+export default HybridObserver;

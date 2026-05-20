@@ -1,9 +1,9 @@
 import { EventEmitter } from 'events';
 import { findIndex, first, forEach, get, isArray, isFunction, isNaN, isNumber, pick, range, remove, some, throttle, uniq, unset, values } from 'lodash';
 import { LoggerFactory } from 'slf';
-import parseSort = require('./parseSort');
+import parseSort from './parseSort';
 
-var Cursor = require('viewdb').Cursor;
+import { Cursor } from 'viewdb';
 
 const LOG = LoggerFactory.getLogger('viewdb:lokijs:collection');
 
@@ -282,4 +282,4 @@ class Collection extends EventEmitter {
   }
 }
 
-export = Collection;
+export default Collection;

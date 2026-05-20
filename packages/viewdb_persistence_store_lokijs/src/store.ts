@@ -1,9 +1,9 @@
 import { find, forEach, get, includes } from 'lodash';
 import { LoggerFactory } from 'slf';
-import Collection = require('./collection');
+import Collection from './collection';
 
-const Loki = require('lokijs');
-import Promise = require('bluebird');
+import Loki from 'lokijs';
+import Promise from 'bluebird';
 const LOG = LoggerFactory.getLogger('viewdb:lokijs:store');
 
 class Store {
@@ -221,4 +221,4 @@ class Store {
   }
 }
 
-export = Store;
+export default Store;

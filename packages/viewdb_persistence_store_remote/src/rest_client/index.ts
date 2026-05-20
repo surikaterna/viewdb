@@ -1,2 +1,2 @@
-import RestClient = require('./rest_client');
-export = RestClient;
+import RestClient from './rest_client';
+export default RestClient;

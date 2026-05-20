@@ -1,5 +1,5 @@
-const LoggerFactory = require('slf').LoggerFactory;
-const slfDebug = require('slf-debug').default;
+import { LoggerFactory } from 'slf';
+import slfDebug from 'slf-debug';
 
 LoggerFactory.setFactory(slfDebug);
 

@@ -1,6 +1,6 @@
-var assert = require('assert');
+import assert from 'assert';
 
-module.exports = function (config) {
+export default function (config) {
   var COLL = 'test_shared';
 
   describe('query', function () {

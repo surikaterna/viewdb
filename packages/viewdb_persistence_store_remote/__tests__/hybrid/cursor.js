@@ -1,6 +1,6 @@
-var Cursor = require('../../dist/hybrid/cursor');
-var LocalCursor = require('viewdb').Cursor;
-var should = require('should');
+import Cursor from '../../src/hybrid/cursor';
+import { Cursor as LocalCursor } from 'viewdb';
+import should from 'should';
 
 describe('Cursor', function () {
   it('#toArray should return remote', () =>

@@ -1,4 +1,4 @@
-var projectDocument = require('../dist/utils').projectDocument;
+import { projectDocument } from '../src/utils';
 
 describe('Project document', function () {
   it('#Should pick property', () =>
