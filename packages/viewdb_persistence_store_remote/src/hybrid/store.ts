@@ -1,6 +1,6 @@
-import _ from 'lodash';
-import Promise from 'bluebird';
-import Collection from './collection';
+import Promise from "bluebird";
+import _ from "lodash";
+import Collection from "./collection";
 
 interface HybridStoreOptions {
   syncWrites: boolean;
@@ -24,8 +24,8 @@ var defaultOptions: HybridStoreOptions = {
   cacheLifeTime: 2, // Time in minutes that the cache should be alive
   cacheQueries: false,
   localOnlyCollections: new Set<string>(),
-  cacheCollectionName: '_cache',
-  projectedDocumentsCollection: '_projected_cache'
+  cacheCollectionName: "_cache",
+  projectedDocumentsCollection: "_projected_cache",
 };
 
 class HybridStore {
@@ -42,7 +42,9 @@ class HybridStore {
 
     if (this._options.cacheQueries) {
       this._collections[this._options.cacheCollectionName] = local.collection(this._options.cacheCollectionName);
-      this._collections[this._options.projectedDocumentsCollection] = local.collection(this._options.projectedDocumentsCollection);
+      this._collections[this._options.projectedDocumentsCollection] = local.collection(
+        this._options.projectedDocumentsCollection
+      );
       setInterval(this._cleanCachedData.bind(this), 1000 * 60 * 30); // Clean every 30 minutes
     }
   }
@@ -96,7 +98,7 @@ class HybridStore {
     var maxTimeEpoch = minimumChangeDateTime.getTime();
 
     // Clean cached query first to prevent query not pointing at anything
-    this._cleanCollection(this._collections[this._options.cacheCollectionName], maxTimeEpoch, 'createDateTime');
+    this._cleanCollection(this._collections[this._options.cacheCollectionName], maxTimeEpoch, "createDateTime");
 
     _.forEach(this._collections, function (collection: any, collectionName: string) {
       if (collectionName === self._options.cacheCollectionName) {
@@ -108,7 +110,7 @@ class HybridStore {
   }
 
   _cleanCollection(collection: any, maxEpoch: number, propertyName?: string): void {
-    var comparisonPropertyName = propertyName || '_insertedAt';
+    var comparisonPropertyName = propertyName || "_insertedAt";
     collection.remove({ [comparisonPropertyName]: { $lt: maxEpoch } }, null, function () {});
   }
 }

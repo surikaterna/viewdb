@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import _ from "lodash";
 
 function _getVersion(version: number | undefined): number {
   if (_.isUndefined(version)) {

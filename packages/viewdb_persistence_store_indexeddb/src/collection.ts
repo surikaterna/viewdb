@@ -1,10 +1,10 @@
-import Promise from 'bluebird';
-import _ from 'lodash';
-import { v4 as uuid } from 'uuid';
-import Kuery from 'kuery';
-import { EventEmitter } from 'events';
+import Promise from "bluebird";
+import { EventEmitter } from "events";
+import Kuery from "kuery";
+import _ from "lodash";
+import { v4 as uuid } from "uuid";
 
-import { Cursor } from 'viewdb';
+import { Cursor } from "viewdb";
 
 class Collection extends EventEmitter {
   static Cursor: any = Cursor;
@@ -19,7 +19,11 @@ class Collection extends EventEmitter {
 
   _isIdentityQuery(query: Record<string, any>, _options?: Record<string, any>): boolean {
     var keys = Object.keys(query);
-    if (keys.length === 1 && (keys[0] === 'id' || keys[0] === '_id') && (typeof query['id'] === 'string' || typeof query['_id'] === 'string')) {
+    if (
+      keys.length === 1 &&
+      (keys[0] === "id" || keys[0] === "_id") &&
+      (typeof query["id"] === "string" || typeof query["_id"] === "string")
+    ) {
       return true;
     } else {
       return false;
@@ -35,11 +39,11 @@ class Collection extends EventEmitter {
   }
 
   _getKey(document: Record<string, any>): string {
-    return this._name + '_' + document['_id'];
+    return this._name + "_" + document["_id"];
   }
 
   insert(documents: any, options?: any, callback?: any): any {
-    return this._write('add', documents, options, callback);
+    return this._write("add", documents, options, callback);
   }
 
   _write(op: string, documents: any, options?: any, callback?: any): any {
@@ -54,11 +58,11 @@ class Collection extends EventEmitter {
     }
 
     return new Promise(function (resolve, reject) {
-      var txn: IDBTransaction = self._db.transaction(['documents'], 'readwrite');
-      var docs: IDBObjectStore = txn.objectStore('documents');
+      var txn: IDBTransaction = self._db.transaction(["documents"], "readwrite");
+      var docs: IDBObjectStore = txn.objectStore("documents");
 
       txn.oncomplete = (txn as any).onsuccess = function () {
-        self.emit('change', documents);
+        self.emit("change", documents);
         process.nextTick(function () {
           resolve(documents);
         });
@@ -71,8 +75,8 @@ class Collection extends EventEmitter {
       var numberOfDocs = documents.length;
       function addNext() {
         var document = documents[currentIndex++];
-        if (!_.has(document, '_id')) {
-          document['_id'] = document['id'] || uuid();
+        if (!_.has(document, "_id")) {
+          document["_id"] = document["id"] || uuid();
         }
         document.$collection = self._name;
         document.$collectionKey = self._getKey(document);
@@ -91,13 +95,13 @@ class Collection extends EventEmitter {
   }
 
   save(documents: any, options?: any, callback?: any): any {
-    return this._write('put', documents, options, callback);
+    return this._write("put", documents, options, callback);
   }
 
   drop(callback?: any): void {
-    var txn = this._db.transaction(['documents'], 'readwrite');
-    var docs = txn.objectStore('documents');
-    var cursor = docs.index('$collection').openCursor(this._name);
+    var txn = this._db.transaction(["documents"], "readwrite");
+    var docs = txn.objectStore("documents");
+    var cursor = docs.index("$collection").openCursor(this._name);
     cursor.onerror = function (event: Event) {
       if (callback) {
         callback(new Error(String(event)));
@@ -132,16 +136,16 @@ class Collection extends EventEmitter {
       if (err) {
         callback(err);
       } else {
-        var txn = self._db.transaction(['documents'], 'readwrite');
+        var txn = self._db.transaction(["documents"], "readwrite");
         txn.oncomplete = (txn as any).onsuccess = function () {
-          self.emit('change', { remove: query });
+          self.emit("change", { remove: query });
           callback(null);
         };
 
         txn.onerror = function (event: Event) {
           callback(new Error(String(event)));
         };
-        var docs = txn.objectStore('documents');
+        var docs = txn.objectStore("documents");
         _.forEach(res, function (doc: any) {
           var key = self._getKey(doc);
           var delReq = docs.delete(key);
@@ -152,9 +156,9 @@ class Collection extends EventEmitter {
 
   _getDocuments(query: any, callback: (err: Error | null, result?: any[]) => void): void {
     var qry = query.query || query;
-    var txn = this._db.transaction(['documents'], 'readonly');
-    var docs = txn.objectStore('documents');
-    var cursor = docs.index('$collection').openCursor(this._name);
+    var txn = this._db.transaction(["documents"], "readonly");
+    var docs = txn.objectStore("documents");
+    var cursor = docs.index("$collection").openCursor(this._name);
     var result: any[] = [];
     cursor.onerror = function (event: Event) {
       callback(new Error(String(event)));
@@ -176,10 +180,10 @@ class Collection extends EventEmitter {
 
   _getByKey(query: any, callback: (err: Error | null, result?: any[]) => void): void {
     var qry = query.query || query;
-    var txn = this._db.transaction(['documents'], 'readonly');
-    var docs = txn.objectStore('documents');
-    var key = qry['id'] || qry['_id'];
-    key = this._name + '_' + key;
+    var txn = this._db.transaction(["documents"], "readonly");
+    var docs = txn.objectStore("documents");
+    var key = qry["id"] || qry["_id"];
+    key = this._name + "_" + key;
     var request = docs.get(key);
     request.onsuccess = function (_event: Event) {
       var result: any[] = [];
@@ -189,7 +193,7 @@ class Collection extends EventEmitter {
       callback(null, result);
     };
     request.onerror = function (_event: Event) {
-      callback(new Error('Unable to _getByKey ' + key));
+      callback(new Error("Unable to _getByKey " + key));
     };
   }
 }

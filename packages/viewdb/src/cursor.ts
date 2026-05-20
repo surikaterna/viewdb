@@ -1,6 +1,16 @@
-import _ from 'lodash';
-import Observer from './observe';
-import { QueryObject, SortSpec, ProjectionSpec, Callback, VDocument, ObserveOptions, ObserveHandle, CollectionLike, GetDocumentsFn } from './types';
+import _ from "lodash";
+import Observer from "./observe";
+import {
+  Callback,
+  CollectionLike,
+  GetDocumentsFn,
+  ObserveHandle,
+  ObserveOptions,
+  ProjectionSpec,
+  QueryObject,
+  SortSpec,
+  VDocument,
+} from "./types";
 
 class Cursor {
   _collection: CollectionLike;
@@ -70,7 +80,7 @@ class Cursor {
   }
 
   _refresh(): void {
-    this._collection.emit('change', {});
+    this._collection.emit("change", {});
   }
 
   rewind(_options?: unknown): void {

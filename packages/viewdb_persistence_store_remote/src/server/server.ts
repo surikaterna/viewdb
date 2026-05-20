@@ -1,12 +1,12 @@
-import _ from 'lodash';
-import { VdbSocket } from '../types';
+import _ from "lodash";
+import { VdbSocket } from "../types";
 
 function sendChange(socket: VdbSocket, change: any, request: any): void {
-  socket.emit('/vdb/response', {
+  socket.emit("/vdb/response", {
     i: request.i,
     p: {
-      changes: [change]
-    }
+      changes: [change],
+    },
   });
 }
 
@@ -21,13 +21,13 @@ class ViewDbSocketServer {
     } else {
       _queryDecorator = queryDecorator;
     }
-    socket.on('disconnect', function () {
+    socket.on("disconnect", function () {
       _.forOwn(_observers, function (observer: any, handle: string) {
         observer.handle.stop();
         delete _observers[handle];
       });
     });
-    socket.on('/vdb/request', function (request: any) {
+    socket.on("/vdb/request", function (request: any) {
       if (request.p.find) {
         _queryDecorator(request.p.collection, request.p.find, function (decoratedQuery: any) {
           var cursor = viewdb.collection(request.p.collection).find(decoratedQuery);
@@ -49,16 +49,16 @@ class ViewDbSocketServer {
             if (cursor.project) {
               cursor.project(request.p.project);
             } else {
-              console.log('warn: no support for project on cursor');
+              console.log("warn: no support for project on cursor");
             }
           }
           cursor.toArray(function (err: Error | null, result: any) {
             if (err) {
               console.log(err);
             } else {
-              socket.emit('/vdb/response', {
+              socket.emit("/vdb/response", {
                 i: request.i,
-                p: result
+                p: result,
               });
             }
           });
@@ -79,9 +79,9 @@ class ViewDbSocketServer {
             if (err) {
               console.log(err);
             } else {
-              socket.emit('/vdb/response', {
+              socket.emit("/vdb/response", {
                 i: request.i,
-                p: result
+                p: result,
               });
             }
             cursor.close(function (_err: Error | null) {});
@@ -124,7 +124,7 @@ class ViewDbSocketServer {
             moved: function (e: any, oldIndex: number, newIndex: number) {
               sendChange(socket, { m: { e: e, o: oldIndex, n: newIndex } }, request);
             },
-            oplog: true
+            oplog: true,
           };
 
           if (request.p.events) {
@@ -152,30 +152,30 @@ class ViewDbSocketServer {
           var observeHandle = cursor.observe(observeOptions);
           _observers[observeId] = {
             i: request.i,
-            handle: observeHandle
+            handle: observeHandle,
           };
-          socket.emit('/vdb/response', {
+          socket.emit("/vdb/response", {
             i: request.i,
             p: {
-              handle: observeId
-            }
+              handle: observeId,
+            },
           });
           cursor.close(function (_err: Error | null) {});
         });
-      } else if (request.p['observe.stop']) {
-        var handle = request.p['observe.stop'].h;
+      } else if (request.p["observe.stop"]) {
+        var handle = request.p["observe.stop"].h;
         if (handle) {
           if (_observers[handle]) {
             _observers[handle].handle.stop();
             delete _observers[handle];
           } else {
-            console.error('Observer not registered on this server: ' + handle);
+            console.error("Observer not registered on this server: " + handle);
           }
         } else {
-          console.log('Observe stopped failed: ' + request.p['observe.stop'].h);
+          console.log("Observe stopped failed: " + request.p["observe.stop"].h);
         }
       } else {
-        throw new Error('Unknown request from client: ' + _.keys(request) + ' || ' + JSON.stringify(request.p));
+        throw new Error("Unknown request from client: " + _.keys(request) + " || " + JSON.stringify(request.p));
       }
     });
   }

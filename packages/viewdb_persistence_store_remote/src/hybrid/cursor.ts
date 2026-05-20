@@ -1,11 +1,11 @@
-import Kuery from 'kuery';
-import Observe from './observe';
-import reconcile from './reconcile';
-import _ from 'lodash';
-import TimeTracker from './timeTracker';
-import { LoggerFactory } from 'slf';
+import Kuery from "kuery";
+import _ from "lodash";
+import { LoggerFactory } from "slf";
+import Observe from "./observe";
+import reconcile from "./reconcile";
+import TimeTracker from "./timeTracker";
 
-var LOG = LoggerFactory.getLogger('viewdb:remote:hybrid-cursor');
+var LOG = LoggerFactory.getLogger("viewdb:remote:hybrid-cursor");
 
 class HybridCursor {
   _query: any;
@@ -125,7 +125,11 @@ class HybridCursor {
         timeTracker.stop();
         var queryTime = timeTracker.getExecutionTime();
         if (queryTime > self._options.queryMaxTime) {
-          LOG.warn('Query %j, took longer than allowed max time of %s seconds.', self._query, self._options.queryMaxTime);
+          LOG.warn(
+            "Query %j, took longer than allowed max time of %s seconds.",
+            self._query,
+            self._options.queryMaxTime
+          );
         }
 
         return callback.apply(self, arguments);
@@ -133,14 +137,21 @@ class HybridCursor {
     }
     timeTracker.start();
     if (this._options.cacheQueries && this._getCachedData) {
-      this._getCachedData(this._query, this._skip, this._limit, this._sort, this._project, function (err: Error | null, data: any) {
-        if (data) {
-          wrappedCallback(null, data);
-          return;
-        }
+      this._getCachedData(
+        this._query,
+        this._skip,
+        this._limit,
+        this._sort,
+        this._project,
+        function (err: Error | null, data: any) {
+          if (data) {
+            wrappedCallback(null, data);
+            return;
+          }
 
-        self._toArray(wrappedCallback);
-      });
+          self._toArray(wrappedCallback);
+        }
+      );
     } else {
       this._toArray(wrappedCallback);
     }
@@ -196,7 +207,11 @@ class HybridCursor {
         timeTracker.stop();
         var queryTime = timeTracker.getExecutionTime();
         if (queryTime > self._options.queryMaxTime) {
-          LOG.warn('Count query %j, took longer than allowed max time of %s seconds.', self._query, self._options.queryMaxTime);
+          LOG.warn(
+            "Count query %j, took longer than allowed max time of %s seconds.",
+            self._query,
+            self._options.queryMaxTime
+          );
         }
 
         return callback.apply(self, arguments);
@@ -240,14 +255,21 @@ class HybridCursor {
     }
 
     if (this._getCachedData) {
-      this._getCachedData(this._query, this._skip, this._limit, this._sort, this._project, function (err: Error | null, data: any) {
-        if (data) {
-          callback(null, data.length);
-          return;
-        }
+      this._getCachedData(
+        this._query,
+        this._skip,
+        this._limit,
+        this._sort,
+        this._project,
+        function (err: Error | null, data: any) {
+          if (data) {
+            callback(null, data.length);
+            return;
+          }
 
-        self._count(options, callback);
-      });
+          self._count(options, callback);
+        }
+      );
     } else {
       this._count(options, callback);
     }
@@ -276,7 +298,10 @@ class HybridCursor {
 
     var modifiedOptions = options;
     if (this._options.cacheQueries) {
-      modifiedOptions = Object.assign({}, options, { cacheCallback: this._onObserverCacheUpdate.bind(this), getCache: this._getObserverData.bind(this) });
+      modifiedOptions = Object.assign({}, options, {
+        cacheCallback: this._onObserverCacheUpdate.bind(this),
+        getCache: this._getObserverData.bind(this),
+      });
     }
 
     return new Observe(this._local, this._remote, this._options, modifiedOptions);

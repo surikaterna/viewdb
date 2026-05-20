@@ -1,9 +1,9 @@
-import _ from 'lodash';
-import { v4 as uuid } from 'uuid';
-import { EventEmitter } from 'events';
-import Kuery from 'kuery';
-import Cursor from '../cursor';
-import { VDocument, QueryObject, Callback, CollectionLike } from '../types';
+import { EventEmitter } from "events";
+import Kuery from "kuery";
+import _ from "lodash";
+import { v4 as uuid } from "uuid";
+import Cursor from "../cursor";
+import { Callback, CollectionLike, QueryObject, VDocument } from "../types";
 
 class Collection extends EventEmitter implements CollectionLike {
   _documents: VDocument[];
@@ -19,7 +19,12 @@ class Collection extends EventEmitter implements CollectionLike {
     callback(null, this._documents.length);
   }
 
-  _write(op: string, documents: VDocument | VDocument[], options: Record<string, any> | Callback<VDocument[]>, callback?: Callback<VDocument[]>): void {
+  _write(
+    op: string,
+    documents: VDocument | VDocument[],
+    options: Record<string, any> | Callback<VDocument[]>,
+    callback?: Callback<VDocument[]>
+  ): void {
     if (_.isFunction(options)) {
       callback = options as Callback<VDocument[]>;
     }
@@ -27,14 +32,14 @@ class Collection extends EventEmitter implements CollectionLike {
     for (let i = 0; i < docs.length; i++) {
       const document: Record<string, any> = docs[i];
       if (!_.isObject(document)) {
-        return callback!(new Error('Document must be object'));
+        return callback!(new Error("Document must be object"));
       }
-      if (!_.has(document, '_id')) {
+      if (!_.has(document, "_id")) {
         document._id = document.id || uuid();
       }
       const idx = _.findIndex(this._documents, { _id: document._id });
-      if (op === 'insert' && idx >= 0) {
-        return callback!(new Error('Unique constraint!'));
+      if (op === "insert" && idx >= 0) {
+        return callback!(new Error("Unique constraint!"));
       }
       if (idx === -1) {
         this._documents.push(document as VDocument);
@@ -42,18 +47,26 @@ class Collection extends EventEmitter implements CollectionLike {
         this._documents[idx] = document as VDocument;
       }
     }
-    this.emit('change', docs);
+    this.emit("change", docs);
     if (callback) {
       callback(null, docs);
     }
   }
 
-  insert(documents: VDocument | VDocument[], options?: Record<string, any> | Callback<VDocument[]>, callback?: Callback<VDocument[]>): void {
-    return this._write('insert', documents, options!, callback);
+  insert(
+    documents: VDocument | VDocument[],
+    options?: Record<string, any> | Callback<VDocument[]>,
+    callback?: Callback<VDocument[]>
+  ): void {
+    return this._write("insert", documents, options!, callback);
   }
 
-  save(documents: VDocument | VDocument[], options?: Record<string, any> | Callback<VDocument[]>, callback?: Callback<VDocument[]>): void {
-    return this._write('save', documents, options!, callback);
+  save(
+    documents: VDocument | VDocument[],
+    options?: Record<string, any> | Callback<VDocument[]>,
+    callback?: Callback<VDocument[]>
+  ): void {
+    return this._write("save", documents, options!, callback);
   }
 
   drop(callback?: Callback): void {
@@ -78,11 +91,11 @@ class Collection extends EventEmitter implements CollectionLike {
   }
 
   ensureIndex(): never {
-    throw new Error('ensureIndex not supported!');
+    throw new Error("ensureIndex not supported!");
   }
 
   createIndex(): never {
-    throw new Error('createIndex not supported!');
+    throw new Error("createIndex not supported!");
   }
 
   _getDocuments(queryObject: QueryObject, callback: Callback<VDocument[]>): void {

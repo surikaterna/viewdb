@@ -1,9 +1,9 @@
-import assert from 'assert';
+import assert from "assert";
 
 export default function (config) {
-  var COLL = 'test_shared';
+  var COLL = "test_shared";
 
-  describe('crud', function () {
+  describe("crud", function () {
     var store;
 
     beforeEach(function () {
@@ -21,7 +21,7 @@ export default function (config) {
       });
     });
 
-    it('find on empty collection returns 0 docs', function () {
+    it("find on empty collection returns 0 docs", function () {
       return new Promise(function (resolve, reject) {
         store
           .collection(COLL)
@@ -34,9 +34,9 @@ export default function (config) {
       });
     });
 
-    it('find returns single inserted document', function () {
+    it("find returns single inserted document", function () {
       return new Promise(function (resolve, reject) {
-        store.collection(COLL).insert({ _id: 'echo' }, function () {
+        store.collection(COLL).insert({ _id: "echo" }, function () {
           store
             .collection(COLL)
             .find({})
@@ -49,10 +49,10 @@ export default function (config) {
       });
     });
 
-    it('find returns multiple inserted documents', function () {
+    it("find returns multiple inserted documents", function () {
       return new Promise(function (resolve, reject) {
-        store.collection(COLL).insert({ _id: 'echo' }, function () {
-          store.collection(COLL).insert({ _id: 'sierra' }, function () {
+        store.collection(COLL).insert({ _id: "echo" }, function () {
+          store.collection(COLL).insert({ _id: "sierra" }, function () {
             store
               .collection(COLL)
               .find({})
@@ -66,9 +66,9 @@ export default function (config) {
       });
     });
 
-    it('insert bulk inserts multiple documents', function () {
+    it("insert bulk inserts multiple documents", function () {
       return new Promise(function (resolve, reject) {
-        store.collection(COLL).insert([{ _id: 'echo' }, { _id: 'sierra' }], function () {
+        store.collection(COLL).insert([{ _id: "echo" }, { _id: "sierra" }], function () {
           store
             .collection(COLL)
             .find({})
@@ -81,10 +81,10 @@ export default function (config) {
       });
     });
 
-    it('save updates an existing document', function () {
+    it("save updates an existing document", function () {
       return new Promise(function (resolve, reject) {
-        store.collection(COLL).insert({ _id: 'echo' }, function () {
-          store.collection(COLL).save({ _id: 'echo', version: 2 }, function () {
+        store.collection(COLL).insert({ _id: "echo" }, function () {
+          store.collection(COLL).save({ _id: "echo", version: 2 }, function () {
             store
               .collection(COLL)
               .find({})
@@ -99,10 +99,10 @@ export default function (config) {
       });
     });
 
-    it('remove deletes a document', function () {
+    it("remove deletes a document", function () {
       return new Promise(function (resolve, reject) {
-        store.collection(COLL).insert({ _id: 'echo' }, function () {
-          store.collection(COLL).remove({ _id: 'echo' }, null, function () {
+        store.collection(COLL).insert({ _id: "echo" }, function () {
+          store.collection(COLL).remove({ _id: "echo" }, null, function () {
             store
               .collection(COLL)
               .find({})
@@ -116,9 +116,9 @@ export default function (config) {
       });
     });
 
-    it('drop removes all documents', function () {
+    it("drop removes all documents", function () {
       return new Promise(function (resolve, reject) {
-        store.collection(COLL).insert({ _id: 'echo' }, function () {
+        store.collection(COLL).insert({ _id: "echo" }, function () {
           store.collection(COLL).drop(function () {
             store
               .collection(COLL)
@@ -133,4 +133,4 @@ export default function (config) {
       });
     });
   });
-};
+}

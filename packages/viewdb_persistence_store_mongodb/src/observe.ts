@@ -1,15 +1,20 @@
-import _ from 'lodash';
-import Kuery from 'kuery';
-import { projectDocument } from './utils';
-import { LoggerFactory } from 'slf';
-import type { ObserveOptions, ObserveHandle } from 'viewdb';
+import Kuery from "kuery";
+import _ from "lodash";
+import { LoggerFactory } from "slf";
+import type { ObserveHandle, ObserveOptions } from "viewdb";
+import { Observer as LegacyObserver, merge } from "viewdb";
+import { projectDocument } from "./utils";
 
-import { merge, Observer as LegacyObserver } from 'viewdb';
-
-const log = LoggerFactory.getLogger('viewdb:mongodb:observer');
+const log = LoggerFactory.getLogger("viewdb:mongodb:observer");
 
 class Observer {
-  _queryOptions!: { query?: any; skip?: number; limit?: number; sort?: Record<string, 1 | -1>; project?: Record<string, 0 | 1> };
+  _queryOptions!: {
+    query?: any;
+    skip?: number;
+    limit?: number;
+    sort?: Record<string, 1 | -1>;
+    project?: Record<string, 0 | 1>;
+  };
   _query: any;
   _options!: ObserveOptions;
   _collection: any;
@@ -45,7 +50,7 @@ class Observer {
     };
     return {
       stop: dispose,
-      dispose: dispose
+      dispose: dispose,
     } as any;
   }
 
@@ -59,28 +64,28 @@ class Observer {
       } else {
         merge(null, documents, _.defaults({ comparatorId: comparator }, self._options));
       }
-      self._cache = _.map(documents, '_id');
+      self._cache = _.map(documents, "_id");
       cb();
     });
   }
 
   _onOperation(doc: any): void {
     if (!this._cache) {
-      log.warn('Got oplog event for document but cache was already disposed');
+      log.warn("Got oplog event for document but cache was already disposed");
       return;
     }
     switch (doc.op) {
-      case 'i':
+      case "i":
         this._onInsert(doc);
         break;
-      case 'u':
+      case "u":
         this._onUpdate(doc);
         break;
-      case 'd':
+      case "d":
         this._onRemove(doc);
         break;
       default:
-        log.warn('Unhandled operation: %s', doc.op);
+        log.warn("Unhandled operation: %s", doc.op);
         break;
     }
   }

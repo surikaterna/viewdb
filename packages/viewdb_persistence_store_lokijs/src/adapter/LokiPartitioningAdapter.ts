@@ -6,7 +6,8 @@
   So we should allow this to continue as if the data is empty string and it's the last page.
 */
 
-import Loki from 'lokijs';
+import Loki from "lokijs";
+
 /**
  * An adapter for adapters.  Converts a non reference mode adapter into a reference mode adapter
  * which can perform destructuring and partioning.  Each collection will be stored in its own key/save and
@@ -35,36 +36,36 @@ class LokiPartitioningAdapter {
   private dirtyPartitions?: number[];
 
   constructor(adapter: any, options: any) {
-    this.mode = 'reference';
+    this.mode = "reference";
     this.adapter = null;
     this.options = options || {};
     this.dbref = null;
-    this.dbname = '';
+    this.dbname = "";
     this.pageIterator = {};
 
     // verify user passed an appropriate adapter
     if (adapter) {
-      if (adapter.mode === 'reference') {
-        throw new Error('LokiPartitioningAdapter cannot be instantiated with a reference mode adapter');
+      if (adapter.mode === "reference") {
+        throw new Error("LokiPartitioningAdapter cannot be instantiated with a reference mode adapter");
       } else {
         this.adapter = adapter;
       }
     } else {
-      throw new Error('LokiPartitioningAdapter requires a (non-reference mode) adapter on construction');
+      throw new Error("LokiPartitioningAdapter requires a (non-reference mode) adapter on construction");
     }
 
     // set collection paging defaults
-    if (!this.options.hasOwnProperty('paging')) {
+    if (!this.options.hasOwnProperty("paging")) {
       this.options.paging = false;
     }
 
     // default to page size of 25 megs (can be up to your largest serialized object size larger than this)
-    if (!this.options.hasOwnProperty('pageSize')) {
+    if (!this.options.hasOwnProperty("pageSize")) {
       this.options.pageSize = 25 * 1024 * 1024;
     }
 
-    if (!this.options.hasOwnProperty('delimiter')) {
-      this.options.delimiter = '$<\n';
+    if (!this.options.hasOwnProperty("delimiter")) {
+      this.options.delimiter = "$<\n";
     }
   }
 
@@ -91,8 +92,10 @@ class LokiPartitioningAdapter {
         return;
       }
 
-      if (typeof result !== 'string') {
-        callback(new Error('LokiPartitioningAdapter received an unexpected response from inner adapter loadDatabase()'));
+      if (typeof result !== "string") {
+        callback(
+          new Error("LokiPartitioningAdapter received an unexpected response from inner adapter loadDatabase()")
+        );
       }
 
       // I will want to use loki destructuring helper methods so i will inflate into typed instance
@@ -109,7 +112,7 @@ class LokiPartitioningAdapter {
 
       self.pageIterator = {
         collection: 0,
-        pageIndex: 0
+        pageIndex: 0,
       };
 
       self.loadNextPartition(0, function () {
@@ -125,7 +128,7 @@ class LokiPartitioningAdapter {
    * @param {function} callback - adapter callback to return load result to caller
    */
   loadNextPartition(partition: any, callback: any) {
-    var keyname = this.dbname + '.' + partition;
+    var keyname = this.dbname + "." + partition;
     var self = this;
 
     if (this.options.paging === true) {
@@ -135,7 +138,10 @@ class LokiPartitioningAdapter {
     }
 
     this.adapter.loadDatabase(keyname, function (result: any) {
-      var data = self.dbref.deserializeCollection(result, { delimited: true, collectionIndex: partition });
+      var data = self.dbref.deserializeCollection(result, {
+        delimited: true,
+        collectionIndex: partition,
+      });
       self.dbref.collections[partition].data = data;
 
       if (++partition < self.dbref.collections.length) {
@@ -153,7 +159,7 @@ class LokiPartitioningAdapter {
    */
   loadNextPage(callback: any) {
     // calculate name for next saved page in sequence
-    var keyname = this.dbname + '.' + this.pageIterator.collection + '.' + this.pageIterator.pageIndex;
+    var keyname = this.dbname + "." + this.pageIterator.collection + "." + this.pageIterator.pageIndex;
     var self = this;
 
     // load whatever page is next in sequence
@@ -161,23 +167,23 @@ class LokiPartitioningAdapter {
       let data;
       // ** Surikat override **
       if (!result) {
-        data = [''];
+        data = [""];
       } else {
         data = result.split(self.options.delimiter);
       }
       // ** end Surikat override **
 
-      result = ''; // free up memory now that we have split it into array
+      result = ""; // free up memory now that we have split it into array
       var dlen = data.length;
       var idx;
 
       // detect if last page by presence of final empty string element and remove it if so
-      var isLastPage = data[dlen - 1] === '';
+      var isLastPage = data[dlen - 1] === "";
       if (isLastPage) {
         data.pop();
         dlen = data.length;
         // empty collections are just a delimiter meaning two blank items
-        if (data[dlen - 1] === '' && dlen === 1) {
+        if (data[dlen - 1] === "" && dlen === 1) {
           data.pop();
           dlen = data.length;
         }
@@ -245,14 +251,14 @@ class LokiPartitioningAdapter {
   saveNextPartition(callback: any) {
     var self = this;
     var partition = this.dirtyPartitions?.shift();
-    var keyname = this.dbname + (partition === -1 ? '' : '.' + partition);
+    var keyname = this.dbname + (partition === -1 ? "" : "." + partition);
 
     // if we are doing paging and this is collection partition
     if (this.options.paging && partition !== -1) {
       this.pageIterator = {
         collection: partition,
         docIndex: 0,
-        pageIndex: 0
+        pageIndex: 0,
       };
 
       // since saveNextPage recursively calls itself until done, our callback means this whole paged partition is finished
@@ -270,7 +276,7 @@ class LokiPartitioningAdapter {
     var result = this.dbref.serializeDestructured({
       partitioned: true,
       delimited: true,
-      partition: partition
+      partition: partition,
     });
 
     this.adapter.saveDatabase(keyname, result, function (err: any) {
@@ -295,17 +301,17 @@ class LokiPartitioningAdapter {
   saveNextPage(callback: any) {
     var self = this;
     var coll = this.dbref.collections[this.pageIterator.collection];
-    var keyname = this.dbname + '.' + this.pageIterator.collection + '.' + this.pageIterator.pageIndex;
+    var keyname = this.dbname + "." + this.pageIterator.collection + "." + this.pageIterator.pageIndex;
     var pageLen = 0,
       cdlen = coll.data.length,
       delimlen = this.options.delimiter.length;
-    var serializedObject = '',
-      pageBuilder = '';
+    var serializedObject = "",
+      pageBuilder = "";
     var doneWithPartition = false,
       doneWithPage = false;
 
     var pageSaveCallback = function (err: any) {
-      pageBuilder = '';
+      pageBuilder = "";
 
       if (err) {
         callback(err);

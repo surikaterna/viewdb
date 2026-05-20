@@ -1,4 +1,4 @@
-import VersioningPlugin from './viewdb_versioning_plugin';
-import TimestampPlugin from './viewdb_timestamp_plugin';
+import TimestampPlugin from "./viewdb_timestamp_plugin";
+import VersioningPlugin from "./viewdb_versioning_plugin";
 
-export { VersioningPlugin, TimestampPlugin };
+export { TimestampPlugin, VersioningPlugin };

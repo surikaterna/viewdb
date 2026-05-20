@@ -1,9 +1,9 @@
-import Promise from 'bluebird';
-import _ from 'lodash';
-import Cursor from './cursor';
-import { EventEmitter } from 'events';
-import { v4 as uuid } from 'uuid';
-import { VdbClient } from '../types';
+import Promise from "bluebird";
+import { EventEmitter } from "events";
+import _ from "lodash";
+import { v4 as uuid } from "uuid";
+import { VdbClient } from "../types";
+import Cursor from "./cursor";
 
 class Collection extends EventEmitter {
   static Cursor: any = Cursor;
@@ -25,15 +25,15 @@ class Collection extends EventEmitter {
   }
 
   insert(_document: any, _options?: any, _callback?: any): void {
-    throw new Error('Not implemented');
+    throw new Error("Not implemented");
   }
 
   save(_document: any, _options?: any, _callback?: any): void {
-    throw new Error('Not implemented');
+    throw new Error("Not implemented");
   }
 
   remove(_document: any, _options?: any, _callback?: any): void {
-    throw new Error('Not implemented');
+    throw new Error("Not implemented");
   }
 
   _buildParams(query: any, method?: string): Record<string, any> {
@@ -53,7 +53,7 @@ class Collection extends EventEmitter {
       skip: skip,
       limit: limit,
       find: q,
-      sort: sort
+      sort: sort,
     };
     if (method) {
       params.method = method;
@@ -89,7 +89,7 @@ class Collection extends EventEmitter {
     var params: any = {
       id: uuid(),
       count: query,
-      collection: this._name
+      collection: this._name,
     };
 
     if (options) {

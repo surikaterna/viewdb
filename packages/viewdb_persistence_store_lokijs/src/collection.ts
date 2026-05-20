@@ -1,11 +1,27 @@
-import { EventEmitter } from 'events';
-import { findIndex, first, forEach, get, isArray, isFunction, isNaN, isNumber, pick, range, remove, some, throttle, uniq, unset, values } from 'lodash';
-import { LoggerFactory } from 'slf';
-import parseSort from './parseSort';
+import { EventEmitter } from "events";
+import {
+  findIndex,
+  first,
+  forEach,
+  get,
+  isArray,
+  isFunction,
+  isNaN,
+  isNumber,
+  pick,
+  range,
+  remove,
+  some,
+  throttle,
+  uniq,
+  unset,
+  values,
+} from "lodash";
+import { LoggerFactory } from "slf";
+import { Cursor } from "viewdb";
+import parseSort from "./parseSort";
 
-import { Cursor } from 'viewdb';
-
-const LOG = LoggerFactory.getLogger('viewdb:lokijs:collection');
+const LOG = LoggerFactory.getLogger("viewdb:lokijs:collection");
 
 const fixCorruptedLoki = (collection: any) => {
   if (!collection.idIndex) {
@@ -33,12 +49,12 @@ class Collection extends EventEmitter {
     this.db = db;
     const collection = this.db.addCollection(name);
     this.collection = collection;
-    if (this.collection.constraints?.unique?.['_id']) {
+    if (this.collection.constraints?.unique?.["_id"]) {
       try {
-        unset(this.collection.constraints.unique, '_id');
-        remove(this.collection.uniqueNames, (key) => key === '_id');
+        unset(this.collection.constraints.unique, "_id");
+        remove(this.collection.uniqueNames, (key) => key === "_id");
       } catch (e: any) {
-        LOG.error('Error trying to remove uniqueIndex _id: %s', e?.message);
+        LOG.error("Error trying to remove uniqueIndex _id: %s", e?.message);
       }
     }
     fixCorruptedLoki(collection);
@@ -51,7 +67,7 @@ class Collection extends EventEmitter {
     this.ttl = {
       fields: {},
       daemonInterval: 1000 * 60,
-      daemon: undefined
+      daemon: undefined,
     };
   }
 
@@ -60,14 +76,14 @@ class Collection extends EventEmitter {
   }
 
   insert(documents: any, options?: any, callback?: any) {
-    LOG.info('Inserting document to collection %s', this.name);
+    LOG.info("Inserting document to collection %s", this.name);
     if (isFunction(options)) {
       callback = options;
       options = null;
     }
     try {
       const insert = this.collection.insert(documents);
-      this.emitThrottled('change', documents);
+      this.emitThrottled("change", documents);
       if (isFunction(callback)) {
         callback(null, insert);
       }
@@ -75,7 +91,7 @@ class Collection extends EventEmitter {
       if (isFunction(callback)) {
         callback(e);
       } else {
-        LOG.warn('insert failed without callback, docments: %j. Error:', documents, e);
+        LOG.warn("insert failed without callback, docments: %j. Error:", documents, e);
       }
     }
   }
@@ -87,7 +103,7 @@ class Collection extends EventEmitter {
         if (doc.commitId) {
           doc._id = doc.commitId;
         } else {
-          LOG.warn('Failed to insert/update doc to collection. Missing id %j', doc);
+          LOG.warn("Failed to insert/update doc to collection. Missing id %j", doc);
           return;
         }
       } else {
@@ -101,21 +117,28 @@ class Collection extends EventEmitter {
     if (!toUpdate) {
       this.collection.insert(doc);
     } else {
-      if (get(options, 'versionCheck', false)) {
-        const prevVersion = get(toUpdate, 'version');
-        const nextVersion = get(doc, 'version');
+      if (get(options, "versionCheck", false)) {
+        const prevVersion = get(toUpdate, "version");
+        const nextVersion = get(doc, "version");
         if (isNumber(prevVersion) && isNumber(nextVersion)) {
-          const skipUpdate = get(options, 'acceptSameVersion', false) ? prevVersion > nextVersion : prevVersion >= nextVersion;
+          const skipUpdate = get(options, "acceptSameVersion", false)
+            ? prevVersion > nextVersion
+            : prevVersion >= nextVersion;
           if (skipUpdate) {
-            LOG.debug('Skipping update of document id %s . prev version: %s next version: %s', doc._id, prevVersion, nextVersion);
+            LOG.debug(
+              "Skipping update of document id %s . prev version: %s next version: %s",
+              doc._id,
+              prevVersion,
+              nextVersion
+            );
             return;
           }
         }
       }
       if (!toUpdate.meta || !toUpdate.$loki) {
         // To fix bad data saved in collection
-        const collectionData = get(this.collection, 'data', []);
-        const collectionIdIndex = get(this.collection, 'idIndex', []);
+        const collectionData = get(this.collection, "data", []);
+        const collectionIdIndex = get(this.collection, "idIndex", []);
         const index = findIndex(collectionData, { _id: doc._id });
         if (index > -1) {
           if (
@@ -123,21 +146,21 @@ class Collection extends EventEmitter {
             get(collectionIdIndex, `[${index}]`) === undefined &&
             (!get(collectionData, `[${index}].$loki`) || !get(collectionData, `[${index}].meta`))
           ) {
-            LOG.debug('Remove bad data from collection and insert. %j', doc);
+            LOG.debug("Remove bad data from collection and insert. %j", doc);
             collectionData.splice(index, 1);
             collectionIdIndex.splice(index, 1);
             unset(this.collection, `constraints.unique._id.keyMap.${doc._id}`);
-            unset(this.collection, 'constraints.unique._id.lokiMap.undefined');
+            unset(this.collection, "constraints.unique._id.lokiMap.undefined");
             this.collection.insert(doc);
           }
         }
       } else {
-        const meta = pick(toUpdate, ['meta', '$loki']);
+        const meta = pick(toUpdate, ["meta", "$loki"]);
         const updated = Object.assign(meta, doc); // add lokijs metada to object
         try {
           this.collection.update(updated);
         } catch (e: any) {
-          LOG.warn('Update error in _updateSingle. %s .. try to fix corrupted $loki data', e?.message);
+          LOG.warn("Update error in _updateSingle. %s .. try to fix corrupted $loki data", e?.message);
           // try fix corrupt and update again
           fixCorruptedLoki(this.collection);
           const toUpdates = this.collection.find(query);
@@ -147,15 +170,15 @@ class Collection extends EventEmitter {
             try {
               this.collection.remove(duplicates.$loki);
             } catch (e: any) {
-              LOG.error('Failed to remove duplicates with _id: %s. Error: %s', duplicate._id, e?.message);
+              LOG.error("Failed to remove duplicates with _id: %s. Error: %s", duplicate._id, e?.message);
             }
           });
-          const meta = pick(toUpdate, ['meta', '$loki']);
+          const meta = pick(toUpdate, ["meta", "$loki"]);
           const updated = Object.assign(meta, doc);
           try {
             this.collection.update(updated);
           } catch (e: any) {
-            LOG.warn('Update error in _updateSingle after fix corrupted $loki. Error: %s', e?.message);
+            LOG.warn("Update error in _updateSingle after fix corrupted $loki. Error: %s", e?.message);
           }
         }
       }
@@ -176,7 +199,7 @@ class Collection extends EventEmitter {
     } else {
       this._updateSingle(documents, options);
     }
-    this.emitThrottled('change', documents);
+    this.emitThrottled("change", documents);
     if (isFunction(callback)) {
       callback(null, documents);
     }
@@ -194,12 +217,12 @@ class Collection extends EventEmitter {
     if (isFunction(callback)) {
       callback();
     }
-    this.emitThrottled('change', { remove: query });
+    this.emitThrottled("change", { remove: query });
   }
 
   _getDocuments(query: any, callback: any) {
     const qry = query.query || query;
-    LOG.info('Collection: %s - Executing query: %j', this.name, qry);
+    LOG.info("Collection: %s - Executing query: %j", this.name, qry);
     var chain = this.collection.chain().find(qry);
     if (query.sort) {
       const parsedSort = parseSort(query.sort);
@@ -212,7 +235,7 @@ class Collection extends EventEmitter {
       chain = chain.limit(query.limit);
     }
     const data = chain.data({ removeMeta: true });
-    LOG.info('query completed. Results: %s', data.length);
+    LOG.info("query completed. Results: %s", data.length);
     callback(null, data);
   }
 
@@ -234,7 +257,7 @@ class Collection extends EventEmitter {
     const ttlFields = this.ttl.fields;
     return () => {
       const removedIds: any[] = [];
-      LOG.info('[ttl-daemon] - cleanup running for fields %j', ttlFields);
+      LOG.info("[ttl-daemon] - cleanup running for fields %j", ttlFields);
       const now = Date.now();
       const toRemove = collection.chain().where((doc: any) => {
         let shouldRemove = false;
@@ -245,7 +268,7 @@ class Collection extends EventEmitter {
             const diff = now - timestamp;
             if (maxAgeMs < diff) {
               shouldRemove = true;
-              LOG.info('[ttl-daemon] - removing expired document %j', doc);
+              LOG.info("[ttl-daemon] - removing expired document %j", doc);
               removedIds.push(doc.id || doc._id);
             }
           }
@@ -253,10 +276,10 @@ class Collection extends EventEmitter {
         return shouldRemove;
       });
       if (removedIds.length > 0) {
-        LOG.info('[ttl-daemon] - removed expired documents for ids %j', removedIds);
+        LOG.info("[ttl-daemon] - removed expired documents for ids %j", removedIds);
       }
       toRemove.remove();
-      this.emitThrottled('change', { remove: { _id: { $in: removedIds } } });
+      this.emitThrottled("change", { remove: { _id: { $in: removedIds } } });
     };
   }
 

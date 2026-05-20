@@ -1,4 +1,4 @@
-import Collection from './collection';
+import Collection from "./collection";
 
 class InMemoryStore {
   _collections: Record<string, Collection>;

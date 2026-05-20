@@ -1,9 +1,9 @@
-import assert from 'assert';
+import assert from "assert";
 
 export default function (config) {
-  var COLL = 'test_shared';
+  var COLL = "test_shared";
 
-  describe('query', function () {
+  describe("query", function () {
     var store;
 
     beforeEach(function () {
@@ -21,17 +21,17 @@ export default function (config) {
       });
     });
 
-    it('find by _id returns correct document', function () {
+    it("find by _id returns correct document", function () {
       return new Promise(function (resolve, reject) {
-        store.collection(COLL).insert({ _id: 'echo' }, function () {
-          store.collection(COLL).insert({ _id: 'sierra' }, function () {
+        store.collection(COLL).insert({ _id: "echo" }, function () {
+          store.collection(COLL).insert({ _id: "sierra" }, function () {
             store
               .collection(COLL)
-              .find({ _id: 'echo' })
+              .find({ _id: "echo" })
               .toArray(function (err, results) {
                 if (err) return reject(err);
                 assert.strictEqual(results.length, 1);
-                assert.strictEqual(results[0]._id, 'echo');
+                assert.strictEqual(results[0]._id, "echo");
                 resolve();
               });
           });
@@ -39,19 +39,19 @@ export default function (config) {
       });
     });
 
-    it('find by nested key returns correct document', function () {
+    it("find by nested key returns correct document", function () {
       return new Promise(function (resolve, reject) {
-        var doc1 = { _id: 'echo', name: { first: 'ECHO', last: 'TV' } };
-        var doc2 = { _id: 'sierra', name: { first: 'SIERRA', last: 'TV' } };
+        var doc1 = { _id: "echo", name: { first: "ECHO", last: "TV" } };
+        var doc2 = { _id: "sierra", name: { first: "SIERRA", last: "TV" } };
         store.collection(COLL).insert(doc1, function () {
           store.collection(COLL).insert(doc2, function () {
             store
               .collection(COLL)
-              .find({ 'name.first': 'ECHO' })
+              .find({ "name.first": "ECHO" })
               .toArray(function (err, results) {
                 if (err) return reject(err);
                 assert.strictEqual(results.length, 1);
-                assert.strictEqual(results[0]._id, 'echo');
+                assert.strictEqual(results[0]._id, "echo");
                 resolve();
               });
           });
@@ -59,13 +59,13 @@ export default function (config) {
       });
     });
 
-    it('find with $in returns matching documents', function () {
+    it("find with $in returns matching documents", function () {
       return new Promise(function (resolve, reject) {
-        store.collection(COLL).insert({ _id: 'echo' }, function () {
-          store.collection(COLL).insert({ _id: 'sierra' }, function () {
+        store.collection(COLL).insert({ _id: "echo" }, function () {
+          store.collection(COLL).insert({ _id: "sierra" }, function () {
             store
               .collection(COLL)
-              .find({ _id: { $in: ['echo', 'sierra'] } })
+              .find({ _id: { $in: ["echo", "sierra"] } })
               .toArray(function (err, results) {
                 if (err) return reject(err);
                 assert.strictEqual(results.length, 2);
@@ -76,4 +76,4 @@ export default function (config) {
       });
     });
   });
-};
+}

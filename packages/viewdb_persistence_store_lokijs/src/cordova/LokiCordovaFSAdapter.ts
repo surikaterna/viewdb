@@ -1,6 +1,6 @@
-import { LoggerFactory } from 'slf';
+import { LoggerFactory } from "slf";
 
-const LOG = LoggerFactory.getLogger('viewdb:lokijs:cordova-fs-adapter');
+const LOG = LoggerFactory.getLogger("viewdb:lokijs:cordova-fs-adapter");
 
 class LokiCordovaFSAdapterError extends Error {}
 
@@ -12,14 +12,14 @@ class LokiCordovaFSAdapter {
     this.options = options;
     this.location = (window as any)?.cordova?.file?.externalDataDirectory;
     this.deviceReady = new Promise((resolve) => {
-      document.addEventListener('deviceready', () => {
+      document.addEventListener("deviceready", () => {
         resolve(true);
       });
     });
   }
 
   saveDatabase(dbname: any, dbstring: any, callback: any) {
-    LOG.info('saving database');
+    LOG.info("saving database");
     this._getFile(
       dbname,
       (fileEntry: any) => {
@@ -27,59 +27,59 @@ class LokiCordovaFSAdapter {
           (fileWriter: any) => {
             fileWriter.onwriteend = () => {
               if (fileWriter.length === 0) {
-                const blob = this._createBlob(dbstring, 'text/plain');
+                const blob = this._createBlob(dbstring, "text/plain");
                 fileWriter.write(blob);
-                LOG.info('saved database to %s', this.location);
+                LOG.info("saved database to %s", this.location);
                 callback();
               }
             };
             fileWriter.truncate(0);
           },
           (err: any) => {
-            LOG.error('error writing file ', err);
-            throw new LokiCordovaFSAdapterError('Unable to write file' + JSON.stringify(err));
+            LOG.error("error writing file ", err);
+            throw new LokiCordovaFSAdapterError("Unable to write file" + JSON.stringify(err));
           }
         );
       },
       (err: any) => {
-        LOG.error('error getting file', err);
-        throw new LokiCordovaFSAdapterError('Unable to get file' + JSON.stringify(err));
+        LOG.error("error getting file", err);
+        throw new LokiCordovaFSAdapterError("Unable to get file" + JSON.stringify(err));
       }
     );
   }
 
   loadDatabase(dbname: any, callback: any) {
-    LOG.info('Loading database - waiting for device ready');
+    LOG.info("Loading database - waiting for device ready");
     this.deviceReady.then(() => {
-      LOG.info('Loading database - device is ready - loading db file');
+      LOG.info("Loading database - device is ready - loading db file");
       this._getFile(
         dbname,
         (fileEntry: any) => {
           fileEntry.file(
             (file: any) => {
-              LOG.info('Loaded file %j', file);
+              LOG.info("Loaded file %j", file);
               const reader = new FileReader();
               reader.onloadend = (event) => {
                 const contents = event?.target?.result;
                 if ((contents as string).length === 0) {
-                  LOG.warn('could not find database');
+                  LOG.warn("could not find database");
                   callback(null);
                 } else {
-                  LOG.info('Loaded database from %s', this.location);
+                  LOG.info("Loaded database from %s", this.location);
                   callback(contents);
                 }
               };
               reader.readAsText(file);
             },
             (err: any) => {
-              LOG.error('error reading file', err);
-              callback(new LokiCordovaFSAdapterError('Unable to read file' + err.message));
+              LOG.error("error reading file", err);
+              callback(new LokiCordovaFSAdapterError("Unable to read file" + err.message));
             }
           );
         },
         (err: any) => {
-          LOG.error('error getting file', err);
-          callback(new LokiCordovaFSAdapterError('Unable to get file: ' + err.message));
+          LOG.error("error getting file", err);
+          callback(new LokiCordovaFSAdapterError("Unable to get file: " + err.message));
         }
       );
     });
@@ -89,7 +89,7 @@ class LokiCordovaFSAdapter {
     (window as any).resolveLocalFileSystemURL(
       this.location,
       (dir: any) => {
-        let fileName = this.options.prefix + '__' + dbname;
+        let fileName = this.options.prefix + "__" + dbname;
         dir.getFile(
           fileName,
           { create: true },
@@ -99,19 +99,19 @@ class LokiCordovaFSAdapter {
                 callback();
               },
               (err: any) => {
-                LOG.error('error delete file', err);
-                throw new LokiCordovaFSAdapterError('Unable delete file' + JSON.stringify(err));
+                LOG.error("error delete file", err);
+                throw new LokiCordovaFSAdapterError("Unable delete file" + JSON.stringify(err));
               }
             );
           },
           (err: any) => {
-            LOG.error('error delete database', err);
-            throw new LokiCordovaFSAdapterError('Unable delete database' + JSON.stringify(err));
+            LOG.error("error delete database", err);
+            throw new LokiCordovaFSAdapterError("Unable delete database" + JSON.stringify(err));
           }
         );
       },
       (err: any) => {
-        throw new LokiCordovaFSAdapterError('Unable to resolve local file system URL' + JSON.stringify(err));
+        throw new LokiCordovaFSAdapterError("Unable to resolve local file system URL" + JSON.stringify(err));
       }
     );
   }
@@ -120,11 +120,11 @@ class LokiCordovaFSAdapter {
     (window as any).resolveLocalFileSystemURL(
       this.location,
       (dir: any) => {
-        let fileName = this.options.prefix + '__' + name;
+        let fileName = this.options.prefix + "__" + name;
         dir.getFile(fileName, { create: true }, handleSuccess, handleError);
       },
       (err: any) => {
-        throw new LokiCordovaFSAdapterError('Unable to resolve local file system URL' + JSON.stringify(err));
+        throw new LokiCordovaFSAdapterError("Unable to resolve local file system URL" + JSON.stringify(err));
       }
     );
   }
@@ -137,18 +137,21 @@ class LokiCordovaFSAdapter {
       blob = new Blob([data], { type: datatype });
     } catch (err: any) {
       (window as any).BlobBuilder =
-        (window as any).BlobBuilder || (window as any).WebKitBlobBuilder || (window as any).MozBlobBuilder || (window as any).MSBlobBuilder;
+        (window as any).BlobBuilder ||
+        (window as any).WebKitBlobBuilder ||
+        (window as any).MozBlobBuilder ||
+        (window as any).MSBlobBuilder;
 
-      if (err.name === 'TypeError' && (window as any).BlobBuilder) {
+      if (err.name === "TypeError" && (window as any).BlobBuilder) {
         const bb = new (window as any).BlobBuilder();
         bb.append(data);
         blob = bb.getBlob(datatype);
-      } else if (err.name === 'InvalidStateError') {
+      } else if (err.name === "InvalidStateError") {
         // InvalidStateError (tested on FF13 WinXP)
         blob = new Blob([data], { type: datatype });
       } else {
         // We're screwed, blob constructor unsupported entirely
-        throw new LokiCordovaFSAdapterError('Unable to create blob' + JSON.stringify(err));
+        throw new LokiCordovaFSAdapterError("Unable to create blob" + JSON.stringify(err));
       }
     }
     return blob;

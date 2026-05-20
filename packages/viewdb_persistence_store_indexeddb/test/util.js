@@ -1,5 +1,5 @@
-import indexeddbjs from 'fake-indexeddb';
+import indexeddbjs from "fake-indexeddb";
 
 export default function () {
-	return indexeddbjs;
-};
+  return indexeddbjs;
+}

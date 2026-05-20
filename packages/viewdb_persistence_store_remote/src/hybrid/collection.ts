@@ -1,6 +1,6 @@
-import _ from 'lodash';
-import HybridCursor from './cursor';
-import * as cacheUtils from '../cacheUtils';
+import _ from "lodash";
+import * as cacheUtils from "../cacheUtils";
+import HybridCursor from "./cursor";
 
 class HybridCollection {
   _local: any;
@@ -10,7 +10,14 @@ class HybridCollection {
   _cacheCollection: any;
   _projectedDocumentCollection: any;
 
-  constructor(local: any, remote: any, name: string, options: any, cacheCollection?: any, projectedDocumentCollection?: any) {
+  constructor(
+    local: any,
+    remote: any,
+    name: string,
+    options: any,
+    cacheCollection?: any,
+    projectedDocumentCollection?: any
+  ) {
     this._local = local;
     this._remote = remote;
     this._name = name;
@@ -25,7 +32,10 @@ class HybridCollection {
       this._local.find(query, options),
       this._remote.find(query, options),
       options,
-      Object.assign({}, this._options, { onCacheUpdateCallback: this._cacheQuery.bind(this), getCachedData: this._getCachedData.bind(this) })
+      Object.assign({}, this._options, {
+        onCacheUpdateCallback: this._cacheQuery.bind(this),
+        getCachedData: this._getCachedData.bind(this),
+      })
     );
   }
 
@@ -85,11 +95,17 @@ class HybridCollection {
         collection = self._projectedDocumentCollection;
       }
 
-      collection.save(Object.assign({}, document, { _insertedAt: cachedDateTime }), { skipVersioning: true, skipTimestamp: true });
+      collection.save(Object.assign({}, document, { _insertedAt: cachedDateTime }), {
+        skipVersioning: true,
+        skipTimestamp: true,
+      });
     });
 
     var queryHash = cacheUtils.generateQueryHash(query, self._name, skip, limit, sort, project);
-    this._cacheCollection.save({ _id: queryHash, createDateTime: cachedDateTime, resultSet: documentIds }, { skipVersioning: true, skipTimestamp: true });
+    this._cacheCollection.save(
+      { _id: queryHash, createDateTime: cachedDateTime, resultSet: documentIds },
+      { skipVersioning: true, skipTimestamp: true }
+    );
   }
 
   _getCachedData(
@@ -128,7 +144,13 @@ class HybridCollection {
     });
   }
 
-  _getCachedIds(query: any, skip: number, limit: number, sort: Record<string, 1 | -1> | undefined, callback: any): void {
+  _getCachedIds(
+    query: any,
+    skip: number,
+    limit: number,
+    sort: Record<string, 1 | -1> | undefined,
+    callback: any
+  ): void {
     if (!this._cacheCollection || !this._options.cacheLifeTime) {
       callback(undefined);
       return;
@@ -139,7 +161,10 @@ class HybridCollection {
     minimumChangeDateTime.setMinutes(minimumChangeDateTime.getMinutes() - this._options.cacheLifeTime);
     var minTimeEpoch = minimumChangeDateTime.getTime();
 
-    this._cacheCollection.find({ _id: queryHash, createDateTime: { $gt: minTimeEpoch } }).toArray(function (err: Error | null, result: any) {
+    this._cacheCollection.find({ _id: queryHash, createDateTime: { $gt: minTimeEpoch } }).toArray(function (
+      err: Error | null,
+      result: any
+    ) {
       var hasResult = result && result[0];
 
       if (!hasResult) {

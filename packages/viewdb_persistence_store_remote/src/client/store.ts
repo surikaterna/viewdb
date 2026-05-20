@@ -1,6 +1,6 @@
-import Promise from 'bluebird';
-import Collection from './collection';
-import { VdbClient } from '../types';
+import Promise from "bluebird";
+import { VdbClient } from "../types";
+import Collection from "./collection";
 
 class Store {
   _collections: Record<string, Collection>;

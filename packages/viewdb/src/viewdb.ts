@@ -1,5 +1,5 @@
-import InMemoryStore from './inmemory/store';
-import { Callback, CollectionLike } from './types';
+import InMemoryStore from "./inmemory/store";
+import { Callback, CollectionLike } from "./types";
 
 interface ViewDBStore {
   open?(callback?: Callback<any>): Promise<any>;

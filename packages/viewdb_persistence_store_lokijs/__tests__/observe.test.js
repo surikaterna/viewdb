@@ -1,12 +1,12 @@
-import _ from 'lodash';
-import { Store } from '..';
+import _ from "lodash";
+import { Store } from "..";
 
-describe('Collection', function () {
+describe("Collection", function () {
   var store;
   beforeEach(
     () =>
       new Promise((resolve) => {
-        store = new Store('test-suite', { inMemoryOnly: true, disableThrottle: true });
+        store = new Store("test-suite", { inMemoryOnly: true, disableThrottle: true });
         resolve();
       })
   );
@@ -14,8 +14,8 @@ describe('Collection', function () {
     () =>
       new Promise((resolve) => {
         if (store) {
-          store.collection('dollhouse').drop(function () {
-            store.collection('dollhouse2').drop(function () {
+          store.collection("dollhouse").drop(function () {
+            store.collection("dollhouse2").drop(function () {
               store.close(function () {
                 store.clearAllIntervals();
                 resolve();
@@ -25,26 +25,26 @@ describe('Collection', function () {
         }
       })
   );
-  it('#observe with insert', () =>
+  it("#observe with insert", () =>
     new Promise((resolve) => {
       store.open().then(function () {
-        var cursor = store.collection('dollhouse').find({});
+        var cursor = store.collection("dollhouse").find({});
         var handle = cursor.observe({
           added: function (x) {
-            expect(x._id).toBe('echo');
+            expect(x._id).toBe("echo");
             setTimeout(() => {
               handle.stop();
               resolve();
             }, 10);
-          }
+          },
         });
-        store.collection('dollhouse').insert({ _id: 'echo' });
+        store.collection("dollhouse").insert({ _id: "echo" });
       });
     }));
-  it('#observe with implicit remove', () =>
+  it("#observe with implicit remove", () =>
     new Promise((resolve) => {
       store.open().then(function () {
-        var cursor = store.collection('dollhouse').find({ _id: 'echo', status: 'confirmed' });
+        var cursor = store.collection("dollhouse").find({ _id: "echo", status: "confirmed" });
         var haveAdded = false;
         var handle = cursor.observe({
           added: function (x) {
@@ -52,74 +52,74 @@ describe('Collection', function () {
           },
           removed: function (x) {
             expect(haveAdded).toBe(true);
-            expect(x._id).toBe('echo');
+            expect(x._id).toBe("echo");
             handle.stop();
             resolve();
-          }
+          },
         });
-        store.collection('dollhouse').insert({ _id: 'echo', status: 'confirmed' });
-        store.collection('dollhouse').save({ _id: 'echo', status: 'checked_in' });
+        store.collection("dollhouse").insert({ _id: "echo", status: "confirmed" });
+        store.collection("dollhouse").save({ _id: "echo", status: "checked_in" });
       });
     }));
-  it('#observe with remove', () =>
+  it("#observe with remove", () =>
     new Promise((resolve) => {
       store.open().then(function () {
-        store.collection('dollhouse').insert({ _id: 'echo' }, function () {
-          var cursor = store.collection('dollhouse').find({});
+        store.collection("dollhouse").insert({ _id: "echo" }, function () {
+          var cursor = store.collection("dollhouse").find({});
           var handle = cursor.observe({
             removed: function (x) {
-              expect(x._id).toBe('echo');
+              expect(x._id).toBe("echo");
               handle.stop();
               resolve();
-            }
+            },
           });
-          store.collection('dollhouse').remove({ _id: 'echo' });
+          store.collection("dollhouse").remove({ _id: "echo" });
         });
       });
     }));
-  it('#observe with query and insert', () =>
+  it("#observe with query and insert", () =>
     new Promise((resolve) => {
       store.open().then(function () {
-        store.collection('dollhouse').insert({ _id: 'echo' });
-        var cursor = store.collection('dollhouse').find({ _id: 'echo2' });
+        store.collection("dollhouse").insert({ _id: "echo" });
+        var cursor = store.collection("dollhouse").find({ _id: "echo2" });
         cursor.observe({
           added: function (x) {
-            expect(x._id).toBe('echo2');
+            expect(x._id).toBe("echo2");
             resolve();
-          }
+          },
         });
-        store.collection('dollhouse').insert({ _id: 'echo2' });
+        store.collection("dollhouse").insert({ _id: "echo2" });
       });
     }));
-  it('#observe with query and update', () =>
+  it("#observe with query and update", () =>
     new Promise((resolve) => {
       store.open().then(function () {
-        var cursor = store.collection('dollhouse').find({ _id: 'echo' });
+        var cursor = store.collection("dollhouse").find({ _id: "echo" });
         var handle = cursor.observe({
           added: function (x) {
             expect(x.age).toBe(10);
-            expect(x._id).toBe('echo');
+            expect(x._id).toBe("echo");
           },
           changed: function (o, n) {
             expect(o.age).toBe(10);
             expect(n.age).toBe(100);
             handle.stop();
             resolve();
-          }
+          },
         });
 
-        store.collection('dollhouse').insert({ _id: 'echo', age: 10 }, function () {
-          store.collection('dollhouse').save({ _id: 'echo', age: 100 });
+        store.collection("dollhouse").insert({ _id: "echo", age: 10 }, function () {
+          store.collection("dollhouse").save({ _id: "echo", age: 100 });
         });
       });
     }));
-  it('#observe with query and skip', () =>
+  it("#observe with query and skip", () =>
     new Promise((resolve) => {
       store.open().then(function () {
-        store.collection('dollhouse').insert({ _id: 'echo' });
-        store.collection('dollhouse').insert({ _id: 'echo2' });
-        store.collection('dollhouse').insert({ _id: 'echo3' });
-        var cursor = store.collection('dollhouse').find({});
+        store.collection("dollhouse").insert({ _id: "echo" });
+        store.collection("dollhouse").insert({ _id: "echo2" });
+        store.collection("dollhouse").insert({ _id: "echo3" });
+        var cursor = store.collection("dollhouse").find({});
         var skip = 0;
         cursor.limit(1);
         var realDone = _.after(3, function () {
@@ -135,14 +135,14 @@ describe('Collection', function () {
           added: function (x) {
             cursor.skip(++skip);
             realDone();
-          }
+          },
         });
       });
     }));
-  it('#observe with no results', () =>
+  it("#observe with no results", () =>
     new Promise((resolve) => {
       store.open().then(function () {
-        var cursor = store.collection('dollhouse').find({});
+        var cursor = store.collection("dollhouse").find({});
         var handle = cursor.observe({
           init: function (coll) {
             expect(coll.length).toBe(0);
@@ -150,15 +150,15 @@ describe('Collection', function () {
               handle.stop();
               resolve();
             }, 10);
-          }
+          },
         });
       });
     }));
-  it('#observe with init after one insert', () =>
+  it("#observe with init after one insert", () =>
     new Promise((resolve) => {
-      store.collection('dollhouse').insert({ _id: 'echo' }, function () {
+      store.collection("dollhouse").insert({ _id: "echo" }, function () {
         store.open().then(function () {
-          var cursor = store.collection('dollhouse').find({});
+          var cursor = store.collection("dollhouse").find({});
           var handle = cursor.observe({
             init: function (coll) {
               expect(coll.length).toBe(1);
@@ -166,28 +166,28 @@ describe('Collection', function () {
                 handle.stop();
                 resolve();
               }, 10);
-            }
+            },
           });
         });
       });
     }));
-  it('#observe with one insert after init', () =>
+  it("#observe with one insert after init", () =>
     new Promise((resolve) => {
       store.open().then(function () {
-        var cursor = store.collection('dollhouse').find({});
+        var cursor = store.collection("dollhouse").find({});
         var handle = cursor.observe({
           init: function (coll) {
             expect(coll.length).toBe(0);
           },
           added: function (a) {
-            expect(a._id).toBe('echo');
+            expect(a._id).toBe("echo");
             handle.stop();
             resolve();
-          }
+          },
         });
       });
       setTimeout(function () {
-        store.collection('dollhouse').insert({ _id: 'echo' });
+        store.collection("dollhouse").insert({ _id: "echo" });
       }, 5);
     }));
 });

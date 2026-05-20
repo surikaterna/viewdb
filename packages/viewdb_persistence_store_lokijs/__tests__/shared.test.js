@@ -1,24 +1,24 @@
-import { Store } from '..';
-import { runStoreTests } from 'viewdb-store-tests';
+import { runStoreTests } from "viewdb-store-tests";
+import { Store } from "..";
 
 runStoreTests({
-  name: 'lokijs',
+  name: "lokijs",
   createStore: function (done) {
-    var store = new Store('test-shared', { inMemoryOnly: true, disableThrottle: true });
+    var store = new Store("test-shared", { inMemoryOnly: true, disableThrottle: true });
     store.open().then(function () {
       done(store);
     });
   },
   destroyStore: function (store, done) {
-    store.collection('test_shared').drop(function () {
+    store.collection("test_shared").drop(function () {
       store.close(function () {
         store.clearAllIntervals();
         done();
       });
     });
   },
-  suites: ['crud', 'query', 'cursor', 'count', 'observe'],
+  suites: ["crud", "query", "cursor", "count", "observe"],
   observeOptions: {
-    settleDelay: 50
-  }
+    settleDelay: 50,
+  },
 });

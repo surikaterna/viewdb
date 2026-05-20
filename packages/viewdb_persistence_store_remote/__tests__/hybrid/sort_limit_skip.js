@@ -1,9 +1,9 @@
-import should from 'should';
-import { ViewDB as ViewDb } from 'viewdb';
-import { Hybrid as HybridStore } from '../..';
-import _ from 'lodash';
+import _ from "lodash";
+import should from "should";
+import { ViewDB as ViewDb } from "viewdb";
+import { Hybrid as HybridStore } from "../..";
 
-describe('Sort / Limit / Skip', function () {
+describe("Sort / Limit / Skip", function () {
   var local = null;
   var remote = null;
   var hybrid = null;
@@ -20,14 +20,14 @@ describe('Sort / Limit / Skip', function () {
       })
   );
 
-  it('#toArray with sort / limit', () =>
+  it("#toArray with sort / limit", () =>
     new Promise((resolve, reject) => {
       var NUMBER_OF_DOCS = 20;
       var LIMIT = 5;
       hybrid.open().then(function () {
         var onPopulated = _.after(NUMBER_OF_DOCS, function () {
           var cursor = hybrid
-            .collection('dollhouse')
+            .collection("dollhouse")
             .find({ _id: { $gte: 0 } })
             .sort({ age: 1 })
             .limit(LIMIT);
@@ -42,8 +42,8 @@ describe('Sort / Limit / Skip', function () {
           );
         });
 
-        const remoteCollection = remote.collection('dollhouse');
-        const localCollection = local.collection('dollhouse');
+        const remoteCollection = remote.collection("dollhouse");
+        const localCollection = local.collection("dollhouse");
 
         for (var i = 0; i < NUMBER_OF_DOCS; i++) {
           var collection = i % 2 === 0 ? localCollection : remoteCollection;

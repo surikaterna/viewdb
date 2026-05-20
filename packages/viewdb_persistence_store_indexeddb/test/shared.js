@@ -1,9 +1,9 @@
-import Store from '../src/store';
-import getDb from './util';
-import { runStoreTests } from 'viewdb-store-tests';
+import { runStoreTests } from "viewdb-store-tests";
+import Store from "../src/store";
+import getDb from "./util";
 
 runStoreTests({
-  name: 'indexeddb',
+  name: "indexeddb",
   createStore: function (done) {
     var idb = getDb();
     var store = new Store(idb);
@@ -18,5 +18,5 @@ runStoreTests({
       done();
     });
   },
-  suites: ['crud', 'query', 'cursor', 'count']
+  suites: ["crud", "query", "cursor", "count"],
 });

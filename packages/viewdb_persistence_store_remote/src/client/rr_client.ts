@@ -1,8 +1,8 @@
-import _ from 'lodash';
-import debug from 'debug';
-import { VdbSocket } from '../types';
+import debug from "debug";
+import _ from "lodash";
+import { VdbSocket } from "../types";
 
-var warn = debug('viewdb:warn');
+var warn = debug("viewdb:warn");
 
 class Client {
   _socket: VdbSocket | undefined;
@@ -23,13 +23,13 @@ class Client {
     this._requests = {};
     this._requestId = 10;
     var self = this;
-    this._socket.on('/vdb/response', function (event: any) {
+    this._socket.on("/vdb/response", function (event: any) {
       if (event.e) {
         throw new Error(event.e);
       }
       var request = self._requests[event.i];
       if (_.isUndefined(request)) {
-        warn('Response for unregistered request', event);
+        warn("Response for unregistered request", event);
       } else {
         var callback = request.cb;
         callback(null, event.p);
@@ -44,10 +44,10 @@ class Client {
   request(payload: any, callback?: any, persistent?: boolean): number {
     var req: any = {
       i: this._requestId++,
-      p: payload
+      p: payload,
     };
     this._requests[req.i] = { cb: callback, k: persistent || false };
-    this._socket!.emit('/vdb/request', req);
+    this._socket!.emit("/vdb/request", req);
     return req.i;
   }
 
@@ -57,7 +57,7 @@ class Client {
     return {
       stop: function () {
         delete self._requests[i];
-      }
+      },
     };
   }
 
@@ -69,7 +69,7 @@ class Client {
       if (request.k) {
         // persistent aka observe
         var callback = request.cb;
-        callback('reconnected');
+        callback("reconnected");
       } else {
         delete self._requests[index];
       }

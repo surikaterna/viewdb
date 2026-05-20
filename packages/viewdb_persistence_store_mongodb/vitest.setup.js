@@ -1,5 +1,5 @@
-import { LoggerFactory } from 'slf';
-import slfDebug from 'slf-debug';
+import { LoggerFactory } from "slf";
+import slfDebug from "slf-debug";
 
 LoggerFactory.setFactory(slfDebug);
 

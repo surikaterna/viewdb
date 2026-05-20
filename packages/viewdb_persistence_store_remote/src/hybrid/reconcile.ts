@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import _ from "lodash";
 
 interface VersionedDoc {
   _id: string;
@@ -12,8 +12,8 @@ function reconcile<T extends VersionedDoc = VersionedDoc>(local: T[], remote: T[
   // 1. If has .version take one with highest version
   // 2. If no version prefer remote
 
-  var localIds = _.map(local, '_id');
-  var remoteIds = _.map(remote, '_id');
+  var localIds = _.map(local, "_id");
+  var remoteIds = _.map(remote, "_id");
 
   var newIds = _.xor(localIds, remoteIds);
   var inBothIds = _.intersection(localIds, remoteIds);
@@ -28,13 +28,13 @@ function reconcile<T extends VersionedDoc = VersionedDoc>(local: T[], remote: T[
     .filter(function (doc: T) {
       return _.includes(inBothIds, doc._id);
     })
-    .sortBy('_id')
+    .sortBy("_id")
     .value();
   var remoteSame = _(remote)
     .filter(function (doc: T) {
       return _.includes(inBothIds, doc._id);
     })
-    .sortBy('_id')
+    .sortBy("_id")
     .value();
 
   // TODO; optimize so not a scan per id is needed

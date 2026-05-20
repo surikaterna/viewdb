@@ -1,20 +1,20 @@
-import ViewDB from './viewdb';
-import Cursor from './cursor';
-import Observer from './observe';
-import merge from './merger';
-import InMemoryStore from './inmemory/store';
-import * as plugins from './plugins';
+import Cursor from "./cursor";
+import InMemoryStore from "./inmemory/store";
+import merge from "./merger";
+import Observer from "./observe";
+import * as plugins from "./plugins";
+import ViewDB from "./viewdb";
 
-export { ViewDB, Cursor, Observer, merge, InMemoryStore, plugins };
 export type {
-  VDocument,
+  Callback,
+  CollectionLike,
+  GetDocumentsFn,
+  MergeOptions,
+  ObserveHandle,
+  ObserveOptions,
+  ProjectionSpec,
   QueryObject,
   SortSpec,
-  ProjectionSpec,
-  Callback,
-  MergeOptions,
-  ObserveOptions,
-  ObserveHandle,
-  GetDocumentsFn,
-  CollectionLike
-} from './types';
+  VDocument,
+} from "./types";
+export { Cursor, InMemoryStore, merge, Observer, plugins, ViewDB };

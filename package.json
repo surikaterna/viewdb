@@ -9,13 +9,14 @@
   "scripts": {
     "build": "turbo run build",
     "test": "turbo run test",
-    "lint": "turbo run lint",
-    "format": "turbo run format",
+    "check-style": "biome check --write .",
+    "check-style:ci": "biome check .",
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "changeset:publish": "changeset publish"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.15",
     "@changesets/cli": "2.30.0",
     "turbo": "^2",
     "typescript": "6.0.2"

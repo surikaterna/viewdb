@@ -1,10 +1,11 @@
-import debug from 'debug';
-import _ from 'lodash';
-import axios from 'axios';
-import { VdbClient } from '../types';
+import axios from "axios";
+import debug from "debug";
+import _ from "lodash";
+import { VdbClient } from "../types";
 
-var warn = debug('viewdb:warn');
-import { merge } from 'viewdb';
+var warn = debug("viewdb:warn");
+
+import { merge } from "viewdb";
 
 class Client implements VdbClient {
   _pollInterval: number;
@@ -13,29 +14,29 @@ class Client implements VdbClient {
 
   constructor(url: string, headers?: any, options?: any) {
     if (!url) {
-      throw Error('Cannot use REST viewdb client without URL');
+      throw Error("Cannot use REST viewdb client without URL");
     }
     this._pollInterval = (options && options.pollInterval) || 1000 * 30;
 
-    if (url.slice(-1) === '/') {
+    if (url.slice(-1) === "/") {
       this._baseUri = url.substring(0, url.length - 1);
     } else {
       this._baseUri = url;
     }
 
     this._requestOptions = {
-      headers: headers
+      headers: headers,
     };
   }
 
   _callRestService(path: string, payload: any, callback: any): void {
     var params: string[] = [];
     _.forEach(Object.keys(payload), function (key: string) {
-      params.push(key + '=' + encodeURIComponent(JSON.stringify(payload[key])));
+      params.push(key + "=" + encodeURIComponent(JSON.stringify(payload[key])));
     });
-    var uri = this._baseUri + '/' + path;
+    var uri = this._baseUri + "/" + path;
     if (params.length > 0) {
-      uri += '?' + params.join('&');
+      uri += "?" + params.join("&");
     }
     const options = _.assign({}, this._requestOptions, { url: uri });
     axios(options)
@@ -44,7 +45,7 @@ class Client implements VdbClient {
       })
       .catch(function (err: Error | null) {
         if (_.isUndefined(callback)) {
-          warn('API call failed. Error message: ' + err);
+          warn("API call failed. Error message: " + err);
         } else {
           callback(err);
         }
@@ -52,7 +53,7 @@ class Client implements VdbClient {
   }
 
   request(payload: any, callback?: any): void {
-    if (!payload['observe.stop']) {
+    if (!payload["observe.stop"]) {
       var request: any = { q: payload.find || payload.observe };
       if (payload.skip) {
         request.skip = payload.skip;
@@ -87,7 +88,7 @@ class Client implements VdbClient {
             {
               comparatorId: function (a: { id: string }, b: { id: string }) {
                 return a.id === b.id;
-              }
+              },
             },
             {
               added: function (e: any, i: number) {
@@ -106,7 +107,7 @@ class Client implements VdbClient {
                 delta.push({ m: { e: e, o: oldIndex, n: newIndex } });
                 cache.splice(oldIndex, 1);
                 cache.splice(newIndex, 0, e);
-              }
+              },
             }
           )
         );
@@ -120,7 +121,7 @@ class Client implements VdbClient {
     return {
       stop: function () {
         clearInterval(pollId);
-      }
+      },
     };
   }
 }

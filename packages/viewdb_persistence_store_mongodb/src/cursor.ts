@@ -1,10 +1,16 @@
-import Observer from './observe';
-import { nodeify } from './utils';
-import type { FindCursor, Document as MongoDocument } from 'mongodb';
+import type { FindCursor, Document as MongoDocument } from "mongodb";
+import Observer from "./observe";
+import { nodeify } from "./utils";
 
 class Cursor {
   _query: any;
-  _queryOptions: { query?: any; skip?: number; limit?: number; sort?: Record<string, 1 | -1>; project?: Record<string, 0 | 1> };
+  _queryOptions: {
+    query?: any;
+    skip?: number;
+    limit?: number;
+    sort?: Record<string, 1 | -1>;
+    project?: Record<string, 0 | 1>;
+  };
   _cursor: FindCursor<MongoDocument>;
   _oplogListener: any;
   _collection: any;
@@ -66,7 +72,7 @@ class Cursor {
   }
 
   _refresh(): void {
-    this._collection.emit('change', {});
+    this._collection.emit("change", {});
   }
 
   rewind(): any {

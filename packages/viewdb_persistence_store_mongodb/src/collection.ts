@@ -1,8 +1,8 @@
-import { EventEmitter } from 'events';
-import { forEach, isFunction, isArray } from 'lodash';
-import Cursor from './cursor';
-import { nodeify } from './utils';
-import type { Collection as MongoCollection, Document as MongoDocument } from 'mongodb';
+import { EventEmitter } from "events";
+import { forEach, isArray, isFunction } from "lodash";
+import type { Collection as MongoCollection, Document as MongoDocument } from "mongodb";
+import Cursor from "./cursor";
+import { nodeify } from "./utils";
 
 class Collection extends EventEmitter {
   _collection: MongoCollection<MongoDocument>;
@@ -23,13 +23,19 @@ class Collection extends EventEmitter {
     return new Cursor(this, { query: query }, options, cursor, this._oplogListener);
   }
 
-  findAndModify(query: any, sort: any, update: any, options: any, cb?: (err: Error | null, doc?: any) => void): Promise<any> {
+  findAndModify(
+    query: any,
+    sort: any,
+    update: any,
+    options: any,
+    cb?: (err: Error | null, doc?: any) => void
+  ): Promise<any> {
     if (sort) {
       Object.assign(options, sort);
     }
     const self = this;
     function callback(err: Error | null, doc?: any) {
-      self.emit('change', { findAndModify: update });
+      self.emit("change", { findAndModify: update });
       if (isFunction(cb)) {
         cb(err, doc);
       }
@@ -57,7 +63,7 @@ class Collection extends EventEmitter {
     var promise = this._collection.updateMany(query, update, options);
     return nodeify(
       promise.then(function (res: any) {
-        self.emit('change', { updateMany: update });
+        self.emit("change", { updateMany: update });
         return res;
       }),
       cb
@@ -73,7 +79,7 @@ class Collection extends EventEmitter {
     var promise = this._collection.updateOne(query, update, options);
     return nodeify(
       promise.then(function (res: any) {
-        self.emit('change', { updateOne: update });
+        self.emit("change", { updateOne: update });
         return res;
       }),
       cb
@@ -81,7 +87,7 @@ class Collection extends EventEmitter {
   }
 
   remove(query: any, options?: any, cb?: (err: Error | null, result?: any) => void): any {
-    console.warn('Deprecated: use deleteMany or deleteOne instead');
+    console.warn("Deprecated: use deleteMany or deleteOne instead");
     var self = this;
     if (isFunction(options)) {
       cb = options;
@@ -90,7 +96,7 @@ class Collection extends EventEmitter {
     var promise = this._collection.deleteMany(query, options);
     return nodeify(
       promise.then(function (res: any) {
-        self.emit('change', { remove: query });
+        self.emit("change", { remove: query });
         return res;
       }),
       cb
@@ -100,7 +106,7 @@ class Collection extends EventEmitter {
   deleteMany(query: any, options?: any): any {
     var self = this;
     return this._collection.deleteMany(query, options).then(function (res: any) {
-      self.emit('change', { remove: query });
+      self.emit("change", { remove: query });
       return res;
     });
   }
@@ -108,7 +114,7 @@ class Collection extends EventEmitter {
   deleteOne(query: any, options?: any): any {
     var self = this;
     return this._collection.deleteOne(query, options).then(function (res: any) {
-      self.emit('change', { remove: query });
+      self.emit("change", { remove: query });
       return res;
     });
   }
@@ -116,7 +122,7 @@ class Collection extends EventEmitter {
   insert(docs: any, cb?: (err: Error | null, docs?: any) => void): any {
     var self = this;
     var onFulfilled = function () {
-      self.emit('change', { insert: docs });
+      self.emit("change", { insert: docs });
       if (isFunction(cb)) {
         cb(null, docs);
       }
@@ -151,7 +157,7 @@ class Collection extends EventEmitter {
     return this._collection
       .bulkWrite(operations)
       .then(function () {
-        self.emit('change', { save: docs });
+        self.emit("change", { save: docs });
         if (isFunction(cb)) {
           cb(null, docs);
         }
@@ -168,7 +174,7 @@ class Collection extends EventEmitter {
     var promise = this._collection.drop();
     return nodeify(
       promise.then(function (res: any) {
-        self.emit('change', { drop: true });
+        self.emit("change", { drop: true });
         return res;
       }),
       cb

@@ -1,44 +1,44 @@
-import { ViewDB as ViewDb, plugins } from '../..';
+import { plugins, ViewDB as ViewDb } from "../..";
 
 const ViewDbTimestampPlugin = plugins.TimestampPlugin;
 const ViewDBVersioningPlugin = plugins.VersioningPlugin;
 
-describe('Viewdb timestamp plugin', () => {
-  it('should add changeDateTime and createDateTime timestamp on insert', () =>
+describe("Viewdb timestamp plugin", () => {
+  it("should add changeDateTime and createDateTime timestamp on insert", () =>
     new Promise((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbTimestampPlugin(viewDb);
       new ViewDBVersioningPlugin(viewDb);
-      var obj = { id: '123' };
-      var collection = viewDb.collection('test');
+      var obj = { id: "123" };
+      var collection = viewDb.collection("test");
       var currentTime = new Date().valueOf();
 
       // wait 1ms until update operation to check for lastModified updated
       setTimeout(function () {
         collection.insert(obj, function () {
-          collection.find({ id: '123' }).toArray(function (err, objects) {
+          collection.find({ id: "123" }).toArray(function (err, objects) {
             var object = objects[0];
             expect(object.createDateTime).exists;
             if (currentTime < object.createDateTime) {
               resolve();
             } else {
-              reject(new Error('Timestamp was not renewed'));
+              reject(new Error("Timestamp was not renewed"));
             }
           });
         });
       }, 5);
     }));
-  it('should add changeDateTime and createDateTime timestamp on bulk insert', () =>
+  it("should add changeDateTime and createDateTime timestamp on bulk insert", () =>
     new Promise((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbTimestampPlugin(viewDb);
       new ViewDBVersioningPlugin(viewDb);
-      var collection = viewDb.collection('test');
+      var collection = viewDb.collection("test");
       var currentTime = new Date().valueOf();
 
       // wait 1ms until update operation to check for lastModified updated
       setTimeout(function () {
-        collection.insert([{ _id: '123' }, { _id: '999' }], function () {
+        collection.insert([{ _id: "123" }, { _id: "999" }], function () {
           collection.find({}).toArray(function (err, objects) {
             var hasError = false;
             objects.forEach(function (object) {
@@ -47,19 +47,19 @@ describe('Viewdb timestamp plugin', () => {
                 hasError = true;
               }
             });
-            (hasError && reject(new Error('Timestamp was not renewed'))) || resolve();
+            (hasError && reject(new Error("Timestamp was not renewed"))) || resolve();
           });
         });
       });
     }));
-  it('should update changeDateTime on builk save', () =>
+  it("should update changeDateTime on builk save", () =>
     new Promise((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbTimestampPlugin(viewDb);
       new ViewDBVersioningPlugin(viewDb);
-      var collection = viewDb.collection('test');
+      var collection = viewDb.collection("test");
 
-      collection.insert([{ _id: '123' }, { _id: '999' }]);
+      collection.insert([{ _id: "123" }, { _id: "999" }]);
       collection.find({}).toArray(function (err, objects) {
         var insertTime = objects[0].createDateTime;
         var updateTime = objects[0].changeDateTime;
@@ -68,8 +68,8 @@ describe('Viewdb timestamp plugin', () => {
         setTimeout(function () {
           collection.save(
             [
-              { _id: '123', name: 'Pelle', createDateTime: insertTime, changeDateTime: insertTime },
-              { _id: '999', name: 'Kalle', createDateTime: insertTime, changeDateTime: insertTime }
+              { _id: "123", name: "Pelle", createDateTime: insertTime, changeDateTime: insertTime },
+              { _id: "999", name: "Kalle", createDateTime: insertTime, changeDateTime: insertTime },
             ],
             function () {
               collection.find({}).toArray(function (err, objects) {
@@ -86,26 +86,26 @@ describe('Viewdb timestamp plugin', () => {
 
       // wait 1ms until update operation to check for lastModified updated
     }));
-  it('should update changeDateTime on save', () =>
+  it("should update changeDateTime on save", () =>
     new Promise((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbTimestampPlugin(viewDb);
       new ViewDBVersioningPlugin(viewDb);
-      var obj = { id: '123' };
+      var obj = { id: "123" };
       var insertTime;
-      var collection = viewDb.collection('test');
+      var collection = viewDb.collection("test");
 
       collection.insert(obj);
-      collection.find({ id: '123' }).toArray(function (err, objects) {
+      collection.find({ id: "123" }).toArray(function (err, objects) {
         var object = objects[0];
         insertTime = object.createDateTime;
       });
 
       // wait 1ms until update operation to check for changeDateTime updated
       setTimeout(function () {
-        obj.name = 'Pelle';
+        obj.name = "Pelle";
         collection.save(obj);
-        collection.find({ id: '123' }).toArray(function (err, objects) {
+        collection.find({ id: "123" }).toArray(function (err, objects) {
           var object = objects[0];
           expect(object.createDateTime).toBe(insertTime);
           expect(object.changeDateTime).toBeGreaterThan(insertTime);
@@ -114,26 +114,26 @@ describe('Viewdb timestamp plugin', () => {
       }, 1);
     }));
 
-  it('should skip changing timestamp with skipTimestamp option on save', () =>
+  it("should skip changing timestamp with skipTimestamp option on save", () =>
     new Promise((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbTimestampPlugin(viewDb);
       new ViewDBVersioningPlugin(viewDb);
-      var obj = { id: '123' };
+      var obj = { id: "123" };
       var insertTime;
-      var collection = viewDb.collection('test');
+      var collection = viewDb.collection("test");
 
       collection.insert(obj);
-      collection.find({ id: '123' }).toArray(function (err, objects) {
+      collection.find({ id: "123" }).toArray(function (err, objects) {
         var object = objects[0];
         insertTime = object.createDateTime;
       });
 
       // wait 1ms until update operation to check for changeDateTime updated
       setTimeout(function () {
-        obj.name = 'Pelle';
+        obj.name = "Pelle";
         collection.save(obj, { skipTimestamp: true }, function () {
-          collection.find({ id: '123' }).toArray(function (err, objects) {
+          collection.find({ id: "123" }).toArray(function (err, objects) {
             var object = objects[0];
             expect(object.createDateTime).toBe(insertTime);
             expect(object.changeDateTime).toBe(insertTime);
@@ -143,21 +143,21 @@ describe('Viewdb timestamp plugin', () => {
       }, 1);
     }));
 
-  it('should work together with version plugin', () =>
+  it("should work together with version plugin", () =>
     new Promise((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbTimestampPlugin(viewDb);
       new ViewDBVersioningPlugin(viewDb);
-      var obj = { id: '123' };
-      var collection = viewDb.collection('test');
+      var obj = { id: "123" };
+      var collection = viewDb.collection("test");
       collection.insert(obj);
-      obj.name = 'Pelle';
+      obj.name = "Pelle";
       obj.version = undefined;
       collection.save(obj);
-      collection.find({ id: '123' }).toArray(function (err, objects) {
+      collection.find({ id: "123" }).toArray(function (err, objects) {
         var object = objects[0];
         expect(object.version).toBe(0);
-        expect(object.name).toBe('Pelle');
+        expect(object.name).toBe("Pelle");
         expect(object.createDateTime).exists;
         expect(object.changeDateTime).exists;
         resolve();

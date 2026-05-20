@@ -1,10 +1,11 @@
-import { Logger } from 'slf';
-import { v4 as uuid } from 'uuid';
-import _ from 'lodash';
-import Observer from './observe';
+import _ from "lodash";
+import { Logger } from "slf";
+import { v4 as uuid } from "uuid";
+import Observer from "./observe";
 
-var LOG = Logger.getLogger('viewdb:remote:cursor');
-import { Cursor } from 'viewdb';
+var LOG = Logger.getLogger("viewdb:remote:cursor");
+
+import { Cursor } from "viewdb";
 
 class RemoteCursor extends Cursor {
   _handle!: { stop: () => void };
@@ -27,13 +28,13 @@ class RemoteCursor extends Cursor {
       options = {};
     }
 
-    var skip = _.get(this, '_query.skip', _.get(options, 'skip', 0));
-    var limit = _.get(this, '_query.limit', _.get(options, 'limit', 0));
+    var skip = _.get(this, "_query.skip", _.get(options, "skip", 0));
+    var limit = _.get(this, "_query.limit", _.get(options, "limit", 0));
 
     var params: any = {
       id: uuid(),
       count: this._query.query || this._query,
-      collection: (this._collection as any)._name
+      collection: (this._collection as any)._name,
     };
 
     if (applySkipLimit) {
@@ -59,31 +60,35 @@ class RemoteCursor extends Cursor {
 
   _refresh(): void {
     if (this._isObserving) {
-      this._collection.emit('change');
+      this._collection.emit("change");
     }
   }
 
   observe(options: any): { stop: () => void } {
     var self = this;
     if (self._isObserving) {
-      LOG.error('Already observing this cursor. Collection: %s - Query: %j', _.get(self, '_collection._name'), self._query);
-      throw new Error('Already observing this cursor. Collection: ' + _.get(self, '_collection._name'));
+      LOG.error(
+        "Already observing this cursor. Collection: %s - Query: %j",
+        _.get(self, "_collection._name"),
+        self._query
+      );
+      throw new Error("Already observing this cursor. Collection: " + _.get(self, "_collection._name"));
     }
     self._isObserving = true;
 
     var refreshListener = function () {
-      LOG.info('restarting observer due to change');
+      LOG.info("restarting observer due to change");
       self._handle.stop();
       self._handle = new Observer(self._collection, options, self._query) as any;
     };
-    self._collection.on('change', refreshListener);
+    self._collection.on("change", refreshListener);
 
     self._handle = new Observer(self._collection, options, self._query) as any;
     return {
       stop: function () {
         self._handle.stop();
-        self._collection.removeListener('change', refreshListener);
-      }
+        self._collection.removeListener("change", refreshListener);
+      },
     };
   }
 }

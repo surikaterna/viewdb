@@ -1,7 +1,7 @@
-import _ from 'lodash';
-import Kuery from 'kuery';
-import merge from './merger';
-import { QueryObject, VDocument, ObserveOptions, CollectionLike } from './types';
+import Kuery from "kuery";
+import _ from "lodash";
+import merge from "./merger";
+import { CollectionLike, ObserveOptions, QueryObject, VDocument } from "./types";
 
 class Observer {
   _query: QueryObject;
@@ -41,14 +41,14 @@ class Observer {
         self.refresh();
       }
     };
-    collection.on('change', listener);
+    collection.on("change", listener);
     this.refresh(true);
 
     return {
       stop: function () {
         self._cache = null;
-        collection.removeListener('change', listener);
-      }
+        collection.removeListener("change", listener);
+      },
     } as any;
   }
 
@@ -96,11 +96,11 @@ class Observer {
           _.defaults(
             {
               comparatorId: function (a: VDocument, b: VDocument) {
-                return _.get(a, '_id') === _.get(b, '_id');
+                return _.get(a, "_id") === _.get(b, "_id");
               },
               keyFn: function (doc: VDocument) {
-                return String(_.get(doc, '_id'));
-              }
+                return String(_.get(doc, "_id"));
+              },
             },
             self._options
           )

@@ -1,7 +1,7 @@
-import Promise from 'bluebird';
-import Collection from './collection';
-import _ from 'lodash';
-import type { Db } from 'mongodb';
+import Promise from "bluebird";
+import _ from "lodash";
+import type { Db } from "mongodb";
+import Collection from "./collection";
 
 class Store {
   _mongodb: Db;
@@ -27,14 +27,14 @@ class Store {
     var coll = this._collections[collectionName];
     if (coll === undefined) {
       if (this._oplogEnabled && this._oplogListener) {
-        var dbName = _.get(this._mongodb, 'databaseName');
+        var dbName = _.get(this._mongodb, "databaseName");
         var namespaceFilter;
         if (dbName) {
-          namespaceFilter = dbName + '.' + collectionName;
+          namespaceFilter = dbName + "." + collectionName;
         }
         this._oplogListeners[collectionName] = new this._oplogListener(this._mongodb, namespaceFilter, collectionName);
       } else if (this._oplogEnabled) {
-        console.warn('oplog listener must be provided to enable listening for updates');
+        console.warn("oplog listener must be provided to enable listening for updates");
       }
       coll = new Collection(this._mongodb.collection(collectionName), this._oplogListeners[collectionName]);
       this._collections[collectionName] = coll;

@@ -1,32 +1,35 @@
-import { projectDocument } from '../src/utils';
+import { projectDocument } from "../src/utils";
 
-describe('Project document', function () {
-  it('#Should pick property', () =>
+describe("Project document", function () {
+  it("#Should pick property", () =>
     new Promise((resolve) => {
-      var result = projectDocument({ alfa: 'abc' }, { alfa: 1 });
+      var result = projectDocument({ alfa: "abc" }, { alfa: 1 });
 
-      expect(result).toEqual({ alfa: 'abc' });
+      expect(result).toEqual({ alfa: "abc" });
       resolve();
     }));
 
-  it('#Should pick property from nested object', () =>
+  it("#Should pick property from nested object", () =>
     new Promise((resolve) => {
-      var result = projectDocument({ alfa: { bravo: { charlie: 1, delta: 2 }, echo: 3 } }, { alfa: { bravo: { delta: 1 } } });
+      var result = projectDocument(
+        { alfa: { bravo: { charlie: 1, delta: 2 }, echo: 3 } },
+        { alfa: { bravo: { delta: 1 } } }
+      );
 
       expect(result).toEqual({ alfa: { bravo: { delta: 2 } } });
       resolve();
     }));
 
-  it('#Should pick property from nested array', () =>
+  it("#Should pick property from nested array", () =>
     new Promise((resolve) => {
       var result = projectDocument(
         {
           alfa: {
             bravo: [
               { delta: 1, echo: 1 },
-              { delta: 2, echo: 2 }
-            ]
-          }
+              { delta: 2, echo: 2 },
+            ],
+          },
         },
         { alfa: { bravo: { delta: 1 } } }
       );
@@ -36,25 +39,27 @@ describe('Project document', function () {
       resolve();
     }));
 
-  it('#Should pick nested property from nested array', () =>
+  it("#Should pick nested property from nested array", () =>
     new Promise((resolve) => {
       var result = projectDocument(
         {
           alfa: {
             bravo: [
               { delta: 1, echo: { foxtrot: 2, gemini: 3 } },
-              { delta: 4, echo: { foxtrot: 5, gemini: 6 } }
-            ]
-          }
+              { delta: 4, echo: { foxtrot: 5, gemini: 6 } },
+            ],
+          },
         },
         { alfa: { bravo: { echo: { gemini: 1 } } } }
       );
-      expect(result).toEqual({ alfa: { bravo: [{ echo: { gemini: 3 } }, { echo: { gemini: 6 } }] } });
+      expect(result).toEqual({
+        alfa: { bravo: [{ echo: { gemini: 3 } }, { echo: { gemini: 6 } }] },
+      });
 
       resolve();
     }));
 
-  it('#Should support exclude paths', () =>
+  it("#Should support exclude paths", () =>
     new Promise((resolve) => {
       var result = projectDocument({ alfa: 1, bravo: 2, charlie: 3, delta: 4 }, { bravo: 0 });
 
@@ -62,9 +67,12 @@ describe('Project document', function () {
       resolve();
     }));
 
-  it('#Should support multiple exclude paths', () =>
+  it("#Should support multiple exclude paths", () =>
     new Promise((resolve) => {
-      var result = projectDocument({ alfa: 1, bravo: 2, charlie: 3, delta: { echo: 4, foxtrot: 5 } }, { bravo: 0, delta: { echo: 0 } });
+      var result = projectDocument(
+        { alfa: 1, bravo: 2, charlie: 3, delta: { echo: 4, foxtrot: 5 } },
+        { bravo: 0, delta: { echo: 0 } }
+      );
 
       expect(result).toEqual({ alfa: 1, charlie: 3, delta: { foxtrot: 5 } });
       resolve();

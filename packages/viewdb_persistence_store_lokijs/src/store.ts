@@ -1,10 +1,10 @@
-import { find, forEach, get, includes } from 'lodash';
-import { LoggerFactory } from 'slf';
-import Collection from './collection';
+import Promise from "bluebird";
+import { find, forEach, get, includes } from "lodash";
+import Loki from "lokijs";
+import { LoggerFactory } from "slf";
+import Collection from "./collection";
 
-import Loki from 'lokijs';
-import Promise from 'bluebird';
-const LOG = LoggerFactory.getLogger('viewdb:lokijs:store');
+const LOG = LoggerFactory.getLogger("viewdb:lokijs:store");
 
 class Store {
   _collections: any;
@@ -19,15 +19,15 @@ class Store {
   adapter: any;
   autosaveHandle: any;
   constructor(name?: any, options?: any, registerCleanUpHandler?: any) {
-    this._name = name ? 'vdb_' + name : 'vdb';
+    this._name = name ? "vdb_" + name : "vdb";
     this._lokiOptions = {
-      autosave: false
+      autosave: false,
     };
     if (options && options.inMemoryOnly) {
       this._lokiOptions = {};
       this.adapter = null;
     } else {
-      if (typeof options?.adapter === 'function') {
+      if (typeof options?.adapter === "function") {
         this.adapter = options.adapter(this._name);
       } else {
         this.adapter = options?.adapter ?? null;
@@ -42,19 +42,19 @@ class Store {
     this._collections = {};
     this._onBeforeUnloadFunc = (event: any) => {
       event.preventDefault();
-      event.returnValue = '';
+      event.returnValue = "";
     };
     this._fixLokiRunCount = 0;
     this._fixLokiInterval = setInterval(() => {
       try {
         this._fixLokiCollections();
       } catch (e: any) {
-        LOG.error('Error while trying to fix lokijs collections: %s', e?.message);
+        LOG.error("Error while trying to fix lokijs collections: %s", e?.message);
       }
     }, 10 * 1000);
 
     registerCleanUpHandler?.(() => {
-      LOG.info('Flush and clear all intervals on cleanup');
+      LOG.info("Flush and clear all intervals on cleanup");
       this._flush();
       this.clearAllIntervals();
     });
@@ -70,7 +70,7 @@ class Store {
     Object.keys(this._collections).forEach((collectionName) => {
       const lokiCollection = find(collections, { name: collectionName });
       if (!lokiCollection) {
-        LOG.info('failed to find collection in loki, but existed in store ', collectionName);
+        LOG.info("failed to find collection in loki, but existed in store ", collectionName);
         if (this._collections[collectionName]._collection) {
           this._lokiJs.loadCollection(this._collections[collectionName]._collection);
         }
@@ -80,10 +80,10 @@ class Store {
 
   // displays a box "Are you sure you want to leave this page? Changes might not be saved"
   _addBeforeUnloadListener() {
-    window.addEventListener('beforeunload', this._onBeforeUnloadFunc);
+    window.addEventListener("beforeunload", this._onBeforeUnloadFunc);
   }
   _removeBeforeUnloadListener() {
-    window.removeEventListener('beforeunload', this._onBeforeUnloadFunc);
+    window.removeEventListener("beforeunload", this._onBeforeUnloadFunc);
   }
 
   // autosave function that adds warning on beforeunload if user closes window while database is persisting
@@ -92,13 +92,13 @@ class Store {
       return;
     }
     const delay = 10 * 1000;
-    LOG.info('Setting up autosave interval');
+    LOG.info("Setting up autosave interval");
     if (this.autosaveHandle) {
       clearInterval(this.autosaveHandle);
     }
     this.autosaveHandle = setInterval(() => {
       this._flush().catch((err: any) => {
-        LOG.info('Error flushing database: %s', err);
+        LOG.info("Error flushing database: %s", err);
       });
     }, delay);
   }
@@ -113,7 +113,7 @@ class Store {
         }
         if (seen[item._id]) {
           coll.remove(item);
-          LOG.info('removed duplicate unique document from collection %s - id: %s', coll.name, item._id);
+          LOG.info("removed duplicate unique document from collection %s - id: %s", coll.name, item._id);
           this._lokiJs.throttledSavePending = false;
           this._lokiJs.throttledCallbacks = [];
         } else {
@@ -126,24 +126,24 @@ class Store {
   _flush() {
     return new Promise((resolve: any, reject: any) => {
       if (this._lokiJs.autosaveDirty()) {
-        LOG.info('Saving database');
+        LOG.info("Saving database");
         this._addBeforeUnloadListener();
         try {
           this._lokiJs.saveDatabase((err: any) => {
             if (err) {
               reject(err);
             } else {
-              LOG.info('Database saved.');
+              LOG.info("Database saved.");
               this._removeBeforeUnloadListener();
               resolve();
             }
           });
         } catch (e: any) {
-          const msg = get(e, 'message');
-          if (includes(msg, 'Duplicate key for property')) {
+          const msg = get(e, "message");
+          if (includes(msg, "Duplicate key for property")) {
             this._repairBrokenIndex();
           } else {
-            LOG.error('Error while saving database ', msg);
+            LOG.error("Error while saving database ", msg);
           }
         }
       } else {
@@ -162,23 +162,23 @@ class Store {
 
   _openOnce(callback: any) {
     this._openPromise = new Promise((resolve: any, reject: any) => {
-      LOG.debug('loading database %s ...', this._name);
+      LOG.debug("loading database %s ...", this._name);
       this._lokiJs.loadDatabase({}, (err: any) => {
         if (err) {
           // retry stupidly one time in case it might help
           setTimeout(() => {
             this._lokiJs.loadDatabase({}, (err: any) => {
               if (err) {
-                LOG.error('Failed to load database: error %s', err);
+                LOG.error("Failed to load database: error %s", err);
                 reject();
               } else {
-                LOG.warn('database %s loaded after retrying', this._name);
+                LOG.warn("database %s loaded after retrying", this._name);
                 resolve();
               }
             });
           }, 500);
         } else {
-          LOG.debug('database %s loaded', this._name);
+          LOG.debug("database %s loaded", this._name);
           this._setupAutosave();
           resolve();
         }

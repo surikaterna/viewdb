@@ -1,4 +1,4 @@
-declare module 'kuery' {
+declare module "kuery" {
   class Kuery {
     constructor(query: any);
     find(collection: any[]): any[];

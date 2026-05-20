@@ -1,11 +1,11 @@
-import _ from 'lodash';
+import _ from "lodash";
 
 function _includeKey(key: string | number | boolean): boolean {
-  return key === '1' || key === true || key === 1;
+  return key === "1" || key === true || key === 1;
 }
 
 function _excludeKey(key: string | number | boolean): boolean {
-  return key === '0' || key === false || key === 0;
+  return key === "0" || key === false || key === 0;
 }
 
 function _projectLayer(document: Record<string, any>, projectObject: Record<string, any>): Record<string, any> {
@@ -38,9 +38,9 @@ function _projectLayer(document: Record<string, any>, projectObject: Record<stri
 }
 
 var nextTick: (cb: () => void) => void;
-if (typeof setImmediate === 'function') {
+if (typeof setImmediate === "function") {
   nextTick = setImmediate;
-} else if (typeof process === 'object' && process && process.nextTick) {
+} else if (typeof process === "object" && process && process.nextTick) {
   nextTick = process.nextTick;
 } else {
   nextTick = function (cb: () => void) {
@@ -49,7 +49,7 @@ if (typeof setImmediate === 'function') {
 }
 
 function nodeify<T>(promise: Promise<T>, cb?: Function): Promise<T | void> {
-  if (typeof cb !== 'function') return promise;
+  if (typeof cb !== "function") return promise;
   return promise
     .then(function (res: T) {
       nextTick(function () {
@@ -73,4 +73,4 @@ function projectDocument(document: Record<string, any>, projectObject: Record<st
   return _projectLayer(document, projectObject);
 }
 
-export { projectDocument, nodeify };
+export { nodeify, projectDocument };

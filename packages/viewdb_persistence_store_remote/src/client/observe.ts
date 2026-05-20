@@ -1,8 +1,8 @@
-import _ from 'lodash';
-import { Logger } from 'slf';
-import { v4 as uuid } from 'uuid';
+import _ from "lodash";
+import { Logger } from "slf";
+import { v4 as uuid } from "uuid";
 
-var LOG = Logger.getLogger('viewdb:remote:observe');
+var LOG = Logger.getLogger("viewdb:remote:observe");
 
 var buildParams = function (defaults: any, query: any, collection: any): any {
   var skip: any, limit: any, sort: any, project: any;
@@ -19,7 +19,7 @@ var buildParams = function (defaults: any, query: any, collection: any): any {
       collection: collection._name,
       skip: skip,
       limit: limit,
-      sort: sort
+      sort: sort,
     },
     defaults
   );
@@ -41,7 +41,7 @@ class Observer {
       a: !_.isNil(options.added),
       r: !_.isNil(options.removed),
       c: !_.isNil(options.changed),
-      m: !_.isNil(options.moved)
+      m: !_.isNil(options.moved),
     };
 
     var params = buildParams({ events: events }, query, collection);
@@ -56,7 +56,7 @@ class Observer {
           remoteHandle = result.handle || remoteHandle;
 
           if (self.handles.indexOf(params.id) > -1) {
-            collection._client.request({ 'observe.stop': { h: params.id } });
+            collection._client.request({ "observe.stop": { h: params.id } });
             handle.stop();
             _.remove(self.handles, params.id);
           } else {
@@ -85,13 +85,13 @@ class Observer {
       return {
         stop: function () {
           if (!remoteHandle) {
-            LOG.warn('WARN unsubscribing before receiving subscription handle from server');
+            LOG.warn("WARN unsubscribing before receiving subscription handle from server");
             self.handles.push(params.id);
           } else {
-            collection._client.request({ 'observe.stop': { h: params.id } });
+            collection._client.request({ "observe.stop": { h: params.id } });
             handle.stop();
           }
-        }
+        },
       };
     };
     return startObserver() as any;

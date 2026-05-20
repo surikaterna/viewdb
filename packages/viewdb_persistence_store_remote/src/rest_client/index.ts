@@ -1,2 +1,2 @@
-import RestClient from './rest_client';
+import RestClient from "./rest_client";
 export default RestClient;

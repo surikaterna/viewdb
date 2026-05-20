@@ -1,7 +1,6 @@
-import _ from 'lodash';
-import reconcile from './reconcile';
-
-import { merge } from 'viewdb';
+import _ from "lodash";
+import { merge } from "viewdb";
+import reconcile from "./reconcile";
 
 function pushArray<T>(arr: T[], arr2: T[]): void {
   arr.push.apply(arr, arr2);
@@ -49,7 +48,7 @@ function buildOptions(cache: any[], callback: (result: any) => void, removed: an
         removed = [];
       }
       callback(e);
-    }
+    },
   };
 }
 
@@ -114,7 +113,10 @@ class HybridObserver {
       };
 
       // While the observer is running, keep the cached data alive
-      this._cacheUpdaterInterval = setInterval(cacheUpdater, 1000 * 60 * Math.max(collectionOptions.cacheLifeTime / 2, 1));
+      this._cacheUpdaterInterval = setInterval(
+        cacheUpdater,
+        1000 * 60 * Math.max(collectionOptions.cacheLifeTime / 2, 1)
+      );
     }
 
     return {
@@ -126,7 +128,7 @@ class HybridObserver {
         self._localHandle && self._localHandle.stop();
         self._remoteHandle && self._remoteHandle.stop();
         clearInterval(self._cacheUpdaterInterval!);
-      }
+      },
     } as any;
   }
 
@@ -153,7 +155,7 @@ class HybridObserver {
           {
             comparatorId: function (a: { _id: string }, b: { _id: string }) {
               return a._id === b._id;
-            }
+            },
           },
           self._options
         )

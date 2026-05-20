@@ -1,5 +1,5 @@
-import Promise from 'bluebird';
-import Collection from './collection';
+import Promise from "bluebird";
+import Collection from "./collection";
 
 class Store {
   _idb: IDBFactory;
@@ -10,7 +10,7 @@ class Store {
   constructor(idb: IDBFactory, name?: string) {
     this._idb = idb;
     this._db = null;
-    this._name = name ? 'vdb_' + name : 'vdb';
+    this._name = name ? "vdb_" + name : "vdb";
     this._collections = {};
   }
 
@@ -25,14 +25,14 @@ class Store {
       request.onupgradeneeded = function (event: IDBVersionChangeEvent) {
         var db: IDBDatabase = (event.target as IDBOpenDBRequest).result;
         if (event.oldVersion < 1) {
-          var documents = db.createObjectStore('documents', { keyPath: '$collectionKey' });
-          documents.createIndex('$collection', '$collection', { unique: false });
+          var documents = db.createObjectStore("documents", { keyPath: "$collectionKey" });
+          documents.createIndex("$collection", "$collection", { unique: false });
         }
         //fix for _id being keypath...
         if (event.oldVersion < 2) {
-          db.deleteObjectStore('documents');
-          var documents = db.createObjectStore('documents', { keyPath: '$collectionKey' });
-          documents.createIndex('$collection', '$collection', { unique: false });
+          db.deleteObjectStore("documents");
+          var documents = db.createObjectStore("documents", { keyPath: "$collectionKey" });
+          documents.createIndex("$collection", "$collection", { unique: false });
         }
       };
       request.onerror = function (event: Event) {

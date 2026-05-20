@@ -1,9 +1,9 @@
-import assert from 'assert';
+import assert from "assert";
 
 export default function (config) {
-  var COLL = 'test_shared';
+  var COLL = "test_shared";
 
-  describe('count', function () {
+  describe("count", function () {
     var store;
 
     beforeEach(function () {
@@ -21,10 +21,10 @@ export default function (config) {
       });
     });
 
-    it('count all returns total number of documents', function () {
+    it("count all returns total number of documents", function () {
       return new Promise(function (resolve, reject) {
-        store.collection(COLL).insert({ _id: 'echo' }, function () {
-          store.collection(COLL).insert({ _id: 'sierra' }, function () {
+        store.collection(COLL).insert({ _id: "echo" }, function () {
+          store.collection(COLL).insert({ _id: "sierra" }, function () {
             store
               .collection(COLL)
               .find({})
@@ -38,13 +38,13 @@ export default function (config) {
       });
     });
 
-    it('count with filter returns filtered count', function () {
+    it("count with filter returns filtered count", function () {
       return new Promise(function (resolve, reject) {
-        store.collection(COLL).insert({ _id: 'echo' }, function () {
-          store.collection(COLL).insert({ _id: 'sierra' }, function () {
+        store.collection(COLL).insert({ _id: "echo" }, function () {
+          store.collection(COLL).insert({ _id: "sierra" }, function () {
             store
               .collection(COLL)
-              .find({ _id: 'echo' })
+              .find({ _id: "echo" })
               .count(function (err, count) {
                 if (err) return reject(err);
                 assert.strictEqual(count, 1);
@@ -55,10 +55,10 @@ export default function (config) {
       });
     });
 
-    it('count with skip returns reduced count', function () {
+    it("count with skip returns reduced count", function () {
       return new Promise(function (resolve, reject) {
-        store.collection(COLL).insert({ _id: 'echo' }, function () {
-          store.collection(COLL).insert({ _id: 'sierra' }, function () {
+        store.collection(COLL).insert({ _id: "echo" }, function () {
+          store.collection(COLL).insert({ _id: "sierra" }, function () {
             store
               .collection(COLL)
               .find({})
@@ -73,4 +73,4 @@ export default function (config) {
       });
     });
   });
-};
+}
