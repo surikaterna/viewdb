@@ -1,4 +1,3 @@
-import Promise from "bluebird";
 import { VdbClient } from "../types";
 import RemoteCollection from "./RemoteCollection";
 

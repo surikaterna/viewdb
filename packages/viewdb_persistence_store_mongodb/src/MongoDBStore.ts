@@ -1,4 +1,3 @@
-import Promise from "bluebird";
 import _ from "lodash";
 import type { Db } from "mongodb";
 import MongoDBCollection from "./MongoDBCollection";
@@ -19,8 +18,14 @@ class MongoDBStore {
   }
 
   open(callback?: (err: Error | null, value?: MongoDBStore) => void): any {
-    const self = this;
-    return Promise.resolve(self).nodeify(callback);
+    const promise = Promise.resolve(this);
+    if (callback) {
+      promise.then(
+        (value) => callback(null, value),
+        (err) => callback(err)
+      );
+    }
+    return promise;
   }
 
   collection(collectionName: string, callback?: (coll: any) => void): any {

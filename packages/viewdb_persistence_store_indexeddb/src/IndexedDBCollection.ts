@@ -1,4 +1,3 @@
-import Promise from "bluebird";
 import { EventEmitter } from "events";
 import Kuery from "kuery";
 import _ from "lodash";

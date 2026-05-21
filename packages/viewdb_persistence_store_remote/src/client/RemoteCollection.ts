@@ -1,4 +1,3 @@
-import Promise from "bluebird";
 import { EventEmitter } from "events";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";

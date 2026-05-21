@@ -1,4 +1,3 @@
-import Promise from "bluebird";
 import { find, forEach, get, includes } from "lodash";
 import Loki from "lokijs";
 import { LoggerFactory } from "slf";
@@ -183,12 +182,25 @@ class LokiJSStore {
           resolve();
         }
       });
-    }).nodeify(callback);
+    });
+    if (callback) {
+      this._openPromise.then(
+        () => callback(null),
+        (err: any) => callback(err)
+      );
+    }
     return this._openPromise;
   }
 
   close(callback: any) {
-    return Promise.resolve().nodeify(callback);
+    const promise = Promise.resolve();
+    if (callback) {
+      promise.then(
+        () => callback(null),
+        (err) => callback(err)
+      );
+    }
+    return promise;
   }
 
   delete(callback: any) {

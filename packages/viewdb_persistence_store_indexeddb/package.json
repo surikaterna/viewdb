@@ -26,7 +26,6 @@
     "viewdb": "*"
   },
   "devDependencies": {
-    "@types/bluebird": "3.5.42",
     "fake-indexeddb": "^2.0.2",
     "viewdb": "*",
     "viewdb-store-tests": "*",
@@ -34,7 +33,6 @@
   },
   "homepage": "https://github.com/surikaterna/viewdb_persistence_store_indexeddb#readme",
   "dependencies": {
-    "bluebird": "^3.7.2",
     "kuery": "^0.5.3",
     "lodash": "^4.18.0",
     "uuid": "^9.0.1"
