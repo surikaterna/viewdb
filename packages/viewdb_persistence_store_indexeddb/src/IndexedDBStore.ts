@@ -1,4 +1,3 @@
-import Promise from "bluebird";
 import IndexedDBCollection from "./IndexedDBCollection";
 
 class IndexedDBStore {
@@ -14,7 +13,7 @@ class IndexedDBStore {
     this._collections = {};
   }
 
-  open(callback?: (err: Error | null, value?: IndexedDBStore) => void): Promise<IndexedDBStore> {
+  open(): Promise<IndexedDBStore> {
     const self = this;
     const request: IDBOpenDBRequest = this._idb.open(this._name, 2);
     return new Promise<IndexedDBStore>(function (resolve, reject) {
@@ -41,18 +40,18 @@ class IndexedDBStore {
       request.onblocked = function (event: Event) {
         reject(new Error(String(event)));
       };
-    }).nodeify(callback);
+    });
   }
 
-  close(callback?: (err: Error | null) => void): Promise<void> {
+  close(): Promise<void> {
     const self = this;
     return new Promise<void>(function (resolve, _reject) {
       self._db!.close();
       resolve();
-    }).nodeify(callback);
+    });
   }
 
-  delete(callback?: (err: Error | null) => void): Promise<void> {
+  delete(): Promise<void> {
     const self = this;
     return new Promise<void>(function (resolve, reject) {
       const req: IDBOpenDBRequest = self._idb.deleteDatabase(self._name);
@@ -62,16 +61,13 @@ class IndexedDBStore {
       req.onerror = function (_event: Event) {
         reject();
       };
-    }).nodeify(callback);
+    });
   }
 
-  collection(name: string, callback?: (collection: IndexedDBCollection) => void): IndexedDBCollection {
+  collection(name: string): IndexedDBCollection {
     let collection = this._collections[name];
     if (!collection) {
       collection = this._collections[name] = new IndexedDBCollection(this._db!, name);
-    }
-    if (callback) {
-      callback(collection);
     }
     return collection;
   }

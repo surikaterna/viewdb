@@ -7,11 +7,11 @@ const LocalCursorAny: any = LocalCursor;
 describe("Cursor", function () {
   it("#toArray should return remote", () =>
     new Promise<void>((resolve, reject) => {
-      const lcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(null, [{ _id: "1" }, { _id: "2" }]);
+      const lcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.resolve([{ _id: "1" }, { _id: "2" }]);
       });
-      const rcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(null, [{ _id: "1" }, { _id: "2" }]);
+      const rcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.resolve([{ _id: "1" }, { _id: "2" }]);
       });
       const hcursor = new HybridCursor({}, lcursor, rcursor, {}, {});
       hcursor.toArray(function (err, result) {
@@ -21,11 +21,11 @@ describe("Cursor", function () {
     }));
   it("#toArray with localFirst should call callback twice", () =>
     new Promise<void>((resolve, reject) => {
-      const lcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(null, [{ _id: "1" }, { _id: "2" }]);
+      const lcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.resolve([{ _id: "1" }, { _id: "2" }]);
       });
-      const rcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(null, [{ _id: "1" }, { _id: "2" }]);
+      const rcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.resolve([{ _id: "1" }, { _id: "2" }]);
       });
       const hcursor = new HybridCursor({}, lcursor, rcursor, {}, { localFirst: true });
       let calls = 0;
@@ -37,11 +37,11 @@ describe("Cursor", function () {
     }));
   it("#toArray with localFirst false should call callback once", () =>
     new Promise<void>((resolve, reject) => {
-      const lcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(null, [{ _id: "1" }, { _id: "2" }]);
+      const lcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.resolve([{ _id: "1" }, { _id: "2" }]);
       });
-      const rcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(null, [{ _id: "1" }, { _id: "2" }]);
+      const rcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.resolve([{ _id: "1" }, { _id: "2" }]);
       });
       const hcursor = new HybridCursor({}, lcursor, rcursor, {}, { localFirst: false });
       const calls = 0;
@@ -51,14 +51,14 @@ describe("Cursor", function () {
     }));
   it("#toArray with versions should merge correctly", () =>
     new Promise<void>((resolve, reject) => {
-      const lcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(null, [
+      const lcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.resolve([
           { _id: "1", version: 1, local: true },
           { _id: "2", version: 2, local: true },
         ]);
       });
-      const rcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(null, [
+      const rcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.resolve([
           { _id: "1", version: 2, local: false },
           { _id: "2", version: 1, local: false },
         ]);
@@ -74,16 +74,18 @@ describe("Cursor", function () {
 
   it("#toArray with local data first should return correctly", () =>
     new Promise<void>((resolve, reject) => {
-      const lcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        setTimeout(function () {
-          callback(null, [
-            { _id: "1", version: 1, local: true },
-            { _id: "2", version: 2, local: true },
-          ]);
-        }, 10);
+      const lcursor = new LocalCursorAny(null, {}, null, function () {
+        return new Promise((resolve) => {
+          setTimeout(function () {
+            resolve([
+              { _id: "1", version: 1, local: true },
+              { _id: "2", version: 2, local: true },
+            ]);
+          }, 10);
+        });
       });
-      const rcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(null, [
+      const rcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.resolve([
           { _id: "1", version: 2, local: false },
           { _id: "2", version: 1, local: false },
         ]);
@@ -98,11 +100,11 @@ describe("Cursor", function () {
     }));
   it("#toArray should throw on local error", () =>
     new Promise<void>((resolve, reject) => {
-      const lcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(new Error());
+      const lcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.reject(new Error());
       });
-      const rcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(null, [
+      const rcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.resolve([
           { _id: "1", version: 2, local: false },
           { _id: "2", version: 1, local: false },
         ]);
@@ -116,14 +118,14 @@ describe("Cursor", function () {
     }));
   it("#toArray should throw on remote error", () =>
     new Promise<void>((resolve, reject) => {
-      const lcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(null, [
+      const lcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.resolve([
           { _id: "1", version: 2, local: false },
           { _id: "2", version: 1, local: false },
         ]);
       });
-      const rcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(new Error());
+      const rcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.reject(new Error());
       });
       const hcursor = new HybridCursor({}, lcursor, rcursor, {}, { localFirst: false, throwRemoteErr: true });
       const calls = 0;
@@ -134,14 +136,14 @@ describe("Cursor", function () {
     }));
   it("#toArray should not throw on remote error if opted out", () =>
     new Promise<void>((resolve, reject) => {
-      const lcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(null, [
+      const lcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.resolve([
           { _id: "1", version: 2, local: false },
           { _id: "2", version: 1, local: false },
         ]);
       });
-      const rcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(new Error());
+      const rcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.reject(new Error());
       });
       const hcursor = new HybridCursor({}, lcursor, rcursor, {}, { localFirst: false, throwRemoteErr: false });
       const calls = 0;
@@ -154,32 +156,34 @@ describe("Cursor", function () {
   it("#toArray should not throw on using $elemMatch with $ne and $eq", () =>
     new Promise<void>((resolve, reject) => {
       const query: any = { things: { $elemMatch: { name: { $eq: "banana" }, category: { $ne: "toy" } } } };
-      const lcursor = new LocalCursorAny(null, query, null, function (query, callback) {
-        setTimeout(function () {
-          callback(null, [
-            {
-              _id: "1",
-              things: [
-                { name: "banana", category: "fruit" },
-                { name: "orange", category: "toy" },
-              ],
-              version: 1,
-              local: true,
-            },
-            {
-              _id: "2",
-              things: [
-                { name: "banana", category: "toy" },
-                { name: "orange", category: "fruit" },
-              ],
-              version: 2,
-              local: true,
-            },
-          ]);
-        }, 10);
+      const lcursor = new LocalCursorAny(null, query, null, function () {
+        return new Promise((resolve) => {
+          setTimeout(function () {
+            resolve([
+              {
+                _id: "1",
+                things: [
+                  { name: "banana", category: "fruit" },
+                  { name: "orange", category: "toy" },
+                ],
+                version: 1,
+                local: true,
+              },
+              {
+                _id: "2",
+                things: [
+                  { name: "banana", category: "toy" },
+                  { name: "orange", category: "fruit" },
+                ],
+                version: 2,
+                local: true,
+              },
+            ]);
+          }, 10);
+        });
       });
-      const rcursor = new LocalCursorAny(null, query, null, function (query, callback) {
-        callback(new Error());
+      const rcursor = new LocalCursorAny(null, query, null, function () {
+        return Promise.reject(new Error());
       });
       const hcursor = new HybridCursor(query, lcursor, rcursor, {}, { localFirst: false, throwRemoteErr: false });
       const calls = 0;
@@ -193,16 +197,18 @@ describe("Cursor", function () {
     }));
   it("#toArray should not throw on remote error if opted out and delayed local response", () =>
     new Promise<void>((resolve, reject) => {
-      const lcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        setTimeout(function () {
-          callback(null, [
-            { _id: "1", version: 1, local: true },
-            { _id: "2", version: 2, local: true },
-          ]);
-        }, 10);
+      const lcursor = new LocalCursorAny(null, {}, null, function () {
+        return new Promise((resolve) => {
+          setTimeout(function () {
+            resolve([
+              { _id: "1", version: 1, local: true },
+              { _id: "2", version: 2, local: true },
+            ]);
+          }, 10);
+        });
       });
-      const rcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(new Error());
+      const rcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.reject(new Error());
       });
       const hcursor = new HybridCursor({}, lcursor, rcursor, {}, { localFirst: false, throwRemoteErr: false });
       const calls = 0;
@@ -214,16 +220,18 @@ describe("Cursor", function () {
     }));
   it("#toArray should throw on remote error if not opted out and delayed local response", () =>
     new Promise<void>((resolve, reject) => {
-      const lcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        setTimeout(function () {
-          callback(null, [
-            { _id: "1", version: 1, local: true },
-            { _id: "2", version: 2, local: true },
-          ]);
-        }, 10);
+      const lcursor = new LocalCursorAny(null, {}, null, function () {
+        return new Promise((resolve) => {
+          setTimeout(function () {
+            resolve([
+              { _id: "1", version: 1, local: true },
+              { _id: "2", version: 2, local: true },
+            ]);
+          }, 10);
+        });
       });
-      const rcursor = new LocalCursorAny(null, {}, null, function (query, callback) {
-        callback(new Error());
+      const rcursor = new LocalCursorAny(null, {}, null, function () {
+        return Promise.reject(new Error());
       });
       const hcursor = new HybridCursor({}, lcursor, rcursor, {}, { localFirst: false, throwRemoteErr: true });
       const calls = 0;

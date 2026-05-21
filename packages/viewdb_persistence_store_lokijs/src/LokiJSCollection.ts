@@ -5,7 +5,6 @@ import {
   forEach,
   get,
   isArray,
-  isFunction,
   isNaN,
   isNumber,
   pick,
@@ -75,24 +74,16 @@ class LokiJSCollection extends EventEmitter {
     return new ViewDBCursor(this, { query: query }, options, this._getDocuments.bind(this));
   }
 
-  insert(documents: any, options?: any, callback?: any) {
+  insert(documents: any, options?: any) {
     LOG.info("Inserting document to collection %s", this.name);
-    if (isFunction(options)) {
-      callback = options;
-      options = null;
-    }
+
     try {
       const insert = this.collection.insert(documents);
       this.emitThrottled("change", documents);
-      if (isFunction(callback)) {
-        callback(null, insert);
-      }
+      return Promise.resolve(insert);
     } catch (e) {
-      if (isFunction(callback)) {
-        callback(e);
-      } else {
-        LOG.warn("insert failed without callback, docments: %j. Error:", documents, e);
-      }
+      LOG.warn("insert failed, docments: %j. Error:", documents, e);
+      return Promise.reject(e);
     }
   }
 
@@ -186,11 +177,7 @@ class LokiJSCollection extends EventEmitter {
   }
 
   // options.versionCheck - will not store to db if not a higher version (if version does not exist - will store)
-  save(documents: any, options?: any, callback?: any) {
-    if (isFunction(options)) {
-      callback = options;
-      options = null;
-    }
+  save(documents: any, options?: any) {
     if (isArray(documents)) {
       const self = this;
       documents.forEach((doc: any) => {
@@ -200,27 +187,21 @@ class LokiJSCollection extends EventEmitter {
       this._updateSingle(documents, options);
     }
     this.emitThrottled("change", documents);
-    if (isFunction(callback)) {
-      callback(null, documents);
-    }
+    return Promise.resolve(documents);
   }
 
-  drop(callback?: any) {
+  drop() {
     this.db.removeCollection(this.name);
-    if (isFunction(callback)) {
-      callback();
-    }
+    return Promise.resolve();
   }
 
-  remove(query: any, options?: any, callback?: any) {
+  remove(query: any, _options?: any) {
     this.collection.chain().find(query).remove();
-    if (isFunction(callback)) {
-      callback();
-    }
     this.emitThrottled("change", { remove: query });
+    return Promise.resolve();
   }
 
-  _getDocuments(query: any, callback: any) {
+  _getDocuments(query: any) {
     const qry = query.query || query;
     LOG.info("Collection: %s - Executing query: %j", this.name, qry);
     let chain = this.collection.chain().find(qry);
@@ -236,7 +217,7 @@ class LokiJSCollection extends EventEmitter {
     }
     const data = chain.data({ removeMeta: true });
     LOG.info("query completed. Results: %s", data.length);
-    callback(null, data);
+    return Promise.resolve(data);
   }
 
   ensureIndex(options: any, callback?: any) {

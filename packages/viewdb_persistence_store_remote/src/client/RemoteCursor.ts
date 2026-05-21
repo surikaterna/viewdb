@@ -14,20 +14,7 @@ class RemoteCursor extends ViewDBCursor {
     super(collection, query, options, getDocuments);
   }
 
-  count(
-    applySkipLimit?: boolean | ((err: Error | null, result?: number) => void),
-    options?: Record<string, any> | ((err: Error | null, result?: number) => void),
-    callback?: (err: Error | null, result?: number) => void
-  ): void {
-    if (_.isFunction(applySkipLimit)) {
-      callback = applySkipLimit;
-      applySkipLimit = true;
-    }
-    if (_.isFunction(options)) {
-      callback = options;
-      options = {};
-    }
-
+  count(options?: Record<string, any>): Promise<number> {
     const skip = _.get(this, "_query.skip", _.get(options, "skip", 0));
     const limit = _.get(this, "_query.limit", _.get(options, "limit", 0));
 
@@ -37,13 +24,17 @@ class RemoteCursor extends ViewDBCursor {
       collection: (this._collection as any)._name,
     };
 
-    if (applySkipLimit) {
-      params.skip = skip;
-      params.limit = limit;
-    }
+    params.skip = skip;
+    params.limit = limit;
 
-    (this._collection as any)._client.request(params, function (err: Error | null, result: any) {
-      callback!(err, result);
+    return new Promise((resolve, reject) => {
+      (this._collection as any)._client.request(params, function (err: Error | null, result: any) {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(result);
+      });
     });
   }
 

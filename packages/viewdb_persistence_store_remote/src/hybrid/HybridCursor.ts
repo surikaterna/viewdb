@@ -111,8 +111,14 @@ class HybridCursor {
       this._remote.project(project);
     }
 
-    this._local.toArray(localResult);
-    this._remote.toArray(serverResult);
+    this._local.toArray().then(
+      (result: any) => localResult(null, result),
+      (err: Error) => localResult(err, [])
+    );
+    this._remote.toArray().then(
+      (result: any) => serverResult(null, result),
+      (err: Error) => serverResult(err, [])
+    );
   }
 
   toArray(callback: any): void {
@@ -243,8 +249,14 @@ class HybridCursor {
       }
     }
 
-    this._local.count(options, localResult);
-    this._remote.count(options, serverResult);
+    this._local.count().then(
+      (count: any) => localResult(null, count),
+      (err: Error) => localResult(err, 0)
+    );
+    this._remote.count().then(
+      (count: any) => serverResult(null, count),
+      (err: Error) => serverResult(err, 0)
+    );
   }
 
   count(options?: any, callback?: any): void {

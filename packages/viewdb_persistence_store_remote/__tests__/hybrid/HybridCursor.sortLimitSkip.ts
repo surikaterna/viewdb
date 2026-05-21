@@ -1,4 +1,3 @@
-import _ from "lodash";
 import should from "should";
 import { ViewDB as ViewDB } from "viewdb";
 import HybridStore from "../../src/hybrid/HybridStore";
@@ -20,35 +19,42 @@ describe("Sort / Limit / Skip", function () {
       })
   );
 
-  it("#toArray with sort / limit", () =>
-    new Promise<void>((resolve, reject) => {
-      const NUMBER_OF_DOCS = 20;
-      const LIMIT = 5;
-      hybrid.open().then(function () {
-        const onPopulated = _.after(NUMBER_OF_DOCS, function () {
-          const cursor = hybrid
-            .collection("dollhouse")
-            .find({ _id: { $gte: "0" } })
-            .sort({ age: 1 })
-            .limit(LIMIT);
-          cursor.toArray(
-            _.after(2, function (err, res) {
-              res.length.should.equal(LIMIT);
-              for (let i = 0; i < LIMIT; i++) {
-                res[i].age.should.equal(i);
-              }
-              resolve();
-            })
-          );
-        });
+  it("#toArray with sort / limit", async () => {
+    const NUMBER_OF_DOCS = 20;
+    const LIMIT = 5;
+    await hybrid.open();
 
-        const remoteCollection = remote.collection("dollhouse");
-        const localCollection = local.collection("dollhouse");
+    const remoteCollection = remote.collection("dollhouse");
+    const localCollection = local.collection("dollhouse");
 
-        for (let i = 0; i < NUMBER_OF_DOCS; i++) {
-          const collection = i % 2 === 0 ? localCollection : remoteCollection;
-          collection.insert({ _id: i, age: i }, onPopulated);
+    const inserts: Promise<any>[] = [];
+    for (let i = 0; i < NUMBER_OF_DOCS; i++) {
+      const collection = i % 2 === 0 ? localCollection : remoteCollection;
+      inserts.push(collection.insert({ _id: i, age: i }));
+    }
+    await Promise.all(inserts);
+
+    const cursor = hybrid
+      .collection("dollhouse")
+      .find({ _id: { $gte: "0" } })
+      .sort({ age: 1 })
+      .limit(LIMIT);
+    let calls = 0;
+    await new Promise<void>((resolve, reject) => {
+      cursor.toArray(function (err, res) {
+        if (err) {
+          reject(err);
+          return;
+        }
+        calls += 1;
+        if (calls === 2) {
+          res.length.should.equal(LIMIT);
+          for (let i = 0; i < LIMIT; i++) {
+            res[i].age.should.equal(i);
+          }
+          resolve();
         }
       });
-    }));
+    });
+  });
 });

@@ -1,6 +1,5 @@
 import _ from "lodash";
 import {
-  Callback,
   Collection,
   Cursor,
   GetDocumentsFn,
@@ -29,15 +28,15 @@ class ViewDBCursor implements Cursor {
   }
 
   forEach(callback: (result: VDocument[]) => void): void {
-    this._getDocuments(this._query, function (err, result) {
+    this._getDocuments(this._query).then((result) => {
       _.forEach(result, function () {
         callback(result!);
       });
     });
   }
 
-  toArray(callback: Callback<VDocument[]>): void {
-    this._getDocuments(this._query, callback);
+  toArray(): Promise<VDocument[]> {
+    return this._getDocuments(this._query);
   }
 
   observe(options: ObserveOptions): ObserveHandle {
@@ -88,7 +87,7 @@ class ViewDBCursor implements Cursor {
     // NOOP
   }
 
-  count(callback: Callback<number>): void {
+  count(): Promise<number> {
     const query: QueryObject = { query: this._query.query };
     if (this._query.skip) {
       query.skip = this._query.skip;
@@ -96,14 +95,12 @@ class ViewDBCursor implements Cursor {
     if (this._query.limit) {
       query.limit = this._query.limit;
     }
-    this._getDocuments(query, function (err, res) {
-      callback(err, res && res.length);
-    });
+    return this._getDocuments(query).then((res) => res.length);
   }
 
-  close(callback: () => void): void {
+  close(): Promise<void> {
     // NOOP
-    callback();
+    return Promise.resolve();
   }
 }
 

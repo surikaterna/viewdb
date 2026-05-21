@@ -66,7 +66,7 @@ class HybridStore {
     });
   }
 
-  collection(name: string, callback?: (collection: any) => void): any {
+  collection(name: string): any {
     let collection = this._collections[name];
     if (!collection) {
       const local = this._local.collection(name);
@@ -86,9 +86,6 @@ class HybridStore {
       }
 
       collection = this._collections[name];
-    }
-    if (callback) {
-      callback(collection);
     }
     return collection;
   }
@@ -113,7 +110,7 @@ class HybridStore {
 
   _cleanCollection(collection: any, maxEpoch: number, propertyName?: string): void {
     const comparisonPropertyName = propertyName || "_insertedAt";
-    collection.remove({ [comparisonPropertyName]: { $lt: maxEpoch } }, null, function () {});
+    collection.remove({ [comparisonPropertyName]: { $lt: maxEpoch } }, null);
   }
 }
 

@@ -6,82 +6,40 @@ export default function (config) {
   describe("cursor", function () {
     let store;
 
-    beforeEach(function () {
-      return new Promise<void>(function (resolve) {
-        config.createStore(function (s) {
-          store = s;
-          resolve();
-        });
-      });
+    beforeEach(async function () {
+      store = await config.createStore();
     });
 
-    afterEach(function () {
-      return new Promise<void>(function (resolve) {
-        config.destroyStore(store, resolve);
-      });
+    afterEach(async function () {
+      await config.destroyStore(store);
     });
 
-    function insertFour(cb) {
+    async function insertFour() {
       const col = store.collection(COLL);
-      col.insert({ _id: "alpha" }, function () {
-        col.insert({ _id: "beta" }, function () {
-          col.insert({ _id: "cosworth" }, function () {
-            col.insert({ _id: "dingo" }, cb);
-          });
-        });
-      });
+      await col.insert({ _id: "alpha" });
+      await col.insert({ _id: "beta" });
+      await col.insert({ _id: "cosworth" });
+      await col.insert({ _id: "dingo" });
     }
 
-    it("sort ascending returns first element correctly", function () {
-      return new Promise<void>(function (resolve, reject) {
-        insertFour(function () {
-          store
-            .collection(COLL)
-            .find({})
-            .sort({ _id: 1 })
-            .toArray(function (err, results) {
-              if (err) return reject(err);
-              assert.strictEqual(results[0]._id, "alpha");
-              resolve();
-            });
-        });
-      });
+    it("sort ascending returns first element correctly", async function () {
+      await insertFour();
+      const results = await store.collection(COLL).find({}).sort({ _id: 1 }).toArray();
+      assert.strictEqual(results[0]._id, "alpha");
     });
 
-    it("sort descending returns first element correctly", function () {
-      return new Promise<void>(function (resolve, reject) {
-        insertFour(function () {
-          store
-            .collection(COLL)
-            .find({})
-            .sort({ _id: -1 })
-            .toArray(function (err, results) {
-              if (err) return reject(err);
-              assert.strictEqual(results[0]._id, "dingo");
-              resolve();
-            });
-        });
-      });
+    it("sort descending returns first element correctly", async function () {
+      await insertFour();
+      const results = await store.collection(COLL).find({}).sort({ _id: -1 }).toArray();
+      assert.strictEqual(results[0]._id, "dingo");
     });
 
-    it("skip and limit return correct subset", function () {
-      return new Promise<void>(function (resolve, reject) {
-        insertFour(function () {
-          store
-            .collection(COLL)
-            .find({})
-            .sort({ _id: 1 })
-            .skip(1)
-            .limit(2)
-            .toArray(function (err, results) {
-              if (err) return reject(err);
-              assert.strictEqual(results.length, 2);
-              assert.strictEqual(results[0]._id, "beta");
-              assert.strictEqual(results[1]._id, "cosworth");
-              resolve();
-            });
-        });
-      });
+    it("skip and limit return correct subset", async function () {
+      await insertFour();
+      const results = await store.collection(COLL).find({}).sort({ _id: 1 }).skip(1).limit(2).toArray();
+      assert.strictEqual(results.length, 2);
+      assert.strictEqual(results[0]._id, "beta");
+      assert.strictEqual(results[1]._id, "cosworth");
     });
   });
 }

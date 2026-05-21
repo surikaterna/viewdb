@@ -83,15 +83,15 @@ class ViewDBObserver implements Observer {
 
   refresh(initial?: boolean): void {
     const self = this;
-    this._collection._getDocuments(this._query, function (err: Error | null, result?: VDocument[]) {
+    this._collection._getDocuments(this._query).then((result) => {
       if (initial && self._options.init) {
-        self._cache = result!;
-        self._options.init(result!);
+        self._cache = result;
+        self._options.init(result);
       } else {
         const old = self._cache;
         self._cache = merge(
           old,
-          result!,
+          result,
           _.defaults(
             {
               comparatorId: function (a: VDocument, b: VDocument) {

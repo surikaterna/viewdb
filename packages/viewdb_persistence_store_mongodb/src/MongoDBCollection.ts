@@ -189,7 +189,7 @@ class MongoDBCollection extends EventEmitter {
     return nodeify(this._collection.createIndex(indexSpec, options), cb);
   }
 
-  _getDocuments(queryObject: any, callback: (err: Error | null, result?: any[]) => void): void {
+  _getDocuments(queryObject: any): Promise<any[]> {
     const query = queryObject.query || queryObject;
     const cursor = this._collection.find(query);
     if (queryObject.skip) {
@@ -204,14 +204,7 @@ class MongoDBCollection extends EventEmitter {
     if (queryObject.project) {
       cursor.project(queryObject.project);
     }
-    cursor
-      .toArray()
-      .then(function (res) {
-        callback(null, res);
-      })
-      .catch(function (err: Error) {
-        callback(err);
-      });
+    return cursor.toArray();
   }
 }
 

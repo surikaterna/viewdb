@@ -83,9 +83,13 @@ describe("Observe", function () {
           },
         });
 
-        store.collection("dollhouse").insert({ _id: "echo", age: 10 }, function () {
-          store.collection("dollhouse").save({ _id: "echo", age: 100 });
-        });
+        store
+          .collection("dollhouse")
+          .insert({ _id: "echo", age: 10 })
+          .then(function () {
+            return store.collection("dollhouse").save({ _id: "echo", age: 100 });
+          })
+          .catch(reject);
       });
     }));
   it("#observe with both empty local and remote result", () =>

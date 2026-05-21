@@ -18,8 +18,8 @@ class ViewDB {
     }
   }
 
-  collection(collectionName: string, callback?: (collection: Collection) => void): Collection {
-    return this._store.collection(collectionName, callback);
+  collection(collectionName: string): Collection {
+    return this._store.collection(collectionName);
   }
 }
 

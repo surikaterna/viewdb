@@ -48,15 +48,15 @@ export interface ObserveHandle {
 
 /** Core cursor contract used by collections */
 export interface Cursor {
-  toArray(callback: Callback<VDocument[]>): void;
+  toArray(): Promise<VDocument[]>;
   observe(options: ObserveOptions): ObserveHandle;
   skip(skip: number): this;
   limit(limit: number): this;
   sort(sort: SortSpec): this;
   project(project: ProjectionSpec): this;
-  count(callback: Callback<number>): void;
+  count(): Promise<number>;
   updateQuery?(query: Record<string, any>): void;
-  close?(callback: () => void): void;
+  close?(): Promise<void>;
 }
 
 /** Core observer contract returned from cursor.observe() */
@@ -64,15 +64,15 @@ export interface Observer extends ObserveHandle {}
 
 /** Core store contract used by ViewDB */
 export interface Store {
-  open?(callback?: Callback<any>): Promise<any>;
-  collection(name: string, callback?: (coll: Collection) => void): Collection;
+  open?(): Promise<any>;
+  collection(name: string): Collection;
 }
 
 /**
- * Callback signature for _getDocuments implementations.
+ * Promise signature for _getDocuments implementations.
  * Used by Collection implementations across all stores.
  */
-export type GetDocumentsFn = (queryObject: QueryObject, callback: Callback<VDocument[]>) => void;
+export type GetDocumentsFn = (queryObject: QueryObject) => Promise<VDocument[]>;
 
 /**
  * Core collection contract that all persistence store collections should satisfy.
@@ -94,13 +94,13 @@ export interface Collection {
 
   // Optional store capabilities
   /** Insert documents into the collection */
-  insert?(documents: any, options?: any, callback?: Callback<any>): void;
+  insert?(documents: any, options?: any): Promise<any>;
   /** Save (upsert) documents */
-  save?(documents: any, options?: any, callback?: Callback<any>): void;
+  save?(documents: any, options?: any): Promise<any>;
   /** Remove documents matching the query */
-  remove?(query: any, options?: any, callback?: Callback): void;
+  remove?(query: any, options?: any): Promise<void>;
   /** Count documents */
-  count?(callback: Callback<number>): void;
+  count?(): Promise<number>;
   /** Drop all documents */
-  drop?(callback?: Callback): void;
+  drop?(): Promise<void>;
 }

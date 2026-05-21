@@ -11,17 +11,14 @@ class RemoteStore {
     this._client = client;
   }
 
-  open(callback?: (err: Error | null, value?: RemoteStore) => void): any {
-    return Promise.resolve(this).nodeify(callback);
+  open(): Promise<RemoteStore> {
+    return Promise.resolve(this);
   }
 
-  collection(name: string, callback?: (collection: RemoteCollection) => void): RemoteCollection {
+  collection(name: string): RemoteCollection {
     let collection = this._collections[name];
     if (!collection) {
       collection = this._collections[name] = new RemoteCollection(this._client, name);
-    }
-    if (callback) {
-      callback(collection);
     }
     return collection;
   }

@@ -52,16 +52,17 @@ class ViewDBSocketServer {
               console.log("warn: no support for project on cursor");
             }
           }
-          cursor.toArray(function (err: Error | null, result: any) {
-            if (err) {
-              console.log(err);
-            } else {
+          cursor
+            .toArray()
+            .then((result: any) => {
               socket.emit("/vdb/response", {
                 i: request.i,
                 p: result,
               });
-            }
-          });
+            })
+            .catch((err: Error) => {
+              console.log(err);
+            });
         });
       } else if (request.p.count) {
         _queryDecorator(request.p.collection, request.p.count, function (decoratedQuery: any) {
@@ -75,17 +76,22 @@ class ViewDBSocketServer {
           if (_.isNumber(request.p.skip)) {
             cursor.skip(request.p.skip);
           }
-          cursor.count(function (err: Error | null, result: any) {
-            if (err) {
-              console.log(err);
-            } else {
+          cursor
+            .count()
+            .then((result: any) => {
               socket.emit("/vdb/response", {
                 i: request.i,
                 p: result,
               });
-            }
-            cursor.close(function (_err: Error | null) {});
-          });
+            })
+            .catch((err: Error) => {
+              console.log(err);
+            })
+            .finally(() => {
+              if (cursor.close) {
+                cursor.close();
+              }
+            });
         });
       } else if (request.p.observe) {
         const observeId = request.p.id;
@@ -160,7 +166,9 @@ class ViewDBSocketServer {
               handle: observeId,
             },
           });
-          cursor.close(function (_err: Error | null) {});
+          if (cursor.close) {
+            cursor.close();
+          }
         });
       } else if (request.p["observe.stop"]) {
         const handle = request.p["observe.stop"].h;

@@ -1,301 +1,175 @@
 import _ from "lodash";
-import { LokiJSStore } from "..";
+import { LokiJSStore } from "../src";
 
 describe("Collection", function () {
   let store;
-  beforeEach(
-    () =>
-      new Promise<void>((resolve) => {
-        store = new LokiJSStore("test-suite", { inMemoryOnly: true });
-        resolve();
-      })
-  );
-  afterEach(
-    () =>
-      new Promise<void>((resolve) => {
-        if (store) {
-          store.collection("dollhouse").drop(function () {
-            store.collection("dollhouse2").drop(function () {
-              store.close(function () {
-                store.clearAllIntervals();
-                resolve();
-              });
-            });
-          });
-        }
-      })
-  );
-  it("#find with empty array should return 0 docs", () =>
-    new Promise<void>((resolve) => {
-      store.open().then(function () {
-        store
-          .collection("dollhouse")
-          .find({})
-          .toArray(function (err, results) {
-            expect(results.length).toBe(0);
-            resolve();
-          });
-      });
-    }));
-  it("#insert two documents with same key but in different collections should work", () =>
-    new Promise<void>((resolve, reject) => {
-      store.open().then(function () {
-        store.collection("dollhouse").insert({ _id: "echo" });
-        store.collection("dollhouse2").insert({ _id: "echo" }, function (err, result) {
-          if (err) {
-            reject(new Error("should not have thrown unique constraint"));
-          } else {
-            resolve();
-          }
-        });
-      });
-    }));
-  it("#update documents already existing", () =>
-    new Promise<void>((resolve) => {
-      store.open().then(function () {
-        store.collection("dollhouse").insert({ _id: "echo" });
-        store.collection("dollhouse").save({ _id: "echo", version: 2 });
-        store
-          .collection("dollhouse")
-          .find({})
-          .toArray(function (err, results) {
-            expect(results.length).toBe(1);
-            expect(results[0].version).toBe(2);
-            resolve();
-          });
-      });
-    }));
-  it("#find {} should return single inserted document", () =>
-    new Promise<void>((resolve) => {
-      store.open().then(function () {
-        store.collection("dollhouse").insert({ _id: "echo" });
-        store
-          .collection("dollhouse")
-          .find({})
-          .toArray(function (err, results) {
-            expect(results.length).toBe(1);
-            resolve();
-          });
-      });
-    }));
-  it("#find {} should return multiple inserted documents", () =>
-    new Promise<void>((resolve) => {
-      store.open().then(function () {
-        store.collection("dollhouse").insert({ _id: "echo" });
-        store.collection("dollhouse").insert({ _id: "sierra" });
-        store
-          .collection("dollhouse")
-          .find({})
-          .toArray(function (err, results) {
-            expect(results.length).toBe(2);
-            resolve();
-          });
-      });
-    }));
-  it('#find {_id:"echo"} should return correct document', () =>
-    new Promise<void>((resolve) => {
-      store.open().then(function () {
-        store.collection("dollhouse").insert({ _id: "echo" });
-        store.collection("dollhouse").insert({ _id: "sierra" });
-        store
-          .collection("dollhouse")
-          .find({ _id: "echo" })
-          .toArray(function (err, results) {
-            expect(results.length).toBe(1);
-            expect(results[0]._id).toBe("echo");
-            resolve();
-          });
-      });
-    }));
-  it('#find with complex key {"name.first":"echo"} should return correct document', () =>
-    new Promise<void>((resolve, reject) => {
-      store.open().then(function () {
-        const promises = [
-          store.collection("dollhouse").insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }),
-          store.collection("dollhouse").insert({ _id: "sierra", name: { first: "SIERRA", last: "TV" } }),
-        ];
-        Promise.all(promises)
-          .then(function () {
-            return store
-              .collection("dollhouse")
-              .find({ "name.first": "ECHO" })
-              .toArray(function (err, results) {
-                expect(results.length).toBe(1);
-                expect(results[0]._id).toBe("echo");
-                resolve();
-              });
-          })
-          .catch(function (err) {
-            reject(err);
-          });
-      });
-    }));
-  it("#drop should remove all documents", () =>
-    new Promise<void>((resolve) => {
-      store.open().then(function () {
-        store.collection("dollhouse").insert({ _id: "echo" });
-        store.collection("dollhouse").drop();
-        store
-          .collection("dollhouse")
-          .find({})
-          .toArray(function (err, results) {
-            expect(results.length).toBe(0);
-            resolve();
-          });
-      });
-    }));
-  it("#sort should sort on a property", () =>
-    new Promise<void>((resolve) => {
-      store.open().then(function () {
-        store.collection("dollhouse").insert({ _id: "alpha" });
-        store.collection("dollhouse").insert({ _id: "beta" });
-        store.collection("dollhouse").insert({ _id: "cosworth" });
-        store.collection("dollhouse").insert({ _id: "dingo" });
+  beforeEach(() => {
+    store = new LokiJSStore("test-suite", { inMemoryOnly: true });
+  });
 
-        store
-          .collection("dollhouse")
-          .find({})
-          .sort({ _id: 1 })
-          .toArray(function (err, results) {
-            expect(results[0]._id).toBe("alpha");
-            resolve();
-          });
-      });
-    }));
-  it("#sort should sort on a property, descending", () =>
-    new Promise<void>((resolve) => {
-      store.open().then(function () {
-        store.collection("dollhouse").insert({ _id: "alpha" });
-        store.collection("dollhouse").insert({ _id: "beta" });
-        store.collection("dollhouse").insert({ _id: "cosworth" });
-        store.collection("dollhouse").insert({ _id: "dingo" });
+  afterEach(async () => {
+    if (store) {
+      await store.collection("dollhouse").drop();
+      await store.collection("dollhouse2").drop();
+      await store.close();
+      store.clearAllIntervals();
+    }
+  });
 
-        store
-          .collection("dollhouse")
-          .find({})
-          .sort({ _id: -1 })
-          .toArray(function (err, results) {
-            expect(results[0]._id).toBe("dingo");
-            resolve();
-          });
-      });
-    }));
-  it("#insert documents via bulk", () =>
-    new Promise<void>((resolve) => {
-      store.open().then(function () {
-        store.collection("dollhouse").insert([{ _id: "echo" }, { _id: "sierra" }]);
-        store
-          .collection("dollhouse")
-          .find({})
-          .toArray(function (err, results) {
-            expect(results.length).toBe(2);
-            resolve();
-          });
-      });
-    }));
-  it("#update documents via bulk", () =>
-    new Promise<void>((resolve) => {
-      store.open().then(function () {
-        store.collection("dollhouse").insert([{ _id: "echo" }, { _id: "sierra" }], function () {
-          store.collection("dollhouse").save([
-            { _id: "echo", version: 2 },
-            { _id: "sierra", version: 22 },
-          ]);
-          store
-            .collection("dollhouse")
-            .find({})
-            .toArray(function (err, results) {
-              resolve();
-            });
-        });
-      });
-    }));
-  it("#count should return number of documents", () =>
-    new Promise<void>((resolve) => {
-      store.open().then(function () {
-        store.collection("dollhouse").insert({ _id: "echo" });
-        store.collection("dollhouse").insert({ _id: "sierra" });
-        store
-          .collection("dollhouse")
-          .find({})
-          .count(function (err, count) {
-            expect(count).toBe(2);
-            resolve();
-          });
-      });
-    }));
-  it("#count should return number of documents with filter", () =>
-    new Promise<void>((resolve) => {
-      store.open().then(function () {
-        store.collection("dollhouse").insert({ _id: "echo" });
-        store.collection("dollhouse").insert({ _id: "sierra" });
-        store
-          .collection("dollhouse")
-          .find({ _id: "echo" })
-          .count(function (err, count) {
-            expect(count).toBe(1);
-            resolve();
-          });
-      });
-    }));
-  it("#count should include skip", () =>
-    new Promise<void>((resolve) => {
-      store.open().then(function () {
-        store.collection("dollhouse").insert({ _id: "echo" });
-        store.collection("dollhouse").insert({ _id: "sierra" });
-        store
-          .collection("dollhouse")
-          .find({})
-          .skip(1)
-          .count(function (err, count) {
-            expect(count).toBe(1);
-            resolve();
-          });
-      });
-    }));
-  it("#count without skip should return total", () =>
-    new Promise<void>((resolve) => {
-      store.open().then(function () {
-        store.collection("dollhouse").insert({ _id: "echo" });
-        store.collection("dollhouse").insert({ _id: "sierra" });
-        store
-          .collection("dollhouse")
-          .find({})
-          .count(function (err, count) {
-            expect(count).toBe(2);
-            resolve();
-          });
-      });
-    }));
-  it('#find {_id: $in ["echo"]} should return correct document', () =>
-    new Promise<void>((resolve) => {
-      store.open().then(function () {
-        store.collection("dollhouse").insert({ _id: "echo" });
-        store.collection("dollhouse").insert({ _id: "sierra" });
-        store
-          .collection("dollhouse")
-          .find({ _id: { $in: ["echo", "sierra"] } })
-          .toArray(function (err, results) {
-            expect(results.length).toBe(2);
-            expect(results[0]._id).toBe("echo");
-            resolve();
-          });
-      });
-    }));
-  it("#should allow to save with $ chars in _syncProfiles", () =>
-    new Promise<void>((resolve) => {
-      store.open().then(function () {
-        store
-          .collection("_syncProfiles")
-          .insert({ id: "echo", query: { $or: ["1", "2"] }, subQueries: { $or: ["1", "2"] } });
-        store
-          .collection("_syncProfiles")
-          .find({ id: "echo" })
-          .toArray(function (err, results) {
-            const equal = _.isEqual(["1", "2"], results[0].query["$or"]);
-            expect(equal).toBe(true);
-            resolve();
-          });
-      });
-    }));
+  it("#find with empty array should return 0 docs", async () => {
+    await store.open();
+    const results = await store.collection("dollhouse").find({}).toArray();
+    expect(results.length).toBe(0);
+  });
+
+  it("#insert two documents with same key but in different collections should work", async () => {
+    await store.open();
+    await store.collection("dollhouse").insert({ _id: "echo" });
+    await store.collection("dollhouse2").insert({ _id: "echo" });
+  });
+
+  it("#update documents already existing", async () => {
+    await store.open();
+    await store.collection("dollhouse").insert({ _id: "echo" });
+    await store.collection("dollhouse").save({ _id: "echo", version: 2 });
+    const results = await store.collection("dollhouse").find({}).toArray();
+    expect(results.length).toBe(1);
+    expect(results[0].version).toBe(2);
+  });
+
+  it("#find {} should return single inserted document", async () => {
+    await store.open();
+    await store.collection("dollhouse").insert({ _id: "echo" });
+    const results = await store.collection("dollhouse").find({}).toArray();
+    expect(results.length).toBe(1);
+  });
+
+  it("#find {} should return multiple inserted documents", async () => {
+    await store.open();
+    await store.collection("dollhouse").insert({ _id: "echo" });
+    await store.collection("dollhouse").insert({ _id: "sierra" });
+    const results = await store.collection("dollhouse").find({}).toArray();
+    expect(results.length).toBe(2);
+  });
+
+  it('#find {_id:"echo"} should return correct document', async () => {
+    await store.open();
+    await store.collection("dollhouse").insert({ _id: "echo" });
+    await store.collection("dollhouse").insert({ _id: "sierra" });
+    const results = await store.collection("dollhouse").find({ _id: "echo" }).toArray();
+    expect(results.length).toBe(1);
+    expect(results[0]._id).toBe("echo");
+  });
+
+  it('#find with complex key {"name.first":"echo"} should return correct document', async () => {
+    await store.open();
+    await Promise.all([
+      store.collection("dollhouse").insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }),
+      store.collection("dollhouse").insert({ _id: "sierra", name: { first: "SIERRA", last: "TV" } }),
+    ]);
+    const results = await store.collection("dollhouse").find({ "name.first": "ECHO" }).toArray();
+    expect(results.length).toBe(1);
+    expect(results[0]._id).toBe("echo");
+  });
+
+  it("#drop should remove all documents", async () => {
+    await store.open();
+    await store.collection("dollhouse").insert({ _id: "echo" });
+    await store.collection("dollhouse").drop();
+    const results = await store.collection("dollhouse").find({}).toArray();
+    expect(results.length).toBe(0);
+  });
+
+  it("#sort should sort on a property", async () => {
+    await store.open();
+    await store.collection("dollhouse").insert({ _id: "alpha" });
+    await store.collection("dollhouse").insert({ _id: "beta" });
+    await store.collection("dollhouse").insert({ _id: "cosworth" });
+    await store.collection("dollhouse").insert({ _id: "dingo" });
+
+    const results = await store.collection("dollhouse").find({}).sort({ _id: 1 }).toArray();
+    expect(results[0]._id).toBe("alpha");
+  });
+
+  it("#sort should sort on a property, descending", async () => {
+    await store.open();
+    await store.collection("dollhouse").insert({ _id: "alpha" });
+    await store.collection("dollhouse").insert({ _id: "beta" });
+    await store.collection("dollhouse").insert({ _id: "cosworth" });
+    await store.collection("dollhouse").insert({ _id: "dingo" });
+
+    const results = await store.collection("dollhouse").find({}).sort({ _id: -1 }).toArray();
+    expect(results[0]._id).toBe("dingo");
+  });
+
+  it("#insert documents via bulk", async () => {
+    await store.open();
+    await store.collection("dollhouse").insert([{ _id: "echo" }, { _id: "sierra" }]);
+    const results = await store.collection("dollhouse").find({}).toArray();
+    expect(results.length).toBe(2);
+  });
+
+  it("#update documents via bulk", async () => {
+    await store.open();
+    await store.collection("dollhouse").insert([{ _id: "echo" }, { _id: "sierra" }]);
+    await store.collection("dollhouse").save([
+      { _id: "echo", version: 2 },
+      { _id: "sierra", version: 22 },
+    ]);
+    await store.collection("dollhouse").find({}).toArray();
+  });
+
+  it("#count should return number of documents", async () => {
+    await store.open();
+    await store.collection("dollhouse").insert({ _id: "echo" });
+    await store.collection("dollhouse").insert({ _id: "sierra" });
+    const count = await store.collection("dollhouse").find({}).count();
+    expect(count).toBe(2);
+  });
+
+  it("#count should return number of documents with filter", async () => {
+    await store.open();
+    await store.collection("dollhouse").insert({ _id: "echo" });
+    await store.collection("dollhouse").insert({ _id: "sierra" });
+    const count = await store.collection("dollhouse").find({ _id: "echo" }).count();
+    expect(count).toBe(1);
+  });
+
+  it("#count should include skip", async () => {
+    await store.open();
+    await store.collection("dollhouse").insert({ _id: "echo" });
+    await store.collection("dollhouse").insert({ _id: "sierra" });
+    const count = await store.collection("dollhouse").find({}).skip(1).count();
+    expect(count).toBe(1);
+  });
+
+  it("#count without skip should return total", async () => {
+    await store.open();
+    await store.collection("dollhouse").insert({ _id: "echo" });
+    await store.collection("dollhouse").insert({ _id: "sierra" });
+    const count = await store.collection("dollhouse").find({}).count();
+    expect(count).toBe(2);
+  });
+
+  it('#find {_id: $in ["echo"]} should return correct document', async () => {
+    await store.open();
+    await store.collection("dollhouse").insert({ _id: "echo" });
+    await store.collection("dollhouse").insert({ _id: "sierra" });
+    const results = await store
+      .collection("dollhouse")
+      .find({ _id: { $in: ["echo", "sierra"] } })
+      .toArray();
+    expect(results.length).toBe(2);
+    expect(results[0]._id).toBe("echo");
+  });
+
+  it("#should allow to save with $ chars in _syncProfiles", async () => {
+    await store.open();
+    await store
+      .collection("_syncProfiles")
+      .insert({ id: "echo", query: { $or: ["1", "2"] }, subQueries: { $or: ["1", "2"] } });
+    const results = await store.collection("_syncProfiles").find({ id: "echo" }).toArray();
+    const equal = _.isEqual(["1", "2"], results[0].query["$or"]);
+    expect(equal).toBe(true);
+  });
 });

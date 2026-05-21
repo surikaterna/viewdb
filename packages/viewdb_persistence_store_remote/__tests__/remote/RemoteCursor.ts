@@ -8,21 +8,18 @@ import ViewDBSocketServer from "../../src/server/ViewDBSocketServer";
 
 describe("Remote server/client", function () {
   let clientVdb, remote, socketServer, socketClient, clientStore, client;
-  beforeEach(
-    () =>
-      new Promise<void>((resolve, reject) => {
-        socketServer = new SocketMock();
-        socketClient = socketServer.socketClient;
-        client = new RequestResponseClient(socketClient);
-        clientStore = new RemoteStore(client);
-        clientVdb = new ViewDB(clientStore);
-        remote = new ViewDB();
-        const vdbSocketServer = new ViewDBSocketServer(remote, socketServer);
-        resolve();
-      })
-  );
+  beforeEach(() => {
+    socketServer = new SocketMock();
+    socketClient = socketServer.socketClient;
+    client = new RequestResponseClient(socketClient);
+    clientStore = new RemoteStore(client);
+    clientVdb = new ViewDB(clientStore);
+    remote = new ViewDB();
+    new ViewDBSocketServer(remote, socketServer);
+  });
+
   it("#socketMock should work", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       socketClient.on("ping", function (message) {
         message.should.equal("Hello");
         socketClient.emit("pong", "heya");
@@ -33,17 +30,13 @@ describe("Remote server/client", function () {
       });
       socketServer.emit("ping", "Hello");
     }));
-  it("#remote query", () =>
-    new Promise<void>((resolve, reject) => {
-      remote.collection("dollhouse").insert({ _id: "echo", test: "success" });
-      clientVdb
-        .collection("dollhouse")
-        .find({ _id: "echo" })
-        .toArray(function (err, res) {
-          res[0].test.should.equal("success");
-          resolve();
-        });
-    }));
+
+  it("#remote query", async () => {
+    await remote.collection("dollhouse").insert!({ _id: "echo", test: "success" });
+    const res = await clientVdb.collection("dollhouse").find({ _id: "echo" }).toArray();
+    res[0].test.should.equal("success");
+  });
+
   it("#remote cursor sort should not trigger refresh when not observing", function () {
     const collection = clientVdb.collection("dollhouse");
     let changes = 0;
@@ -55,61 +48,40 @@ describe("Remote server/client", function () {
 
     changes.should.equal(0);
   });
-  it("#remote cursor count", () =>
-    new Promise<void>((resolve, reject) => {
-      remote.collection("dollhouse").insert({ _id: "echo" });
-      remote.collection("dollhouse").insert({ _id: "echo2" });
-      clientVdb
-        .collection("dollhouse")
-        .find({ _id: "echo" })
-        .count(function (err, res) {
-          res.should.equal(1);
-          resolve();
-        });
-    }));
-  it("#remote cursor count should use skip/limit from cursor", () =>
-    new Promise<void>((resolve, reject) => {
-      remote.collection("dollhouse").insert({ _id: "echo" });
-      remote.collection("dollhouse").insert({ _id: "echo2" });
-      remote.collection("dollhouse").insert({ _id: "echo3" });
-      clientVdb
-        .collection("dollhouse")
-        .find({})
-        .skip(1)
-        .limit(1)
-        .count(function (err, res) {
-          res.should.equal(1);
-          resolve();
-        });
-    }));
-  it("#remote cursor count should use skip from options", () =>
-    new Promise<void>((resolve, reject) => {
-      remote.collection("dollhouse").insert({ _id: "echo" });
-      remote.collection("dollhouse").insert({ _id: "echo2" });
-      remote.collection("dollhouse").insert({ _id: "echo3" });
-      clientVdb
-        .collection("dollhouse")
-        .find({})
-        .count({}, { skip: 1 }, function (err, res) {
-          res.should.equal(2);
-          resolve();
-        });
-    }));
-  it("#remote cursor count should use limit from options", () =>
-    new Promise<void>((resolve, reject) => {
-      remote.collection("dollhouse").insert({ _id: "echo" });
-      remote.collection("dollhouse").insert({ _id: "echo2" });
-      remote.collection("dollhouse").insert({ _id: "echo3" });
-      clientVdb
-        .collection("dollhouse")
-        .find({})
-        .count({}, { limit: 2 }, function (err, res) {
-          res.should.equal(2);
-          resolve();
-        });
-    }));
+
+  it("#remote cursor count", async () => {
+    await remote.collection("dollhouse").insert!({ _id: "echo" });
+    await remote.collection("dollhouse").insert!({ _id: "echo2" });
+    const res = await clientVdb.collection("dollhouse").find({ _id: "echo" }).count();
+    res.should.equal(1);
+  });
+
+  it("#remote cursor count should use skip/limit from cursor", async () => {
+    await remote.collection("dollhouse").insert!({ _id: "echo" });
+    await remote.collection("dollhouse").insert!({ _id: "echo2" });
+    await remote.collection("dollhouse").insert!({ _id: "echo3" });
+    const res = await clientVdb.collection("dollhouse").find({}).skip(1).limit(1).count();
+    res.should.equal(1);
+  });
+
+  it("#remote cursor count should use skip from options", async () => {
+    await remote.collection("dollhouse").insert!({ _id: "echo" });
+    await remote.collection("dollhouse").insert!({ _id: "echo2" });
+    await remote.collection("dollhouse").insert!({ _id: "echo3" });
+    const res = await (clientVdb.collection("dollhouse").find({}) as any).count({ skip: 1 });
+    res.should.equal(2);
+  });
+
+  it("#remote cursor count should use limit from options", async () => {
+    await remote.collection("dollhouse").insert!({ _id: "echo" });
+    await remote.collection("dollhouse").insert!({ _id: "echo2" });
+    await remote.collection("dollhouse").insert!({ _id: "echo3" });
+    const res = await (clientVdb.collection("dollhouse").find({}) as any).count({ limit: 2 });
+    res.should.equal(2);
+  });
+
   it("#remote collection count", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
       clientVdb.collection("dollhouse").count({ _id: "echo" }, function (err, res) {
@@ -117,8 +89,9 @@ describe("Remote server/client", function () {
         resolve();
       });
     }));
+
   it("#remote collection count with skip", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
       clientVdb.collection("dollhouse").count({}, { skip: 1 }, function (err, res) {
@@ -126,8 +99,9 @@ describe("Remote server/client", function () {
         resolve();
       });
     }));
+
   it("#remote collection count with limit", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
       clientVdb.collection("dollhouse").count({}, { limit: 1 }, function (err, res) {
@@ -135,8 +109,9 @@ describe("Remote server/client", function () {
         resolve();
       });
     }));
+
   it("#remote collection observe", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
       const cursor = clientVdb.collection("dollhouse").find({ _id: { $in: ["echo2", "echo3"] } });
@@ -151,8 +126,9 @@ describe("Remote server/client", function () {
       });
       remote.collection("dollhouse").insert({ _id: "echo3" });
     }));
+
   it("#remote collection observe should call init again on reconnected", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       remote.collection("dollhouse").insert({ _id: "echo2" });
       const cursor = clientVdb.collection("dollhouse").find({ _id: { $in: ["echo2", "echo3"] } });
       let inits = 0;
@@ -170,8 +146,9 @@ describe("Remote server/client", function () {
         },
       });
     }));
+
   it("#remote collection observe should continue to work on reconnected", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       remote.collection("dollhouse").insert({ _id: "echo2" });
       const cursor = clientVdb.collection("dollhouse").find({ _id: { $in: ["echo2", "echo3"] } });
       let inits = 0;
@@ -183,21 +160,22 @@ describe("Remote server/client", function () {
             client.onClientReconnected();
             remote.collection("dollhouse").insert({ _id: "echo3" });
           } else {
-            inits.should.equal(2); // max 2 inits - 1 reconnect
+            inits.should.equal(2);
           }
         },
         added: function (item) {
           item._id.should.equal("echo3");
           remote.collection("dollhouse").save({ _id: "echo3", updated: true });
         },
-        changed: function (asis, tobe) {
+        changed: function (_asis, tobe) {
           tobe.updated.should.equal(true);
           resolve();
         },
       });
     }));
+
   it("#remote reconnected should work with hybrid", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       remote.collection("dollhouse").insert({ _id: "echo2" });
       const local = new ViewDB();
       const hybrid = new ViewDB(new (HybridStore as any)(local, clientStore, { throttleObserveRefresh: 0 }));
@@ -209,12 +187,12 @@ describe("Remote server/client", function () {
           init: function (init) {
             list = init;
           },
-          added: function (element, index) {
+          added: function (_element, index) {
             list.splice(index, 1);
             remote.collection("dollhouse").save({ _id: "echo2", changed: 1 });
             client.onClientReconnected();
           },
-          changed: function (asis, tobe, index) {
+          changed: function (_asis, tobe, index) {
             changes++;
             remote.collection("dollhouse").save({ _id: "echo2", changed: 2 });
             list[index] = tobe;

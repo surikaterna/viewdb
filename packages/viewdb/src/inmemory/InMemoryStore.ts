@@ -8,14 +8,11 @@ class InMemoryStore implements Store {
     this._collections = {};
   }
 
-  collection(collectionName: string, callback?: (collection: Collection) => void): InMemoryCollection {
+  collection(collectionName: string): InMemoryCollection {
     let coll = this._collections[collectionName];
     if (coll === undefined) {
       coll = new InMemoryCollection(collectionName);
       this._collections[collectionName] = coll;
-    }
-    if (callback) {
-      callback(coll);
     }
     return coll;
   }

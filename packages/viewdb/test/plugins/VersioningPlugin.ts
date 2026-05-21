@@ -5,115 +5,99 @@ import { plugins, ViewDB as ViewDB } from "../..";
 const VersioningPlugin = plugins.VersioningPlugin;
 
 describe("Viewdb versioning plugin", () => {
-  it("should add version on insert", () =>
-    new Promise<void>((resolve, reject) => {
-      const viewDb = new ViewDB();
-      new VersioningPlugin(viewDb);
-      const obj: any = { id: "123" };
+  it("should add version on insert", async () => {
+    const viewDb = new ViewDB();
+    new VersioningPlugin(viewDb);
+    const obj: any = { id: "123" };
 
-      const collection = viewDb.collection("test");
-      collection.insert(obj);
+    const collection = viewDb.collection("test");
+    await collection.insert!(obj);
 
-      collection.find({ id: "123" }).toArray(function (err, objects) {
-        const object = objects[0];
+    const objects = await collection.find({ id: "123" }).toArray();
+    const object = objects[0];
 
-        expect(object.version).toBe(0);
-        resolve();
-      });
-    }));
-  it("should add version on builk insert", () =>
-    new Promise<void>((resolve, reject) => {
-      const viewDb = new ViewDB();
-      new VersioningPlugin(viewDb);
+    expect(object.version).toBe(0);
+  });
 
-      const collection = viewDb.collection("test");
-      collection.insert([{ id: "123" }, { id: "999" }]);
+  it("should add version on builk insert", async () => {
+    const viewDb = new ViewDB();
+    new VersioningPlugin(viewDb);
 
-      collection.find({}).toArray(function (err, objects) {
-        expect(objects[0].version).toBe(0);
-        expect(objects[1].version).toBe(0);
-        resolve();
-      });
-    }));
-  it("should increase version on save", () =>
-    new Promise<void>((resolve, reject) => {
-      const viewDb = new ViewDB();
-      new VersioningPlugin(viewDb);
-      const obj: any = { id: "123" };
+    const collection = viewDb.collection("test");
+    await collection.insert!([{ id: "123" }, { id: "999" }]);
 
-      const collection = viewDb.collection("test");
-      collection.insert(obj);
-      obj.name = "Pelle";
-      collection.save(obj);
+    const objects = await collection.find({}).toArray();
+    expect(objects[0].version).toBe(0);
+    expect(objects[1].version).toBe(0);
+  });
 
-      collection.find({ id: "123" }).toArray(function (err, objects) {
-        const object = objects[0];
-        expect(object.version).toBe(1);
-        expect(object.name).toBe("Pelle");
-        resolve();
-      });
-    }));
+  it("should increase version on save", async () => {
+    const viewDb = new ViewDB();
+    new VersioningPlugin(viewDb);
+    const obj: any = { id: "123" };
 
-  it("should increase version on bulk save", () =>
-    new Promise<void>((resolve, reject) => {
-      const viewDb = new ViewDB();
-      new VersioningPlugin(viewDb);
+    const collection = viewDb.collection("test");
+    await collection.insert!(obj);
+    obj.name = "Pelle";
+    await collection.save!(obj);
 
-      const collection = viewDb.collection("test");
-      collection.insert([
-        { _id: "123", version: 10 },
-        { _id: "999", version: 101 },
-      ]);
-      collection.find({}).toArray(function (err, objects) {
-        _.forEach(objects, function (o, i) {
-          (o as any).name = Number(i) === 0 ? "Pelle" : "Kalle";
-        });
-        collection.save(objects, function () {
-          collection.find({}).toArray(function (err, objects) {
-            expect(objects[0].version).toBe(12); // add 1 version for insert and one for save
-            expect(objects[0].name).toBe("Pelle");
-            expect(objects[1].version).toBe(103);
-            expect(objects[1].name).toBe("Kalle");
-            resolve();
-          });
-        });
-      });
-    }));
-  it("should skip changing version with skipVersioning option on save", () =>
-    new Promise<void>((resolve, reject) => {
-      const viewDb = new ViewDB();
-      new VersioningPlugin(viewDb);
-      const obj: any = { id: "123" };
+    const objects = await collection.find({ id: "123" }).toArray();
+    const object = objects[0];
+    expect(object.version).toBe(1);
+    expect(object.name).toBe("Pelle");
+  });
 
-      const collection = viewDb.collection("test");
-      collection.insert(obj);
-      obj.name = "Pelle";
-      collection.save(obj, { skipVersioning: true });
+  it("should increase version on bulk save", async () => {
+    const viewDb = new ViewDB();
+    new VersioningPlugin(viewDb);
 
-      collection.find({ id: "123" }).toArray(function (err, objects) {
-        const object = objects[0];
-        expect(object.version).toBe(0); // still version 0
-        expect(object.name).toBe("Pelle");
-        resolve();
-      });
-    }));
-  it("should add version on save", () =>
-    new Promise<void>((resolve, reject) => {
-      const viewDb = new ViewDB();
-      new VersioningPlugin(viewDb);
-      const obj: any = { id: "123" };
+    const collection = viewDb.collection("test");
+    await collection.insert!([
+      { _id: "123", version: 10 },
+      { _id: "999", version: 101 },
+    ]);
+    const objects = await collection.find({}).toArray();
+    _.forEach(objects, function (o, i) {
+      (o as any).name = Number(i) === 0 ? "Pelle" : "Kalle";
+    });
+    await collection.save!(objects);
+    const saved = await collection.find({}).toArray();
+    expect(saved[0].version).toBe(12); // add 1 version for insert and one for save
+    expect(saved[0].name).toBe("Pelle");
+    expect(saved[1].version).toBe(103);
+    expect(saved[1].name).toBe("Kalle");
+  });
 
-      const collection = viewDb.collection("test");
-      collection.insert(obj);
-      obj.name = "Pelle";
-      obj.version = undefined;
-      collection.save(obj);
+  it("should skip changing version with skipVersioning option on save", async () => {
+    const viewDb = new ViewDB();
+    new VersioningPlugin(viewDb);
+    const obj: any = { id: "123" };
 
-      collection.find({ id: "123" }).toArray(function (err, objects) {
-        const object = objects[0];
-        expect(object.version).toBe(0);
-        expect(object.name).toBe("Pelle");
-        resolve();
-      });
-    }));
+    const collection = viewDb.collection("test");
+    await collection.insert!(obj);
+    obj.name = "Pelle";
+    await collection.save!(obj, { skipVersioning: true });
+
+    const objects = await collection.find({ id: "123" }).toArray();
+    const object = objects[0];
+    expect(object.version).toBe(0); // still version 0
+    expect(object.name).toBe("Pelle");
+  });
+
+  it("should add version on save", async () => {
+    const viewDb = new ViewDB();
+    new VersioningPlugin(viewDb);
+    const obj: any = { id: "123" };
+
+    const collection = viewDb.collection("test");
+    await collection.insert!(obj);
+    obj.name = "Pelle";
+    obj.version = undefined;
+    await collection.save!(obj);
+
+    const objects = await collection.find({ id: "123" }).toArray();
+    const object = objects[0];
+    expect(object.version).toBe(0);
+    expect(object.name).toBe("Pelle");
+  });
 });

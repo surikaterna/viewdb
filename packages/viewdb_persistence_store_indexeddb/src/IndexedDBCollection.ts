@@ -42,16 +42,12 @@ class IndexedDBCollection extends EventEmitter {
     return this._name + "_" + document["_id"];
   }
 
-  insert(documents: any, options?: any, callback?: any): any {
-    return this._write("add", documents, options, callback);
+  insert(documents: any, options?: any): any {
+    return this._write("add", documents, options);
   }
 
-  _write(op: string, documents: any, options?: any, callback?: any): any {
+  _write(op: string, documents: any, options?: any): any {
     const self = this;
-    if (_.isFunction(options)) {
-      callback = options;
-      options = null;
-    }
 
     if (!_.isArray(documents)) {
       documents = [documents];
@@ -91,110 +87,99 @@ class IndexedDBCollection extends EventEmitter {
         };
       }
       addNext();
-    }).nodeify(callback);
-  }
-
-  save(documents: any, options?: any, callback?: any): any {
-    return this._write("put", documents, options, callback);
-  }
-
-  drop(callback?: any): void {
-    const txn = this._db.transaction(["documents"], "readwrite");
-    const docs = txn.objectStore("documents");
-    const cursor = docs.index("$collection").openCursor(this._name);
-    cursor.onerror = function (event: Event) {
-      if (callback) {
-        callback(new Error(String(event)));
-      } else {
-        console.log(event);
-      }
-    };
-    cursor.onsuccess = function (event: Event) {
-      const c = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
-      if (c) {
-        c.delete();
-        c.continue();
-      } else {
-        if (callback) {
-          callback(null);
-        }
-      }
-    };
-  }
-
-  remove(query: any, options?: any, callback?: any): void {
-    const self = this;
-    if (_.isFunction(options)) {
-      callback = options;
-      options = null;
-    }
-    if (!callback) {
-      callback = function () {};
-    }
-
-    this._getDocuments(query, function (err: Error | null, res: any) {
-      if (err) {
-        callback(err);
-      } else {
-        const txn = self._db.transaction(["documents"], "readwrite");
-        txn.oncomplete = (txn as any).onsuccess = function () {
-          self.emit("change", { remove: query });
-          callback(null);
-        };
-
-        txn.onerror = function (event: Event) {
-          callback(new Error(String(event)));
-        };
-        const docs = txn.objectStore("documents");
-        _.forEach(res, function (doc: any) {
-          const key = self._getKey(doc);
-          const delReq = docs.delete(key);
-        });
-      }
     });
   }
 
-  _getDocuments(query: any, callback: (err: Error | null, result?: any[]) => void): void {
-    const qry = query.query || query;
-    const txn = this._db.transaction(["documents"], "readonly");
-    const docs = txn.objectStore("documents");
-    const cursor = docs.index("$collection").openCursor(this._name);
-    const result: any[] = [];
-    cursor.onerror = function (event: Event) {
-      callback(new Error(String(event)));
-    };
-    cursor.onsuccess = function (event: Event) {
-      const c = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
-      if (c) {
-        result.push(c.value);
-        c.continue();
-      } else {
-        const q = new Kuery(qry);
-        query.sort && q.sort(query.sort);
-        query.skip && q.skip(query.skip);
-        query.limit && q.limit(query.limit);
-        callback(null, q.find(result));
-      }
-    };
+  save(documents: any, options?: any): any {
+    return this._write("put", documents, options);
   }
 
-  _getByKey(query: any, callback: (err: Error | null, result?: any[]) => void): void {
+  drop(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const txn = this._db.transaction(["documents"], "readwrite");
+      const docs = txn.objectStore("documents");
+      const cursor = docs.index("$collection").openCursor(this._name);
+      cursor.onerror = function (event: Event) {
+        reject(new Error(String(event)));
+      };
+      cursor.onsuccess = function (event: Event) {
+        const c = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
+        if (c) {
+          c.delete();
+          c.continue();
+        } else {
+          resolve();
+        }
+      };
+    });
+  }
+
+  remove(query: any, _options?: any): Promise<void> {
+    return this._getDocuments(query).then((res: any) => {
+      return new Promise<void>((resolve, reject) => {
+        const txn = this._db.transaction(["documents"], "readwrite");
+        txn.oncomplete = (txn as any).onsuccess = () => {
+          this.emit("change", { remove: query });
+          resolve();
+        };
+
+        txn.onerror = function (event: Event) {
+          reject(new Error(String(event)));
+        };
+        const docs = txn.objectStore("documents");
+        _.forEach(res, (doc: any) => {
+          const key = this._getKey(doc);
+          docs.delete(key);
+        });
+      });
+    });
+  }
+
+  _getDocuments(query: any): Promise<any[]> {
     const qry = query.query || query;
-    const txn = this._db.transaction(["documents"], "readonly");
-    const docs = txn.objectStore("documents");
-    let key = qry["id"] || qry["_id"];
-    key = this._name + "_" + key;
-    const request = docs.get(key);
-    request.onsuccess = function (_event: Event) {
+    return new Promise((resolve, reject) => {
+      const txn = this._db.transaction(["documents"], "readonly");
+      const docs = txn.objectStore("documents");
+      const cursor = docs.index("$collection").openCursor(this._name);
       const result: any[] = [];
-      if (request.result !== undefined) {
-        result.push(request.result);
-      }
-      callback(null, result);
-    };
-    request.onerror = function (_event: Event) {
-      callback(new Error("Unable to _getByKey " + key));
-    };
+      cursor.onerror = function (event: Event) {
+        reject(new Error(String(event)));
+      };
+      cursor.onsuccess = function (event: Event) {
+        const c = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
+        if (c) {
+          result.push(c.value);
+          c.continue();
+        } else {
+          const q = new Kuery(qry);
+          query.sort && q.sort(query.sort);
+          query.skip && q.skip(query.skip);
+          query.limit && q.limit(query.limit);
+          resolve(q.find(result));
+        }
+      };
+    });
+  }
+
+  _getByKey(query: any): Promise<any[]> {
+    const qry = query.query || query;
+    return new Promise((resolve, reject) => {
+      const txn = this._db.transaction(["documents"], "readonly");
+      const docs = txn.objectStore("documents");
+      let key = qry["id"] || qry["_id"];
+      key = this._name + "_" + key;
+      const request = docs.get(key);
+      request.onsuccess = function (_event: Event) {
+        const result: any[] = [];
+        if (request.result !== undefined) {
+          result.push(request.result);
+        }
+        resolve(result);
+      };
+      request.onerror = function (_event: Event) {
+        reject(new Error("Unable to _getByKey " + key));
+      };
+    });
   }
 }
 

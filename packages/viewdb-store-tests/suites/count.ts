@@ -6,71 +6,33 @@ export default function (config) {
   describe("count", function () {
     let store;
 
-    beforeEach(function () {
-      return new Promise<void>(function (resolve) {
-        config.createStore(function (s) {
-          store = s;
-          resolve();
-        });
-      });
+    beforeEach(async function () {
+      store = await config.createStore();
     });
 
-    afterEach(function () {
-      return new Promise<void>(function (resolve) {
-        config.destroyStore(store, resolve);
-      });
+    afterEach(async function () {
+      await config.destroyStore(store);
     });
 
-    it("count all returns total number of documents", function () {
-      return new Promise<void>(function (resolve, reject) {
-        store.collection(COLL).insert({ _id: "echo" }, function () {
-          store.collection(COLL).insert({ _id: "sierra" }, function () {
-            store
-              .collection(COLL)
-              .find({})
-              .count(function (err, count) {
-                if (err) return reject(err);
-                assert.strictEqual(count, 2);
-                resolve();
-              });
-          });
-        });
-      });
+    it("count all returns total number of documents", async function () {
+      await store.collection(COLL).insert({ _id: "echo" });
+      await store.collection(COLL).insert({ _id: "sierra" });
+      const count = await store.collection(COLL).find({}).count();
+      assert.strictEqual(count, 2);
     });
 
-    it("count with filter returns filtered count", function () {
-      return new Promise<void>(function (resolve, reject) {
-        store.collection(COLL).insert({ _id: "echo" }, function () {
-          store.collection(COLL).insert({ _id: "sierra" }, function () {
-            store
-              .collection(COLL)
-              .find({ _id: "echo" })
-              .count(function (err, count) {
-                if (err) return reject(err);
-                assert.strictEqual(count, 1);
-                resolve();
-              });
-          });
-        });
-      });
+    it("count with filter returns filtered count", async function () {
+      await store.collection(COLL).insert({ _id: "echo" });
+      await store.collection(COLL).insert({ _id: "sierra" });
+      const count = await store.collection(COLL).find({ _id: "echo" }).count();
+      assert.strictEqual(count, 1);
     });
 
-    it("count with skip returns reduced count", function () {
-      return new Promise<void>(function (resolve, reject) {
-        store.collection(COLL).insert({ _id: "echo" }, function () {
-          store.collection(COLL).insert({ _id: "sierra" }, function () {
-            store
-              .collection(COLL)
-              .find({})
-              .skip(1)
-              .count(function (err, count) {
-                if (err) return reject(err);
-                assert.strictEqual(count, 1);
-                resolve();
-              });
-          });
-        });
-      });
+    it("count with skip returns reduced count", async function () {
+      await store.collection(COLL).insert({ _id: "echo" });
+      await store.collection(COLL).insert({ _id: "sierra" });
+      const count = await store.collection(COLL).find({}).skip(1).count();
+      assert.strictEqual(count, 1);
     });
   });
 }

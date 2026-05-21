@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import Kuery from "kuery";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
-import { Callback, Collection, QueryObject, VDocument } from "../types";
+import { Collection, QueryObject, VDocument } from "../types";
 import ViewDBCursor from "../ViewDBCursor";
 
 class InMemoryCollection extends EventEmitter implements Collection {
@@ -15,79 +15,62 @@ class InMemoryCollection extends EventEmitter implements Collection {
     this._name = collectionName;
   }
 
-  count(callback: Callback<number>): void {
-    callback(null, this._documents.length);
+  count(): Promise<number> {
+    return Promise.resolve(this._documents.length);
   }
 
-  _write(
-    op: string,
-    documents: VDocument | VDocument[],
-    options: Record<string, any> | Callback<VDocument[]>,
-    callback?: Callback<VDocument[]>
-  ): void {
-    if (_.isFunction(options)) {
-      callback = options as Callback<VDocument[]>;
-    }
+  _write(op: string, documents: VDocument | VDocument[], _options?: Record<string, any>): Promise<VDocument[]> {
     const docs: VDocument[] = _.isArray(documents) ? documents : [documents];
-    for (let i = 0; i < docs.length; i++) {
-      const document: Record<string, any> = docs[i];
-      if (!_.isObject(document)) {
-        return callback!(new Error("Document must be object"));
+    const promise = new Promise<VDocument[]>((resolve, reject) => {
+      for (let i = 0; i < docs.length; i++) {
+        const document: Record<string, any> = docs[i];
+        if (!_.isObject(document)) {
+          reject(new Error("Document must be object"));
+          return;
+        }
+        if (!_.has(document, "_id")) {
+          document._id = document.id || uuid();
+        }
+        const idx = _.findIndex(this._documents, { _id: document._id });
+        if (op === "insert" && idx >= 0) {
+          reject(new Error("Unique constraint!"));
+          return;
+        }
+        if (idx === -1) {
+          this._documents.push(document as VDocument);
+        } else {
+          this._documents[idx] = document as VDocument;
+        }
       }
-      if (!_.has(document, "_id")) {
-        document._id = document.id || uuid();
-      }
-      const idx = _.findIndex(this._documents, { _id: document._id });
-      if (op === "insert" && idx >= 0) {
-        return callback!(new Error("Unique constraint!"));
-      }
-      if (idx === -1) {
-        this._documents.push(document as VDocument);
-      } else {
-        this._documents[idx] = document as VDocument;
-      }
-    }
-    this.emit("change", docs);
-    if (callback) {
-      callback(null, docs);
-    }
+      this.emit("change", docs);
+      resolve(docs);
+    });
+
+    return promise;
   }
 
-  insert(
-    documents: VDocument | VDocument[],
-    options?: Record<string, any> | Callback<VDocument[]>,
-    callback?: Callback<VDocument[]>
-  ): void {
-    return this._write("insert", documents, options!, callback);
+  insert(documents: VDocument | VDocument[], options?: Record<string, any>): Promise<VDocument[]> {
+    return this._write("insert", documents, options);
   }
 
-  save(
-    documents: VDocument | VDocument[],
-    options?: Record<string, any> | Callback<VDocument[]>,
-    callback?: Callback<VDocument[]>
-  ): void {
-    return this._write("save", documents, options!, callback);
+  save(documents: VDocument | VDocument[], options?: Record<string, any>): Promise<VDocument[]> {
+    return this._write("save", documents, options);
   }
 
-  drop(callback?: Callback): void {
+  drop(): Promise<void> {
     this._documents = [];
-    if (callback) {
-      callback(null);
-    }
+    return Promise.resolve();
   }
 
   find(query: Record<string, any>, options?: Record<string, any>): ViewDBCursor {
     return new ViewDBCursor(this, { query: query }, options || {}, this._getDocuments.bind(this));
   }
 
-  remove(query: Record<string, any>, options?: Record<string, any>, callback?: Callback): void {
+  remove(query: Record<string, any>, _options?: Record<string, any>): Promise<void> {
     const q = new Kuery(query);
     const documents = q.find(this._documents);
     this._documents = _.pullAll(this._documents, documents);
-
-    process.nextTick(function () {
-      callback!(null);
-    });
+    return Promise.resolve();
   }
 
   ensureIndex(): never {
@@ -98,7 +81,7 @@ class InMemoryCollection extends EventEmitter implements Collection {
     throw new Error("createIndex not supported!");
   }
 
-  _getDocuments(queryObject: QueryObject, callback: Callback<VDocument[]>): void {
+  _getDocuments(queryObject: QueryObject): Promise<VDocument[]> {
     const query = queryObject.query || queryObject;
     const q = new Kuery(query);
     if (queryObject.sort) {
@@ -111,9 +94,12 @@ class InMemoryCollection extends EventEmitter implements Collection {
       q.limit(queryObject.limit);
     }
     const documents = q.find(this._documents);
-    process.nextTick(() => {
-      callback(null, _.cloneDeep(documents));
+    const promise = new Promise<VDocument[]>((resolve) => {
+      process.nextTick(() => {
+        resolve(_.cloneDeep(documents));
+      });
     });
+    return promise;
   }
 }
 

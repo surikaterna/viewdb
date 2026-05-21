@@ -1,6 +1,5 @@
 import assert from "assert";
 
-// Inline replacement for _.after(n, fn) — no lodash dependency
 function after(n, fn) {
   let count = 0;
   return function () {
@@ -17,19 +16,12 @@ export default function (config) {
   describe("observe", function () {
     let store;
 
-    beforeEach(function () {
-      return new Promise<void>(function (resolve) {
-        config.createStore(function (s) {
-          store = s;
-          resolve();
-        });
-      });
+    beforeEach(async function () {
+      store = await config.createStore();
     });
 
-    afterEach(function () {
-      return new Promise<void>(function (resolve) {
-        config.destroyStore(store, resolve);
-      });
+    afterEach(async function () {
+      await config.destroyStore(store);
     });
 
     it("init fires with empty collection", function () {
@@ -63,37 +55,35 @@ export default function (config) {
       });
     });
 
-    it("removed fires on remove", function () {
-      return new Promise<void>(function (resolve) {
-        store.collection(COLL).insert({ _id: "echo" }, function () {
-          const cursor = store.collection(COLL).find({});
-          const handle = cursor.observe({
-            removed: function (x) {
-              assert.strictEqual(x._id, "echo");
-              handle.stop();
-              resolve();
-            },
-          });
-          store.collection(COLL).remove({ _id: "echo" });
+    it("removed fires on remove", async function () {
+      await store.collection(COLL).insert({ _id: "echo" });
+      await new Promise<void>((resolve) => {
+        const cursor = store.collection(COLL).find({});
+        const handle = cursor.observe({
+          removed: function (x) {
+            assert.strictEqual(x._id, "echo");
+            handle.stop();
+            resolve();
+          },
         });
+        store.collection(COLL).remove({ _id: "echo" });
       });
     });
 
-    it("added fires for matching query on insert", function () {
-      return new Promise<void>(function (resolve) {
-        store.collection(COLL).insert({ _id: "echo" }, function () {
-          const cursor = store.collection(COLL).find({ _id: "echo2" });
-          const handle = cursor.observe({
-            added: function (x) {
-              assert.strictEqual(x._id, "echo2");
-              setTimeout(function () {
-                handle.stop();
-                resolve();
-              }, delay);
-            },
-          });
-          store.collection(COLL).insert({ _id: "echo2" });
+    it("added fires for matching query on insert", async function () {
+      await store.collection(COLL).insert({ _id: "echo" });
+      await new Promise<void>((resolve) => {
+        const cursor = store.collection(COLL).find({ _id: "echo2" });
+        const handle = cursor.observe({
+          added: function (x) {
+            assert.strictEqual(x._id, "echo2");
+            setTimeout(function () {
+              handle.stop();
+              resolve();
+            }, delay);
+          },
         });
+        store.collection(COLL).insert({ _id: "echo2" });
       });
     });
 
@@ -111,37 +101,38 @@ export default function (config) {
             resolve();
           },
         });
-        store.collection(COLL).insert({ _id: "echo", age: 10 }, function () {
-          store.collection(COLL).save({ _id: "echo", age: 100 });
-        });
+        store
+          .collection(COLL)
+          .insert({ _id: "echo", age: 10 })
+          .then(() => {
+            store.collection(COLL).save({ _id: "echo", age: 100 });
+          });
       });
     });
 
-    it("observe with skip updates correctly", function () {
-      return new Promise<void>(function (resolve) {
-        store.collection(COLL).insert({ _id: "echo" }, function () {
-          store.collection(COLL).insert({ _id: "echo2" }, function () {
-            store.collection(COLL).insert({ _id: "echo3" }, function () {
-              const cursor = store.collection(COLL).find({});
-              let skip = 0;
-              cursor.limit(1);
-              const realDone = after(3, function () {
-                cursor.toArray(function (err, res) {
-                  assert.strictEqual(res.length, 0);
-                  setTimeout(function () {
-                    handle.stop();
-                    resolve();
-                  }, delay);
-                });
-              });
-              const handle = cursor.observe({
-                added: function () {
-                  cursor.skip(++skip);
-                  realDone();
-                },
-              });
-            });
+    it("observe with skip updates correctly", async function () {
+      await store.collection(COLL).insert({ _id: "echo" });
+      await store.collection(COLL).insert({ _id: "echo2" });
+      await store.collection(COLL).insert({ _id: "echo3" });
+
+      await new Promise<void>((resolve) => {
+        const cursor = store.collection(COLL).find({});
+        let skip = 0;
+        cursor.limit(1);
+        const realDone = after(3, function () {
+          cursor.toArray().then((res) => {
+            assert.strictEqual(res.length, 0);
+            setTimeout(function () {
+              handle.stop();
+              resolve();
+            }, delay);
           });
+        });
+        const handle = cursor.observe({
+          added: function () {
+            cursor.skip(++skip);
+            realDone();
+          },
         });
       });
     });
