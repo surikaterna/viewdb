@@ -1,6 +1,5 @@
 import _ from "lodash";
 import nock from "nock";
-import should from "should";
 import { RestClient as Client, Client as Store } from "../..";
 import mockResponse from "./mock-response.json";
 
@@ -18,7 +17,7 @@ describe("RestClient", function () {
       nock("http://www.example.com").get("/party?q=%7B%22name%22%3A%22Firstname%22%7D").reply(200, mockResponse);
 
       restClient.request({ find: { name: "Firstname" }, collection: "party" }, function (err, result) {
-        should.deepEqual(result, mockResponse);
+        expect(result).toEqual(mockResponse);
         resolve();
       });
     }));
@@ -84,7 +83,7 @@ describe("RestClient", function () {
       const stop = _.after(1, observer.stop);
 
       setTimeout(function () {
-        hitCount.should.equal(1);
+        expect(hitCount).toBe(1);
         resolve();
       }, 15);
     }));
@@ -102,12 +101,12 @@ describe("RestClient", function () {
       const verify = function (res) {
         ++hits;
         if (hits === 1) {
-          should.equal(res.changes[0].a.e.name, "firstName");
-          should.equal(res.changes.length, 1);
+          expect(res.changes[0].a.e.name).toBe("firstName");
+          expect(res.changes.length).toBe(1);
         }
         if (hits === 2) {
           handle.stop();
-          should.equal(res.changes[0].r.e.name, "firstName");
+          expect(res.changes[0].r.e.name).toBe("firstName");
           resolve();
         }
       };

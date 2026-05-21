@@ -1,4 +1,3 @@
-import should from "should";
 import { ViewDB as ViewDB } from "viewdb";
 import HybridStore from "../../src/hybrid/HybridStore";
 
@@ -24,7 +23,7 @@ describe("Observe", function () {
       const cursor = hybrid.collection("dollhouse").find({});
       const handle = cursor.observe({
         added: function (x) {
-          x._id.should.equal("echo");
+          expect(x._id).toBe("echo");
           handle.stop();
           resolve();
         },
@@ -37,7 +36,7 @@ describe("Observe", function () {
       const cursor = hybrid.collection("dollhouse").find({ _id: "echo2" });
       const handle = cursor.observe({
         added: function (x) {
-          x._id.should.equal("echo2");
+          expect(x._id).toBe("echo2");
           handle.stop();
           resolve();
         },
@@ -72,12 +71,12 @@ describe("Observe", function () {
         const cursor = store.collection("dollhouse").find({ _id: "echo" });
         const handle = cursor.observe({
           added: function (x) {
-            x.age.should.equal(10);
-            x._id.should.equal("echo");
+            expect(x.age).toBe(10);
+            expect(x._id).toBe("echo");
           },
           changed: function (o, n) {
-            o.age.should.equal(10);
-            n.age.should.equal(100);
+            expect(o.age).toBe(10);
+            expect(n.age).toBe(100);
             handle.stop();
             resolve();
           },
@@ -97,7 +96,7 @@ describe("Observe", function () {
       const cursor = hybrid.collection("dollhouse").find({ _id: "echo2" });
       const handle = cursor.observe({
         init: function (r) {
-          r.length.should.equal(0);
+          expect(r.length).toBe(0);
           handle.stop();
           resolve();
         },
@@ -124,9 +123,9 @@ describe("Observe", function () {
               hybrid
                 .collection("dollhouse")
                 ._getCachedData({}, 0, 0, undefined, undefined, function (err, cachedDocuments) {
-                  cachedDocuments.length.should.equal(1);
-                  cachedDocuments[0]._id.should.equal("alfa");
-                  cachedDocuments[0].age.should.equal(100);
+                  expect(cachedDocuments.length).toBe(1);
+                  expect(cachedDocuments[0]._id).toBe("alfa");
+                  expect(cachedDocuments[0].age).toBe(100);
                   resolve();
                 });
             });

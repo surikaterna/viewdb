@@ -1,4 +1,3 @@
-import should from "should";
 import { InMemoryStore, ViewDBCursor } from "viewdb";
 import HybridStore from "../../src/hybrid/HybridStore";
 
@@ -28,7 +27,7 @@ describe("HybridStore", function () {
                     reject(cacheErr);
                     return;
                   }
-                  data.length.should.equal(1);
+                  expect(data.length).toBe(1);
                   resolve();
                 });
             });
@@ -88,9 +87,9 @@ describe("HybridStore", function () {
                                 undefined,
                                 { id: 1 },
                                 function (_err2, projectedData) {
-                                  data.length.should.equal(1);
-                                  projectedData.length.should.equal(1);
-                                  projectedData[0]._insertedAt.should.be.belowOrEqual(data[0]._insertedAt);
+                                  expect(data.length).toBe(1);
+                                  expect(projectedData.length).toBe(1);
+                                  expect(projectedData[0]._insertedAt).toBeLessThanOrEqual(data[0]._insertedAt);
                                   resolve();
                                 }
                               );
@@ -130,7 +129,7 @@ describe("HybridStore", function () {
                     reject(cacheErr);
                     return;
                   }
-                  data.length.should.equal(1);
+                  expect(data.length).toBe(1);
                 });
             });
           }
@@ -149,7 +148,7 @@ describe("HybridStore", function () {
               return;
             }
             iterations += 1;
-            res.length.should.equal(1);
+            expect(res.length).toBe(1);
             if (iterations > 1 || res.length === 0) {
               resolve();
             }

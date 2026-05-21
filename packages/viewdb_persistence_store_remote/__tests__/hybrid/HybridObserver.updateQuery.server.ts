@@ -1,5 +1,4 @@
 import _ from "lodash";
-import should from "should";
 import SocketMock from "socket.io-mock";
 import { ViewDB as ViewDB } from "viewdb";
 import RemoteStore from "../../src/client/RemoteStore";
@@ -55,7 +54,7 @@ describe("Observe-Update Remote", function () {
         },
         added: function (x) {
           realDone(); // 3 calls
-          x._id.should.equal(id);
+          expect(x._id).toBe(id);
           if (x._id === "3") {
             handle.stop();
           } else {
@@ -78,7 +77,7 @@ describe("Observe-Update Remote", function () {
 
       const handle = hybridCursor.observe({
         added: function (x) {
-          x._id.should.equal(id);
+          expect(x._id).toBe(id);
           if (x._id === "3") {
             handle.stop();
             resolve();
@@ -108,7 +107,7 @@ describe("Observe-Update Remote", function () {
           }
         },
         removed: function (x) {
-          x._id.should.equal("1");
+          expect(x._id).toBe("1");
           realDone();
         },
       });

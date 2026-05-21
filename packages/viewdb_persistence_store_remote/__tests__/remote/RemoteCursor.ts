@@ -1,4 +1,3 @@
-import should from "should";
 import SocketMock from "socket.io-mock";
 import { ViewDB as ViewDB } from "viewdb";
 import RemoteStore from "../../src/client/RemoteStore";
@@ -21,11 +20,11 @@ describe("Remote server/client", function () {
   it("#socketMock should work", () =>
     new Promise<void>((resolve) => {
       socketClient.on("ping", function (message) {
-        message.should.equal("Hello");
+        expect(message).toBe("Hello");
         socketClient.emit("pong", "heya");
       });
       socketServer.on("pong", function (message) {
-        message.should.equal("heya");
+        expect(message).toBe("heya");
         resolve();
       });
       socketServer.emit("ping", "Hello");
@@ -34,7 +33,7 @@ describe("Remote server/client", function () {
   it("#remote query", async () => {
     await remote.collection("dollhouse").insert!({ _id: "echo", test: "success" });
     const res = await clientVdb.collection("dollhouse").find({ _id: "echo" }).toArray();
-    res[0].test.should.equal("success");
+    expect(res[0].test).toBe("success");
   });
 
   it("#remote cursor sort should not trigger refresh when not observing", function () {
@@ -46,14 +45,14 @@ describe("Remote server/client", function () {
 
     collection.find({ _id: "echo" }).sort({ _id: 1 });
 
-    changes.should.equal(0);
+    expect(changes).toBe(0);
   });
 
   it("#remote cursor count", async () => {
     await remote.collection("dollhouse").insert!({ _id: "echo" });
     await remote.collection("dollhouse").insert!({ _id: "echo2" });
     const res = await clientVdb.collection("dollhouse").find({ _id: "echo" }).count();
-    res.should.equal(1);
+    expect(res).toBe(1);
   });
 
   it("#remote cursor count should use skip/limit from cursor", async () => {
@@ -61,7 +60,7 @@ describe("Remote server/client", function () {
     await remote.collection("dollhouse").insert!({ _id: "echo2" });
     await remote.collection("dollhouse").insert!({ _id: "echo3" });
     const res = await clientVdb.collection("dollhouse").find({}).skip(1).limit(1).count();
-    res.should.equal(1);
+    expect(res).toBe(1);
   });
 
   it("#remote cursor count should use skip from options", async () => {
@@ -69,7 +68,7 @@ describe("Remote server/client", function () {
     await remote.collection("dollhouse").insert!({ _id: "echo2" });
     await remote.collection("dollhouse").insert!({ _id: "echo3" });
     const res = await (clientVdb.collection("dollhouse").find({}) as any).count({ skip: 1 });
-    res.should.equal(2);
+    expect(res).toBe(2);
   });
 
   it("#remote cursor count should use limit from options", async () => {
@@ -77,7 +76,7 @@ describe("Remote server/client", function () {
     await remote.collection("dollhouse").insert!({ _id: "echo2" });
     await remote.collection("dollhouse").insert!({ _id: "echo3" });
     const res = await (clientVdb.collection("dollhouse").find({}) as any).count({ limit: 2 });
-    res.should.equal(2);
+    expect(res).toBe(2);
   });
 
   it("#remote collection count", () =>
@@ -85,7 +84,7 @@ describe("Remote server/client", function () {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
       clientVdb.collection("dollhouse").count({ _id: "echo" }, function (err, res) {
-        res.should.equal(1);
+        expect(res).toBe(1);
         resolve();
       });
     }));
@@ -95,7 +94,7 @@ describe("Remote server/client", function () {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
       clientVdb.collection("dollhouse").count({}, { skip: 1 }, function (err, res) {
-        res.should.equal(1);
+        expect(res).toBe(1);
         resolve();
       });
     }));
@@ -105,7 +104,7 @@ describe("Remote server/client", function () {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
       clientVdb.collection("dollhouse").count({}, { limit: 1 }, function (err, res) {
-        res.should.equal(1);
+        expect(res).toBe(1);
         resolve();
       });
     }));
@@ -117,10 +116,10 @@ describe("Remote server/client", function () {
       const cursor = clientVdb.collection("dollhouse").find({ _id: { $in: ["echo2", "echo3"] } });
       cursor.observe({
         init: function (init) {
-          init.length.should.equal(1);
+          expect(init.length).toBe(1);
         },
         added: function (a) {
-          a._id.should.equal("echo3");
+          expect(a._id).toBe("echo3");
           resolve();
         },
       });
@@ -136,11 +135,11 @@ describe("Remote server/client", function () {
         init: function (init) {
           inits++;
           if (inits === 1) {
-            init.length.should.equal(1);
+            expect(init.length).toBe(1);
             remote.collection("dollhouse").insert({ _id: "echo3" });
             client.onClientReconnected();
           } else if (inits === 2) {
-            init.length.should.equal(2);
+            expect(init.length).toBe(2);
             resolve();
           }
         },
@@ -155,20 +154,20 @@ describe("Remote server/client", function () {
       cursor.observe({
         init: function (init) {
           inits++;
-          init.length.should.equal(1);
+          expect(init.length).toBe(1);
           if (inits === 1) {
             client.onClientReconnected();
             remote.collection("dollhouse").insert({ _id: "echo3" });
           } else {
-            inits.should.equal(2);
+            expect(inits).toBe(2);
           }
         },
         added: function (item) {
-          item._id.should.equal("echo3");
+          expect(item._id).toBe("echo3");
           remote.collection("dollhouse").save({ _id: "echo3", updated: true });
         },
         changed: function (_asis, tobe) {
-          tobe.updated.should.equal(true);
+          expect(tobe.updated).toBe(true);
           resolve();
         },
       });
@@ -196,7 +195,7 @@ describe("Remote server/client", function () {
             changes++;
             remote.collection("dollhouse").save({ _id: "echo2", changed: 2 });
             list[index] = tobe;
-            list.length.should.equal(1);
+            expect(list.length).toBe(1);
             if (changes === 2) {
               resolve();
             }

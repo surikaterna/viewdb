@@ -1,5 +1,4 @@
 import _ from "lodash";
-import should from "should";
 import { ViewDB as ViewDB } from "viewdb";
 import { SocketClient, Client as ViewDBRemoteClient } from "../../";
 import HybridStore from "../../src/hybrid/HybridStore";
@@ -33,7 +32,7 @@ describe("Observe-Update", function () {
 
       const handle = cursor.observe({
         added: function (x) {
-          x._id.should.equal(id);
+          expect(x._id).toBe(id);
           if (x._id === "3") {
             handle.stop();
             resolve();
@@ -63,7 +62,7 @@ describe("Observe-Update", function () {
           }
         },
         removed: function (x) {
-          x._id.should.equal("1");
+          expect(x._id).toBe("1");
           realDone();
         },
       });

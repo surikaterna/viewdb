@@ -1,4 +1,3 @@
-import should from "should";
 import { ViewDB as ViewDB } from "viewdb";
 import HybridStore from "../../src/hybrid/HybridStore";
 
@@ -48,9 +47,9 @@ describe("Sort / Limit / Skip", function () {
         }
         calls += 1;
         if (calls === 2) {
-          res.length.should.equal(LIMIT);
+          expect(res.length).toBe(LIMIT);
           for (let i = 0; i < LIMIT; i++) {
-            res[i].age.should.equal(i);
+            expect(res[i].age).toBe(i);
           }
           resolve();
         }
