@@ -149,7 +149,7 @@ class HybridCursor {
         this._limit,
         this._sort,
         this._project,
-        function (err: Error | null, data: any) {
+        function (_err: Error | null, data: any) {
           if (data) {
             wrappedCallback(null, data);
             return;
@@ -200,7 +200,7 @@ class HybridCursor {
     this._getCachedData(this._query, this._skip, this._limit, this._sort, this._project, callback);
   }
 
-  _count(options: any, callback: any): void {
+  _count(_options: any, callback: any): void {
     const self = this;
     let localCount: any = null;
     let remoteCount: any = null;
@@ -273,7 +273,7 @@ class HybridCursor {
         this._limit,
         this._sort,
         this._project,
-        function (err: Error | null, data: any) {
+        function (_err: Error | null, data: any) {
           if (data) {
             callback(null, data.length);
             return;

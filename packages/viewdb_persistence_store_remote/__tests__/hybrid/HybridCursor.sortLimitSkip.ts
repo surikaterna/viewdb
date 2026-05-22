@@ -8,7 +8,7 @@ describe("Sort / Limit / Skip", function () {
 
   beforeEach(
     () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         local = new ViewDB();
         remote = new ViewDB();
         hybrid = new ViewDB(new (HybridStore as any)(local, remote, { throttleObserveRefresh: 0 }));

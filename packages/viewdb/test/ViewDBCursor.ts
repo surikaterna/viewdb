@@ -10,7 +10,7 @@ describe("Cursor", () => {
     expect(result.length).toBe(4);
   });
   it("#forEach", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       const cursor = new ViewDBCursor(null, {}, null, function () {
         return Promise.resolve([{ v: 1 }, { v: 2 }, { v: 3 }, { v: 4 }]);
       });

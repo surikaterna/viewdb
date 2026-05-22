@@ -12,18 +12,18 @@ describe("RestClient", function () {
     nock.cleanAll();
   });
   it("#request should work", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       const restClient = new Client("http://www.example.com/", {}, testOptions);
       nock("http://www.example.com").get("/party?q=%7B%22name%22%3A%22Firstname%22%7D").reply(200, mockResponse);
 
-      restClient.request({ find: { name: "Firstname" }, collection: "party" }, function (err, result) {
+      restClient.request({ find: { name: "Firstname" }, collection: "party" }, function (_err, result) {
         expect(result).toEqual(mockResponse);
         resolve();
       });
     }));
 
   it("#skiplimit url should be correct", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       const restClient = new Client("http://www.example.com/", {}, testOptions);
       nock("http://www.example.com")
         .get("/party?q=%7B%22name%22%3A%22Firstname%22%7D&skip=50&limit=77")
@@ -41,7 +41,7 @@ describe("RestClient", function () {
     }));
 
   it("#observe should work", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       const restClient = new Client("http://www.example.com/", {}, testOptions);
       const handle = restClient.subscribe(
         { observe: { name: "a" }, collection: "shipment", events: {}, skip: 1, limit: 100 },
@@ -63,7 +63,7 @@ describe("RestClient", function () {
     }));
 
   it("#observe should stop when calling stop", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       const restClient = new Client("http://www.example.com/", {}, testOptions);
       let hitCount = 0;
 
@@ -89,7 +89,7 @@ describe("RestClient", function () {
     }));
 
   it("#observe should notify changes", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       const restClient = new Client("http://www.example.com", {}, testOptions);
 
       // mock returning response with data - dies after one hit
@@ -113,7 +113,7 @@ describe("RestClient", function () {
 
       const handle = restClient.subscribe(
         { observe: { name: "a" }, collection: "party", events: {} },
-        function (err, res) {
+        function (_err, res) {
           if (res) {
             verify(res);
           }

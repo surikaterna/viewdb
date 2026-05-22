@@ -45,7 +45,7 @@ class IndexedDBCollection extends EventEmitter {
     return this._write("add", documents, options);
   }
 
-  _write(op: string, documents: any, options?: any): any {
+  _write(op: string, documents: any, _options?: any): any {
     const self = this;
 
     if (!_.isArray(documents)) {

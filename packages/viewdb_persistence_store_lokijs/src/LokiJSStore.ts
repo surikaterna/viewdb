@@ -203,7 +203,7 @@ class LokiJSStore {
     return promise;
   }
 
-  delete(callback: any) {
+  delete(_callback: any) {
     // noop
   }
 

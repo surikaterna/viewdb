@@ -57,7 +57,7 @@ class MongoDBObserver {
   loadInitial(cb: () => void): void {
     const self = this;
     const newQuery = _.merge(this._query, self._queryOptions);
-    this._collection._getDocuments(newQuery, function (err: Error | null, result?: any[]) {
+    this._collection._getDocuments(newQuery, function (_err: Error | null, result?: any[]) {
       const documents = result || [];
       if (self._options.init) {
         self._options.init(documents);

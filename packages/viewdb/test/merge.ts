@@ -3,7 +3,7 @@ import merge from "../src/merge";
 
 describe("Merger", () => {
   it("#merge with remove element", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       const l1: any[] = [{ a: 1 }, "b", "d"];
       const l2: any[] = [{ a: 1 }, "b"];
 
@@ -20,7 +20,7 @@ describe("Merger", () => {
       //		console.log(_.difference(l1,l2));
     }));
   it("#merge with remove complex element", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       const l1: any[] = [{ a: 1 }, "b", "d", { e: 1 }];
       const l2: any[] = [{ a: 1 }, "b"];
       const removed: any[] = [];
@@ -39,7 +39,7 @@ describe("Merger", () => {
     }));
 
   it("#merge with objects instead of arrays", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       const l1: any = { 0: { a: 1 }, 1: "b", 2: "d", 3: { e: 1 } };
       const l2: any[] = [{ a: 1 }, "b"];
       const removed: any[] = [];
@@ -101,7 +101,7 @@ describe("Merger", () => {
         removed: function () {
           reject(new Error("should not be called"));
         },
-        moved: function (e, oldIndex, newIndex) {
+        moved: function () {
           moved.push(arguments);
         },
       });
@@ -125,7 +125,7 @@ describe("Merger", () => {
         moved: function () {
           reject(new Error("should not be called"));
         },
-        changed: function (o, n, index) {},
+        changed: function () {},
         comparatorId: function (a, b) {
           return a._id === b._id;
         },
@@ -135,7 +135,7 @@ describe("Merger", () => {
     }));
 
   it("#merge true and false array", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       const l1 = [true, false];
       const l2 = [false, true];
       const res = merge(l1, l2);
@@ -143,7 +143,7 @@ describe("Merger", () => {
       resolve();
     }));
   it("#merge complex moves", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       const l1 = [
         { _id: 1, a: "Hello1" },
         { _id: 2, a: "Hello2" },
@@ -173,7 +173,7 @@ describe("Merger", () => {
       resolve();
     }));
   it("#merge complex moves and add and remove", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       const l1 = [
         { _id: 1, a: "Hello1" },
         { _id: 2, a: "Hello2" },

@@ -32,25 +32,25 @@ describe("mongodb_persistence", () => {
 
   describe("Collection", function () {
     it("#find with empty array should return 0 docs", () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         const store = new Store(getDb());
         store.open().then(function () {
           store
             .collection(COLLECTION_NAME)
             .find({})
-            .toArray(function (err, results) {
+            .toArray(function (_err, results) {
               expect(results).toHaveLength(0);
               resolve();
             });
         });
       }));
     it("#find with setReadPreference", () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         const store = new Store(getDb());
         store.open().then(function () {
           const cursor = store.collection(COLLECTION_NAME).find({});
           cursor.setReadPreference(ReadPreference.PRIMARY);
-          cursor.toArray(function (err, results) {
+          cursor.toArray(function (_err, results) {
             expect(results).toHaveLength(0);
             resolve();
           });
@@ -72,7 +72,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#update documents already existing", () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         const store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "existing" }, () => {
@@ -80,7 +80,7 @@ describe("mongodb_persistence", () => {
               store
                 .collection(COLLECTION_NAME)
                 .find({})
-                .toArray(function (err, results) {
+                .toArray(function (_err, results) {
                   expect(results).toHaveLength(1);
                   expect(results[0].version).toBe(2);
                   resolve();
@@ -90,7 +90,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#update one document", () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         const store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "existing" }, () => {
@@ -100,7 +100,7 @@ describe("mongodb_persistence", () => {
                 store
                   .collection(COLLECTION_NAME)
                   .find({})
-                  .toArray(function (err, results) {
+                  .toArray(function (_err, results) {
                     expect(results).toHaveLength(1);
                     expect(results[0].name).toBe("john");
                     resolve();
@@ -165,7 +165,7 @@ describe("mongodb_persistence", () => {
     });
 
     it("#update many documents", () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         const store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert(
@@ -178,7 +178,7 @@ describe("mongodb_persistence", () => {
                 store
                   .collection(COLLECTION_NAME)
                   .find({})
-                  .toArray(function (err, results) {
+                  .toArray(function (_err, results) {
                     expect(results).toHaveLength(2);
                     expect(results[0]).toEqual({
                       _id: "existing1",
@@ -198,14 +198,14 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#find {} should return single inserted document", () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         const store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "echo" }, function () {
             store
               .collection(COLLECTION_NAME)
               .find({})
-              .toArray(function (err, results) {
+              .toArray(function (_err, results) {
                 expect(results).toHaveLength(1);
                 resolve();
               });
@@ -213,7 +213,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#find {} should return multiple inserted documents", () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         const store = new Store(getDb());
         store.open().then(function () {
           // store.collection(COLLECTION_NAME).insert([{ _id: 'echo' }, { _id: 'sierra' }]);
@@ -222,7 +222,7 @@ describe("mongodb_persistence", () => {
             store
               .collection(COLLECTION_NAME)
               .find({})
-              .toArray(function (err, results) {
+              .toArray(function (_err, results) {
                 expect(results).toHaveLength(2);
                 resolve();
               });
@@ -230,7 +230,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it('#find {_id:"echo"} should return correct document', () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         const store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "echo" }, function () {
@@ -238,7 +238,7 @@ describe("mongodb_persistence", () => {
               store
                 .collection(COLLECTION_NAME)
                 .find({ _id: "echo" })
-                .toArray(function (err, results) {
+                .toArray(function (_err, results) {
                   expect(results).toHaveLength(1);
                   expect(results[0]._id).toBe("echo");
                   resolve();
@@ -248,7 +248,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it('#find with complex key {"name.first":"echo"} should return correct document', () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         const store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }, function () {
@@ -258,7 +258,7 @@ describe("mongodb_persistence", () => {
                 store
                   .collection(COLLECTION_NAME)
                   .find({ "name.first": "ECHO" })
-                  .toArray(function (err, results) {
+                  .toArray(function (_err, results) {
                     expect(results).toHaveLength(1);
                     expect(results[0]._id).toBe("echo");
                     resolve();
@@ -268,7 +268,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#find with project should return correct projection", () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         const store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }, () => {
@@ -279,7 +279,7 @@ describe("mongodb_persistence", () => {
                   .collection(COLLECTION_NAME)
                   .find({})
                   .project({ _id: 1 })
-                  .toArray(function (err, results) {
+                  .toArray(function (_err, results) {
                     expect(results[0].name).toBeUndefined();
                     expect(results[0]._id).toBe("echo");
                     resolve();
@@ -289,7 +289,7 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#drop should remove all documents", () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         const store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "echo" }, function () {
@@ -297,7 +297,7 @@ describe("mongodb_persistence", () => {
               store
                 .collection(COLLECTION_NAME)
                 .find({})
-                .toArray(function (err, results) {
+                .toArray(function (_err, results) {
                   expect(results).toHaveLength(0);
                   resolve();
                 });
@@ -318,7 +318,7 @@ describe("mongodb_persistence", () => {
     });
 
     it("#remove should remove one document", () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         const store = new Store(getDb());
         store.open().then(function () {
           store.collection(COLLECTION_NAME).insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }, function () {
@@ -329,7 +329,7 @@ describe("mongodb_persistence", () => {
                   store
                     .collection(COLLECTION_NAME)
                     .find({ "name.first": "ECHO" })
-                    .toArray(function (err, results) {
+                    .toArray(function (_err, results) {
                       expect(results).toHaveLength(0);
                       resolve();
                     });
@@ -348,7 +348,7 @@ describe("mongodb_persistence", () => {
       });
     };
     it("#skip/limit", () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         const store = new Store(getDb());
         const collection = store.collection(COLLECTION_NAME);
         populate(collection, 0, function () {
@@ -356,7 +356,7 @@ describe("mongodb_persistence", () => {
             .find({ a: "a" })
             .skip(8)
             .limit(10)
-            .toArray(function (err, res) {
+            .toArray(function (_err, res) {
               expect(res[1].id).toBe(9);
               expect(res).toHaveLength(2); // only 2 left after skipping 8/10
               resolve();
@@ -364,25 +364,25 @@ describe("mongodb_persistence", () => {
         });
       }));
     it("#count", () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         const store = new Store(getDb());
         const collection = store.collection(COLLECTION_NAME);
         populate(collection, 0, function () {
-          collection.find({}).count(function (err, res) {
+          collection.find({}).count(function (_err, res) {
             expect(res).toBe(10);
             resolve();
           });
         });
       }));
     it("#count should apply skip", () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         const store = new Store(getDb());
         const collection = store.collection(COLLECTION_NAME);
         populate(collection, 0, function () {
           collection
             .find({})
             .skip(8)
-            .count(function (err, res) {
+            .count(function (_err, res) {
               expect(res).toBe(2);
               resolve();
             });

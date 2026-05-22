@@ -10,7 +10,7 @@ describe("Observe-Update", function () {
 
   beforeEach(
     () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         local = new ViewDB();
         const socketIoMock = {
           emit: function () {},
@@ -25,7 +25,7 @@ describe("Observe-Update", function () {
   );
 
   it("#observe-update with update query", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       let id = "1";
       local.collection("dollhouse").insert({ _id: id });
       const cursor = hybrid.collection("dollhouse").find({ _id: id });
@@ -46,7 +46,7 @@ describe("Observe-Update", function () {
       local.collection("dollhouse").insert({ _id: "echo2" });
     }));
   it("#observe-update with update $in query", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       local.collection("dollhouse").insert({ _id: "1" });
       const realDone = _.after(2, resolve);
       const cursor = hybrid.collection("dollhouse").find({ _id: { $in: ["1", "2"] } });

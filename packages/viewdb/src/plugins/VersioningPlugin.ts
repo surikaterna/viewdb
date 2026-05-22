@@ -44,7 +44,7 @@ function VersioningPlugin(viewDb: any): void {
       };
 
       const oldFindAndModify = coll.findAndModify;
-      coll.findAndModify = function (this: any, query: any, sort: any, update: any, options: any, cb: any) {
+      coll.findAndModify = function (this: any, _query: any, _sort: any, update: any, options: any, _cb: any) {
         if (!(options && options.skipVersioning)) {
           const inc = update.$inc || {};
           inc.version = 1;
@@ -57,7 +57,7 @@ function VersioningPlugin(viewDb: any): void {
       };
 
       const oldUpdateMany = coll.updateMany;
-      coll.updateMany = function (this: any, query: any, update: any, options: any, cb: any) {
+      coll.updateMany = function (this: any, _query: any, update: any, options: any, _cb: any) {
         if (!(options && options.skipVersioning)) {
           const inc = update.$inc || {};
           inc.version = 1;
@@ -70,7 +70,7 @@ function VersioningPlugin(viewDb: any): void {
       };
 
       const oldUpdateOne = coll.updateOne;
-      coll.updateOne = function (this: any, query: any, update: any, options: any, cb: any) {
+      coll.updateOne = function (this: any, _query: any, update: any, options: any, _cb: any) {
         if (!(options && options.skipVersioning)) {
           const inc = update.$inc || {};
           inc.version = 1;

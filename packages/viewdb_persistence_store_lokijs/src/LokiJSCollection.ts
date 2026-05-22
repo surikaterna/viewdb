@@ -74,7 +74,7 @@ class LokiJSCollection extends EventEmitter {
     return new ViewDBCursor(this, { query: query }, options, this._getDocuments.bind(this));
   }
 
-  insert(documents: any, options?: any) {
+  insert(documents: any, _options?: any) {
     LOG.info("Inserting document to collection %s", this.name);
 
     try {
@@ -220,7 +220,7 @@ class LokiJSCollection extends EventEmitter {
     return Promise.resolve(data);
   }
 
-  ensureIndex(options: any, callback?: any) {
+  ensureIndex(options: any, _callback?: any) {
     if (options.expireAfterSeconds) {
       this.setTTL(options.fieldName, options.expireAfterSeconds * 1000);
     } else {
@@ -228,7 +228,7 @@ class LokiJSCollection extends EventEmitter {
     }
   }
 
-  createIndex(options: any, callback?: any) {}
+  createIndex(_options: any, _callback?: any) {}
 
   /*----------------------------+
   | TTL daemon                  |

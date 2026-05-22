@@ -83,7 +83,7 @@ describe("Remote server/client", function () {
     new Promise<void>((resolve) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
-      clientVdb.collection("dollhouse").count({ _id: "echo" }, function (err, res) {
+      clientVdb.collection("dollhouse").count({ _id: "echo" }, function (_err, res) {
         expect(res).toBe(1);
         resolve();
       });
@@ -93,7 +93,7 @@ describe("Remote server/client", function () {
     new Promise<void>((resolve) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
-      clientVdb.collection("dollhouse").count({}, { skip: 1 }, function (err, res) {
+      clientVdb.collection("dollhouse").count({}, { skip: 1 }, function (_err, res) {
         expect(res).toBe(1);
         resolve();
       });
@@ -103,7 +103,7 @@ describe("Remote server/client", function () {
     new Promise<void>((resolve) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
-      clientVdb.collection("dollhouse").count({}, { limit: 1 }, function (err, res) {
+      clientVdb.collection("dollhouse").count({}, { limit: 1 }, function (_err, res) {
         expect(res).toBe(1);
         resolve();
       });

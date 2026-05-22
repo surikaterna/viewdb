@@ -10,7 +10,7 @@ describe("Observe-Update Remote", function () {
   let clientRemote, serverViewdb, socketServer, socketClient, clientStore, client, clientLocal, hybrid;
   beforeEach(
     () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         socketServer = new SocketMock();
         socketClient = socketServer.socketClient;
         client = new RequestResponseClient(socketClient);
@@ -26,14 +26,14 @@ describe("Observe-Update Remote", function () {
       })
   );
   it("#viewdb server+hybrid setup should work", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       const id = "1";
       let called = 0;
       serverViewdb.collection("dollhouse").insert({ _id: id });
       hybrid
         .collection("dollhouse")
         .find({ _id: id })
-        .toArray(function (err, res) {
+        .toArray(function () {
           if (called === 0) {
             called++;
           } else {
@@ -42,7 +42,7 @@ describe("Observe-Update Remote", function () {
         });
     }));
   it("#old docs should be removed on updateQuery", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       let id = "1";
       serverViewdb.collection("dollhouse").insert({ _id: id });
       const hybridCursor = hybrid.collection("dollhouse").find({ _id: id });
@@ -63,14 +63,14 @@ describe("Observe-Update Remote", function () {
             serverViewdb.collection("dollhouse").insert({ _id: id });
           }
         },
-        removed: function (x) {
+        removed: function () {
           realDone(); // 2 calls
         },
       });
       serverViewdb.collection("dollhouse").insert({ _id: "echo2" });
     }));
   it("#update query from client", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       let id = "1";
       serverViewdb.collection("dollhouse").insert({ _id: id });
       const hybridCursor = hybrid.collection("dollhouse").find({ _id: id });
@@ -91,7 +91,7 @@ describe("Observe-Update Remote", function () {
       serverViewdb.collection("dollhouse").insert({ _id: "echo2" });
     }));
   it("#observe-update with update from server $in query", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       serverViewdb.collection("dollhouse").insert({ _id: "1" });
       const realDone = _.after(2, resolve);
       const hybridCursor = hybrid.collection("dollhouse").find({ _id: { $in: ["1", "2"] } });

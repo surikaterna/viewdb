@@ -8,7 +8,7 @@ describe("Observe", function () {
 
   beforeEach(
     () =>
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         local = new ViewDB();
         remote = new ViewDB();
         hybrid = new ViewDB(new (HybridStore as any)(local, remote, { throttleObserveRefresh: 0 }));
@@ -19,7 +19,7 @@ describe("Observe", function () {
   );
 
   it("#observe with local insert", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       const cursor = hybrid.collection("dollhouse").find({});
       const handle = cursor.observe({
         added: function (x) {
@@ -31,7 +31,7 @@ describe("Observe", function () {
       local.collection("dollhouse").insert({ _id: "echo" });
     }));
   it("#observe with query and local insert", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       const cursor = hybrid.collection("dollhouse").find({ _id: "echo2" });
       const handle = cursor.observe({
@@ -44,17 +44,17 @@ describe("Observe", function () {
       local.collection("dollhouse").insert({ _id: "echo2" });
     }));
   it("#observe called twice with one local and one remote insert", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       const cursor = hybrid.collection("dollhouse").find({ _id: "echo2" });
       let called = 0;
       const handle = cursor.observe({
-        added: function (x) {
+        added: function () {
           if (++called === 2) {
             resolve();
           }
         },
-        changed: function (x) {
+        changed: function () {
           if (++called === 2) {
             handle.stop();
             resolve();
@@ -107,7 +107,7 @@ describe("Observe", function () {
       });
     }));
   it("#should cache query if setting is enabled", () =>
-    new Promise<void>((resolve, reject) => {
+    new Promise<void>((resolve) => {
       hybrid = new ViewDB(
         new (HybridStore as any)(local, remote, {
           throttleObserveRefresh: 0,
@@ -122,7 +122,7 @@ describe("Observe", function () {
             setTimeout(function () {
               hybrid
                 .collection("dollhouse")
-                ._getCachedData({}, 0, 0, undefined, undefined, function (err, cachedDocuments) {
+                ._getCachedData({}, 0, 0, undefined, undefined, function (_err, cachedDocuments) {
                   expect(cachedDocuments.length).toBe(1);
                   expect(cachedDocuments[0]._id).toBe("alfa");
                   expect(cachedDocuments[0].age).toBe(100);

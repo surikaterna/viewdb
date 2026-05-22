@@ -99,7 +99,7 @@ class HybridObserver {
       this._localHandle = this._localCursor.observe(buildOptions(this._localCache, _refresh, this._removed, false));
       this._remoteHandle = this._remoteCursor.observe(remoteOptions);
     } else {
-      this._getCache(function (err: Error | null, data: any) {
+      this._getCache(function (_err: Error | null, data: any) {
         if (data) {
           self._remoteCache.concat(data);
           self.refresh();
