@@ -76,7 +76,7 @@ class HybridCollection {
       return;
     }
 
-    const cachedDateTime = new Date().getTime();
+    const cachedDateTime = Date.now();
     const documentIds: any[] = [];
     _.forEach(documents, (document: any) => {
       documentIds.push(document._id);

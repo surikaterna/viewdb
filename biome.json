@@ -14,7 +14,6 @@
         "noConstructorReturn": "off"
       },
       "suspicious": {
-        "noShadowRestrictedNames": "off",
         "noPrototypeBuiltins": "off",
         "noImplicitAnyLet": "off",
         "noExplicitAny": "off"
@@ -22,13 +21,11 @@
       "complexity": {
         "noUselessConstructor": "off",
         "noBannedTypes": "off",
-        "noArguments": "off",
-        "useDateNow": "off"
+        "noArguments": "off"
       },
       "style": {
         "useNodejsImportProtocol": "off",
-        "noNonNullAssertion": "off",
-        "useConst": "off"
+        "noNonNullAssertion": "off"
       }
     }
   },

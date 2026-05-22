@@ -11,7 +11,7 @@ function TimestampPlugin(viewDb: any): void {
       coll.save = function (this: any, docs: any, options: any) {
         let newdocs = docs;
         if (!options?.skipTimestamp) {
-          const timestamp = new Date().valueOf();
+          const timestamp = Date.now();
           if (!_.isArray(docs)) {
             newdocs = [docs];
           }
@@ -32,7 +32,7 @@ function TimestampPlugin(viewDb: any): void {
           if (!_.isArray(docs)) {
             docs = [docs];
           }
-          const timestamp = new Date().valueOf();
+          const timestamp = Date.now();
           for (let i = 0; i < docs.length; i++) {
             const doc = docs[i];
             doc.createDateTime = timestamp;
@@ -44,7 +44,7 @@ function TimestampPlugin(viewDb: any): void {
 
       const oldFindAndModify = coll.findAndModify;
       coll.findAndModify = function (this: any, query: any, sort: any, update: any, options: any, cb: any) {
-        const timestamp = new Date().valueOf();
+        const timestamp = Date.now();
         const clonedUpdate = _.clone(update);
         const setOnInsert = clonedUpdate.$setOnInsert || {};
         setOnInsert.createDateTime = timestamp;
@@ -62,7 +62,7 @@ function TimestampPlugin(viewDb: any): void {
 
       const oldUpdateMany = coll.updateMany;
       coll.updateMany = function (this: any, query: any, update: any, options: any, cb: any) {
-        const timestamp = new Date().valueOf();
+        const timestamp = Date.now();
         const clonedUpdate = _.clone(update);
         const setOnInsert = clonedUpdate.$setOnInsert || {};
         setOnInsert.createDateTime = timestamp;
@@ -80,7 +80,7 @@ function TimestampPlugin(viewDb: any): void {
 
       const oldUpdateOne = coll.updateOne;
       coll.updateOne = function (this: any, query: any, update: any, options: any, cb: any) {
-        const timestamp = new Date().valueOf();
+        const timestamp = Date.now();
         const clonedUpdate = _.clone(update);
         const setOnInsert = clonedUpdate.$setOnInsert || {};
         setOnInsert.createDateTime = timestamp;

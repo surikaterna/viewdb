@@ -5,7 +5,6 @@ import {
   forEach,
   get,
   isArray,
-  isNaN,
   isNumber,
   pick,
   range,
@@ -244,7 +243,7 @@ class LokiJSCollection extends EventEmitter {
         forEach(ttlFields, (maxAgeMs, field) => {
           const value = get(doc, field);
           const timestamp = new Date(value).getTime();
-          if (!isNaN(timestamp)) {
+          if (!Number.isNaN(timestamp)) {
             const diff = now - timestamp;
             if (maxAgeMs < diff) {
               shouldRemove = true;

@@ -65,9 +65,9 @@ describe("Reconcile", () => {
       local.push({ _id: String(i), version: 1 });
       remote.push({ _id: String(i), version: 1 });
     }
-    const start = new Date().getTime();
+    const start = Date.now();
     reconcileAny(local, remote);
-    const end = new Date().getTime();
+    const end = Date.now();
     expect(end - start).toBeLessThan(500);
   });
   it("#reconcile should not break if local contain duplicates, and should update to newest version of local copy", () => {

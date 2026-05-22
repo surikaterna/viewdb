@@ -10,7 +10,7 @@ describe("Viewdb timestamp plugin", () => {
     new VersioningPlugin(viewDb);
     const obj: any = { id: "123" };
     const collection = viewDb.collection("test");
-    const currentTime = new Date().valueOf();
+    const currentTime = Date.now();
 
     await new Promise<void>((resolve, reject) => {
       setTimeout(async () => {
@@ -32,7 +32,7 @@ describe("Viewdb timestamp plugin", () => {
     new TimestampPlugin(viewDb);
     new VersioningPlugin(viewDb);
     const collection = viewDb.collection("test");
-    const currentTime = new Date().valueOf();
+    const currentTime = Date.now();
 
     await new Promise<void>((resolve, reject) => {
       setTimeout(async () => {
