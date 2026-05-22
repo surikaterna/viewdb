@@ -1,11 +1,10 @@
 import { EventEmitter } from "events";
-import Kuery from "kuery";
+import Kuery, { type TypedQuery } from "kuery";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
+import { type Collection, isQueryObject, type QueryObject, type VDocument, ViewDBCursor } from "viewdb";
 
-import { ViewDBCursor } from "viewdb";
-
-class IndexedDBCollection extends EventEmitter {
+class IndexedDBCollection<T extends VDocument = VDocument> extends EventEmitter implements Collection<T> {
   static Cursor: any = ViewDBCursor;
   _db: IDBDatabase;
   _name: string;
@@ -29,11 +28,11 @@ class IndexedDBCollection extends EventEmitter {
     }
   }
 
-  find(query: any, options?: any): any {
+  find(query: TypedQuery<T>): ViewDBCursor<T> {
     if (this._isIdentityQuery(query)) {
-      return new ViewDBCursor(this, { query: query }, options, this._getByKey.bind(this));
+      return new ViewDBCursor(this, { query }, this._getByKey.bind(this));
     } else {
-      return new ViewDBCursor(this, { query: query }, options, this._getDocuments.bind(this));
+      return new ViewDBCursor(this, { query }, this._getDocuments.bind(this));
     }
   }
 
@@ -41,25 +40,22 @@ class IndexedDBCollection extends EventEmitter {
     return `${this._name}_${document._id}`;
   }
 
-  insert(documents: any, options?: any): any {
+  insert(documents: T | T[], options?: Record<string, any>): Promise<T[]> {
     return this._write("add", documents, options);
   }
 
-  _write(op: string, documents: any, _options?: any): any {
+  _write(op: string, documents: T | T[], _options?: Record<string, any>): Promise<T[]> {
     const self = this;
-
-    if (!_.isArray(documents)) {
-      documents = [documents];
-    }
+    const docs = _.isArray(documents) ? documents : [documents];
 
     return new Promise((resolve, reject) => {
       const txn: IDBTransaction = self._db.transaction(["documents"], "readwrite");
-      const docs: IDBObjectStore = txn.objectStore("documents");
+      const objectStore: IDBObjectStore = txn.objectStore("documents");
 
       txn.oncomplete = (txn as any).onsuccess = () => {
-        self.emit("change", documents);
+        self.emit("change", docs);
         process.nextTick(() => {
-          resolve(documents);
+          resolve(docs);
         });
       };
 
@@ -67,15 +63,15 @@ class IndexedDBCollection extends EventEmitter {
         reject(new Error(String(event)));
       };
       let currentIndex = 0;
-      const numberOfDocs = documents.length;
+      const numberOfDocs = docs.length;
       function addNext() {
-        const document = documents[currentIndex++];
-        if (!_.has(document, "_id")) {
-          (document as any)._id = (document as any).id || uuid();
+        const doc = docs[currentIndex++];
+        if (!_.has(doc, "_id")) {
+          (doc as any)._id = (doc as any).id || uuid();
         }
-        document.$collection = self._name;
-        document.$collectionKey = self._getKey(document);
-        const request: IDBRequest = (docs as any)[op](document);
+        (doc as Record<string, any>).$collection = self._name;
+        (doc as Record<string, any>).$collectionKey = self._getKey(doc);
+        const request: IDBRequest = (objectStore as any)[op](doc);
         request.onsuccess = () => {
           if (currentIndex < numberOfDocs) {
             addNext();
@@ -89,15 +85,15 @@ class IndexedDBCollection extends EventEmitter {
     });
   }
 
-  save(documents: any, options?: any): any {
+  save(documents: T | T[], options?: Record<string, any>): Promise<T[]> {
     return this._write("put", documents, options);
   }
 
   drop(): Promise<void> {
     return new Promise((resolve, reject) => {
       const txn = this._db.transaction(["documents"], "readwrite");
-      const docs = txn.objectStore("documents");
-      const cursor = docs.index("$collection").openCursor(this._name);
+      const objectStore = txn.objectStore("documents");
+      const cursor = objectStore.index("$collection").openCursor(this._name);
       cursor.onerror = (event: Event) => {
         reject(new Error(String(event)));
       };
@@ -113,7 +109,7 @@ class IndexedDBCollection extends EventEmitter {
     });
   }
 
-  remove(query: any, _options?: any): Promise<void> {
+  remove(query: TypedQuery<T>, _options?: Record<string, any>): Promise<void> {
     return this._getDocuments(query).then((res: any) => {
       return new Promise<void>((resolve, reject) => {
         const txn = this._db.transaction(["documents"], "readwrite");
@@ -125,22 +121,22 @@ class IndexedDBCollection extends EventEmitter {
         txn.onerror = (event: Event) => {
           reject(new Error(String(event)));
         };
-        const docs = txn.objectStore("documents");
+        const objectStore = txn.objectStore("documents");
         _.forEach(res, (doc: any) => {
           const key = this._getKey(doc);
-          docs.delete(key);
+          objectStore.delete(key);
         });
       });
     });
   }
 
-  _getDocuments(query: any): Promise<any[]> {
-    const qry = query.query || query;
+  _getDocuments(queryObject: QueryObject<T> | TypedQuery<T>): Promise<T[]> {
+    const query = isQueryObject(queryObject) ? (queryObject.query as TypedQuery<T>) : queryObject;
     return new Promise((resolve, reject) => {
       const txn = this._db.transaction(["documents"], "readonly");
-      const docs = txn.objectStore("documents");
-      const cursor = docs.index("$collection").openCursor(this._name);
-      const result: any[] = [];
+      const objectStore = txn.objectStore("documents");
+      const cursor = objectStore.index("$collection").openCursor(this._name);
+      const result: T[] = [];
       cursor.onerror = (event: Event) => {
         reject(new Error(String(event)));
       };
@@ -150,11 +146,13 @@ class IndexedDBCollection extends EventEmitter {
           result.push(c.value);
           c.continue();
         } else {
-          const q = new Kuery(qry);
-          query.sort && q.sort(query.sort);
-          query.skip && q.skip(query.skip);
-          query.limit && q.limit(query.limit);
-          resolve(q.find(result));
+          const q = new Kuery<T>(query);
+          if (isQueryObject(queryObject)) {
+            queryObject.sort && q.sort(queryObject.sort);
+            queryObject.skip && q.skip(queryObject.skip);
+            queryObject.limit && q.limit(queryObject.limit);
+          }
+          resolve(q.find(result) as T[]);
         }
       };
     });
@@ -164,10 +162,10 @@ class IndexedDBCollection extends EventEmitter {
     const qry = query.query || query;
     return new Promise((resolve, reject) => {
       const txn = this._db.transaction(["documents"], "readonly");
-      const docs = txn.objectStore("documents");
+      const objectStore = txn.objectStore("documents");
       let key = qry.id || qry._id;
       key = `${this._name}_${key}`;
-      const request = docs.get(key);
+      const request = objectStore.get(key);
       request.onsuccess = (_event: Event) => {
         const result: any[] = [];
         if (request.result !== undefined) {

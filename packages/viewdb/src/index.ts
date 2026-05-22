@@ -20,4 +20,5 @@ export type {
   Store,
   VDocument,
 } from "./types";
+export * from "./utils";
 export { InMemoryStore, merge, plugins, ViewDB, ViewDBCursor, ViewDBObserver };

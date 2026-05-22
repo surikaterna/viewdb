@@ -1,20 +1,22 @@
-import type { Store } from "../types";
+import type { Store, VDocument } from "../types";
 import InMemoryCollection from "./InMemoryCollection";
 
 class InMemoryStore implements Store {
-  _collections: Record<string, InMemoryCollection>;
+  readonly _collections: Record<string, InMemoryCollection<any>>;
 
   constructor() {
     this._collections = {};
   }
 
-  collection(collectionName: string): InMemoryCollection {
-    let coll = this._collections[collectionName];
-    if (coll === undefined) {
-      coll = new InMemoryCollection(collectionName);
-      this._collections[collectionName] = coll;
+  collection<T extends VDocument = VDocument>(name: string): InMemoryCollection<T> {
+    const existingCollection = this._collections[name];
+    if (existingCollection) {
+      return existingCollection;
     }
-    return coll;
+
+    const newCollection = new InMemoryCollection<T>(name);
+    this._collections[name] = newCollection;
+    return newCollection;
   }
 }
 

@@ -15,11 +15,11 @@ class RemoteCollection extends EventEmitter {
     this._name = collectionName;
   }
 
-  find(query: any, options?: any): any {
+  find(query: any): any {
     if (this._isIdentityQuery(query)) {
       return [];
     }
-    return new RemoteCursor(this, { query: query }, options, this._getDocuments.bind(this));
+    return new RemoteCursor(this, { query }, this._getDocuments.bind(this));
   }
 
   insert(_document: any, _options?: any, _callback?: any): void {

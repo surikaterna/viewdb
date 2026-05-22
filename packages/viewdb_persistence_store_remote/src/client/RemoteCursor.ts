@@ -10,8 +10,8 @@ import { ViewDBCursor } from "viewdb";
 class RemoteCursor extends ViewDBCursor {
   _handle!: { stop: () => void };
 
-  constructor(collection: any, query: any, options: any, getDocuments: any) {
-    super(collection, query, options, getDocuments);
+  constructor(collection: any, query: any, getDocuments: any) {
+    super(collection, query, getDocuments);
   }
 
   count(options?: Record<string, any>): Promise<number> {

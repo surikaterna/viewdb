@@ -9,6 +9,6 @@
     "strict": false,
     "types": ["node", "lodash", "vitest/globals"]
   },
-  "include": ["src", "__tests__", "vitest.setup.ts", "../shared-types"],
+  "include": ["src", "__tests__", "vitest.setup.ts"],
   "exclude": ["node_modules", "dist"]
 }

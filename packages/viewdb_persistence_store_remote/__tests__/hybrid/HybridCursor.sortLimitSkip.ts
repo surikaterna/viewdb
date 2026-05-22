@@ -29,7 +29,7 @@ describe("Sort / Limit / Skip", () => {
     const inserts: Promise<any>[] = [];
     for (let i = 0; i < NUMBER_OF_DOCS; i++) {
       const collection = i % 2 === 0 ? localCollection : remoteCollection;
-      inserts.push(collection.insert({ _id: i, age: i }));
+      inserts.push(collection.insert({ _id: String(i), age: i }));
     }
     await Promise.all(inserts);
 

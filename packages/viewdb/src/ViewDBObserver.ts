@@ -3,18 +3,16 @@ import _ from "lodash";
 import merge from "./merge";
 import type { Collection, ObserveOptions, Observer, QueryObject, VDocument } from "./types";
 
-class ViewDBObserver implements Observer {
-  _query: QueryObject;
-  _queryOptions: QueryObject;
+class ViewDBObserver<T extends VDocument = VDocument> implements Observer {
+  _query: QueryObject<T>;
   _options: ObserveOptions;
-  _collection: Collection;
-  _cache: VDocument[] | null;
+  _collection: Collection<T>;
+  _cache: T[] | null;
   _refreshPending: boolean;
   stop!: () => void;
 
-  constructor(query: QueryObject, queryOptions: QueryObject, collection: Collection, options: ObserveOptions) {
+  constructor(query: QueryObject<T>, collection: Collection<T>, options: ObserveOptions) {
     this._query = query;
-    this._queryOptions = queryOptions;
     this._options = options;
     this._collection = collection;
     this._cache = [];
@@ -22,7 +20,7 @@ class ViewDBObserver implements Observer {
 
     const enableBatching = options.enableBatching === true;
 
-    const listener = (changedDocs?: VDocument[]) => {
+    const listener = (changedDocs?: T[]) => {
       if (this._cache !== null && this.isIrrelevant(changedDocs)) {
         return;
       }
@@ -92,8 +90,8 @@ class ViewDBObserver implements Observer {
           result,
           _.defaults(
             {
-              comparatorId: (a: VDocument, b: VDocument) => _.get(a, "_id") === _.get(b, "_id"),
-              keyFn: (doc: VDocument) => String(_.get(doc, "_id")),
+              comparatorId: (a: T, b: T) => _.get(a, "_id") === _.get(b, "_id"),
+              keyFn: (doc: T) => String(_.get(doc, "_id")),
             },
             this._options
           )

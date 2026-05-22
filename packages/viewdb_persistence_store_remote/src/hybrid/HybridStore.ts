@@ -50,8 +50,8 @@ class HybridStore {
     }
   }
 
-  open(): Promise<HybridStore> {
-    const storesToOpen: any[] = [];
+  async open(): Promise<HybridStore> {
+    const storesToOpen: Promise<any>[] = [];
     if (this._local.open) {
       storesToOpen.push(this._local.open());
     }
@@ -59,7 +59,8 @@ class HybridStore {
       storesToOpen.push(this._remote.open());
     }
 
-    return Promise.all(storesToOpen).then(() => this);
+    await Promise.all(storesToOpen);
+    return this;
   }
 
   collection(name: string): any {

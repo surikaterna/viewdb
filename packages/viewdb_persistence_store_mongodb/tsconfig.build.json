@@ -6,9 +6,9 @@
     "rootDir": "src",
     "composite": true,
     "types": ["node", "lodash"],
-    "typeRoots": ["../../node_modules/@types", "../../node_modules", "../shared-types"]
+    "typeRoots": ["../../node_modules/@types", "../../node_modules"]
   },
   "references": [{ "path": "../viewdb/tsconfig.build.json" }],
-  "include": ["src", "../shared-types"],
+  "include": ["src"],
   "exclude": ["node_modules", "dist", "__tests__"]
 }

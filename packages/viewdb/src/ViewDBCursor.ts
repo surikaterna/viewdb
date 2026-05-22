@@ -12,17 +12,15 @@ import type {
 } from "./types";
 import ViewDBObserver from "./ViewDBObserver";
 
-class ViewDBCursor implements Cursor {
-  _collection: Collection;
-  _query: QueryObject;
-  _options: QueryObject;
-  _getDocuments: GetDocumentsFn;
+class ViewDBCursor<T extends VDocument = VDocument> implements Cursor<T> {
+  _collection: Collection<T>;
+  _query: QueryObject<T>;
+  _getDocuments: GetDocumentsFn<T>;
   _isObserving: boolean;
 
-  constructor(collection: Collection, query: QueryObject, options: QueryObject, getDocuments: GetDocumentsFn) {
+  constructor(collection: Collection<T>, query: QueryObject<T>, getDocuments: GetDocumentsFn<T>) {
     this._collection = collection;
     this._query = query;
-    this._options = options;
     this._getDocuments = getDocuments;
     this._isObserving = false;
   }
@@ -35,14 +33,14 @@ class ViewDBCursor implements Cursor {
     });
   }
 
-  toArray(): Promise<VDocument[]> {
+  toArray(): Promise<T[]> {
     return this._getDocuments(this._query);
   }
 
   observe(options: ObserveOptions): ObserveHandle {
     this._isObserving = true;
     // Observer constructor returns { stop } object, not the Observer instance
-    return new ViewDBObserver(this._query, this._options, this._collection, options) as any;
+    return new ViewDBObserver(this._query, this._collection, options) as ObserveHandle;
   }
 
   updateQuery(query: Record<string, any>): void {
@@ -87,15 +85,16 @@ class ViewDBCursor implements Cursor {
     // NOOP
   }
 
-  count(): Promise<number> {
-    const query: QueryObject = { query: this._query.query };
+  async count(): Promise<number> {
+    const query: QueryObject<T> = { query: this._query.query };
     if (this._query.skip) {
       query.skip = this._query.skip;
     }
     if (this._query.limit) {
       query.limit = this._query.limit;
     }
-    return this._getDocuments(query).then((res) => res.length);
+    const res = await this._getDocuments(query);
+    return res.length;
   }
 
   close(): Promise<void> {

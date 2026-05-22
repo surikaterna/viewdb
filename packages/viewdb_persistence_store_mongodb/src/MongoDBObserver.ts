@@ -26,7 +26,7 @@ class MongoDBObserver {
     this._queryOptions = queryOptions;
 
     if (!oplogListener) {
-      return new ViewDBObserver(query, queryOptions, collection, options) as any;
+      return new ViewDBObserver(query, collection, options) as any;
     }
     const namespace = collection._collection.s.namespace;
     this._query = query;

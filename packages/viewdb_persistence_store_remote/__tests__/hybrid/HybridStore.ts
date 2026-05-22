@@ -102,10 +102,10 @@ describe("HybridStore", () => {
     const remoteStore = new InMemoryStore();
 
     await remoteStore.collection("alfa").insert({ id: "abc" });
-    const hcursor = new HybridStore(localStore, remoteStore, { cacheQueries: true });
+    const hstore = new HybridStore(localStore, remoteStore, { cacheQueries: true });
 
     await new Promise<void>((resolve, reject) => {
-      hcursor
+      hstore
         .collection("alfa")
         .find({})
         .toArray((err, res) => {
@@ -115,7 +115,7 @@ describe("HybridStore", () => {
           }
           if (res.length > 0) {
             setTimeout(() => {
-              hcursor
+              hstore
                 .collection("alfa")
                 ._getCachedData({}, undefined, undefined, undefined, undefined, (cacheErr, data) => {
                   if (cacheErr) {
@@ -130,9 +130,9 @@ describe("HybridStore", () => {
 
       let iterations = 0;
       setTimeout(() => {
-        hcursor._local._collections._cache._documents[0].resultSet = ["xyz"];
-        hcursor._collections._cache._documents.resultSet = ["xyz"];
-        hcursor
+        hstore._local._collections._cache._documents[0].resultSet = ["xyz"];
+        hstore._collections._cache._documents.resultSet = ["xyz"];
+        hstore
           .collection("alfa")
           .find({})
           .toArray((err, res) => {

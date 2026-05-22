@@ -1,27 +1,28 @@
 import { EventEmitter } from "events";
-import Kuery from "kuery";
+import Kuery, { type TypedQuery } from "kuery";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import type { Collection, QueryObject, VDocument } from "../types";
+import { isQueryObject } from "../utils";
 import ViewDBCursor from "../ViewDBCursor";
 
-class InMemoryCollection extends EventEmitter implements Collection {
-  _documents: VDocument[];
-  _name: string;
+class InMemoryCollection<T extends VDocument = VDocument> extends EventEmitter implements Collection<T> {
+  _documents: T[];
+  readonly _name: string;
 
-  constructor(collectionName: string) {
+  constructor(name: string) {
     super();
     this._documents = [];
-    this._name = collectionName;
+    this._name = name;
   }
 
   count(): Promise<number> {
     return Promise.resolve(this._documents.length);
   }
 
-  _write(op: string, documents: VDocument | VDocument[], _options?: Record<string, any>): Promise<VDocument[]> {
-    const docs: VDocument[] = _.isArray(documents) ? documents : [documents];
-    const promise = new Promise<VDocument[]>((resolve, reject) => {
+  _write(op: string, documents: T | T[], _options?: Record<string, any>): Promise<T[]> {
+    const docs: T[] = _.isArray(documents) ? documents : [documents];
+    const promise = new Promise<T[]>((resolve, reject) => {
       for (let i = 0; i < docs.length; i++) {
         const document: Record<string, any> = docs[i];
         if (!_.isObject(document)) {
@@ -37,9 +38,9 @@ class InMemoryCollection extends EventEmitter implements Collection {
           return;
         }
         if (idx === -1) {
-          this._documents.push(document as VDocument);
+          this._documents.push(document as T);
         } else {
-          this._documents[idx] = document as VDocument;
+          this._documents[idx] = document as T;
         }
       }
       this.emit("change", docs);
@@ -49,11 +50,11 @@ class InMemoryCollection extends EventEmitter implements Collection {
     return promise;
   }
 
-  insert(documents: VDocument | VDocument[], options?: Record<string, any>): Promise<VDocument[]> {
+  insert(documents: T | T[], options?: Record<string, any>): Promise<T[]> {
     return this._write("insert", documents, options);
   }
 
-  save(documents: VDocument | VDocument[], options?: Record<string, any>): Promise<VDocument[]> {
+  save(documents: T | T[], options?: Record<string, any>): Promise<T[]> {
     return this._write("save", documents, options);
   }
 
@@ -62,11 +63,11 @@ class InMemoryCollection extends EventEmitter implements Collection {
     return Promise.resolve();
   }
 
-  find(query: Record<string, any>, options?: Record<string, any>): ViewDBCursor {
-    return new ViewDBCursor(this, { query: query }, options || {}, this._getDocuments.bind(this));
+  find(query: TypedQuery<T>): ViewDBCursor<T> {
+    return new ViewDBCursor(this, { query }, this._getDocuments.bind(this));
   }
 
-  remove(query: Record<string, any>, _options?: Record<string, any>): Promise<void> {
+  remove(query: TypedQuery<T>, _options?: Record<string, any>): Promise<void> {
     const q = new Kuery(query);
     const documents = q.find(this._documents);
     this._documents = _.pullAll(this._documents, documents);
@@ -81,22 +82,26 @@ class InMemoryCollection extends EventEmitter implements Collection {
     throw new Error("createIndex not supported!");
   }
 
-  _getDocuments(queryObject: QueryObject): Promise<VDocument[]> {
-    const query = queryObject.query || queryObject;
-    const q = new Kuery(query);
-    if (queryObject.sort) {
-      q.sort(queryObject.sort);
+  _getDocuments(queryObject: QueryObject<T> | TypedQuery<T>): Promise<T[]> {
+    const query = isQueryObject(queryObject) ? (queryObject.query as TypedQuery<T>) : queryObject;
+    const q = new Kuery<T>(query);
+
+    if (isQueryObject(queryObject)) {
+      if (queryObject.sort) {
+        q.sort(queryObject.sort);
+      }
+      if (queryObject.skip) {
+        q.skip(queryObject.skip);
+      }
+      if (queryObject.limit) {
+        q.limit(queryObject.limit);
+      }
     }
-    if (queryObject.skip) {
-      q.skip(queryObject.skip);
-    }
-    if (queryObject.limit) {
-      q.limit(queryObject.limit);
-    }
+
     const documents = q.find(this._documents);
-    const promise = new Promise<VDocument[]>((resolve) => {
+    const promise = new Promise<T[]>((resolve) => {
       process.nextTick(() => {
-        resolve(_.cloneDeep(documents));
+        resolve(_.cloneDeep(documents as T[]));
       });
     });
     return promise;

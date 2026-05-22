@@ -69,8 +69,8 @@ class LokiJSCollection extends EventEmitter {
     };
   }
 
-  find(query: Record<string, any>, options?: any) {
-    return new ViewDBCursor(this, { query: query }, options, this._getDocuments.bind(this));
+  find(query: Record<string, any>) {
+    return new ViewDBCursor(this, { query }, this._getDocuments.bind(this));
   }
 
   insert(documents: any, _options?: any) {

@@ -1,12 +1,19 @@
+import type { TypedQuery } from "kuery";
+
 /** A generic document stored in viewdb */
 export type VDocument = Record<string, any> & { _id?: string };
 
 /** Query object passed to find/observe/getDocuments */
-export interface QueryObject {
-  query?: Record<string, any>;
+export interface QueryObject<T extends VDocument = VDocument> {
+  /** Filter query for the documents. */
+  query?: TypedQuery<T>;
+  /** Set the skip for the cursor. */
   skip?: number;
+  /** Set the limit for the cursor. */
   limit?: number;
+  /** Sets the sort order of the cursor query. */
   sort?: Record<string, 1 | -1>;
+  /** Add a project stage to the aggregation pipeline. */
   project?: Record<string, 0 | 1>;
 }
 
@@ -42,21 +49,39 @@ export interface ObserveOptions<T = VDocument> {
 
 /** Handle returned by observe() */
 export interface ObserveHandle {
+  /** Clears the cache and stops the observe listener. */
   stop: () => void | Promise<void>;
+  /**
+   * @deprecated Use ObserveHandle.stop()
+   *
+   * Clears the cache and stops the observe listener.
+   */
   dispose?: () => void | Promise<void>;
 }
 
 /** Core cursor contract used by collections */
-export interface Cursor {
-  toArray(): Promise<VDocument[]>;
-  observe(options: ObserveOptions): ObserveHandle;
-  skip(skip: number): this;
-  limit(limit: number): this;
-  sort(sort: SortSpec): this;
-  project(project: ProjectionSpec): this;
+export interface Cursor<T extends VDocument = VDocument> {
+  /** Frees any client-side resources used by the cursor. */
+  close(): Promise<void>;
+  /**
+   * @deprecated To be replaced with methods on the Collection interface.
+   *
+   * Get the count of documents for this cursor.
+   */
   count(): Promise<number>;
+  /** Creates an observe handle to listen for changes. */
+  observe(options: ObserveOptions): ObserveHandle;
+  /** Set the skip for the cursor. */
+  skip(skip: number): this;
+  /** Set the limit for the cursor. */
+  limit(limit: number): this;
+  /** Sets the sort order of the cursor query. */
+  sort(sort: SortSpec): this;
+  /** Add a project stage to the aggregation pipeline. */
+  project(project: ProjectionSpec): this;
+  /** Returns an array of documents. */
+  toArray(): Promise<T[]>;
   updateQuery?(query: Record<string, any>): void;
-  close?(): Promise<void>;
 }
 
 /** Core observer contract returned from cursor.observe() */
@@ -65,42 +90,53 @@ export interface Observer extends ObserveHandle {}
 /** Core store contract used by ViewDB */
 export interface Store {
   open?(): Promise<any>;
-  collection(name: string): Collection;
+  collection<T extends VDocument = VDocument>(name: string): Collection<T>;
 }
 
 /**
  * Promise signature for _getDocuments implementations.
  * Used by Collection implementations across all stores.
  */
-export type GetDocumentsFn = (queryObject: QueryObject) => Promise<VDocument[]>;
+export type GetDocumentsFn<T extends VDocument = VDocument> = (
+  queryObject: QueryObject<T> | TypedQuery<T>
+) => Promise<T[]>;
 
-/**
- * Core collection contract that all persistence store collections should satisfy.
- *
- * Required members are used by Cursor and Observer.
- * Optional members represent common store capabilities.
- */
-export interface Collection {
-  /** Create a cursor for the given query */
-  find(query: Record<string, any>, options?: Record<string, any>): Cursor;
-  /** Internal: retrieve documents matching the query object */
-  _getDocuments: GetDocumentsFn;
-  /** EventEmitter: emit events (primarily 'change') */
-  emit(event: string, ...args: any[]): void;
-  /** EventEmitter: listen for events */
-  on(event: string, listener: (...args: any[]) => void): any;
-  /** EventEmitter: remove listener */
-  removeListener(event: string, listener: (...args: any[]) => void): any;
-
-  // Optional store capabilities
-  /** Insert documents into the collection */
-  insert?(documents: any, options?: any): Promise<any>;
-  /** Save (upsert) documents */
-  save?(documents: any, options?: any): Promise<any>;
-  /** Remove documents matching the query */
-  remove?(query: any, options?: any): Promise<void>;
-  /** Count documents */
+/** Core collection contract that all persistence store collections should satisfy. */
+export interface Collection<T extends VDocument = VDocument> {
+  /**
+   * @deprecated Use `Collection.countDocuments` or `Collection.estimatedDocumentCount`.
+   *
+   * Count documents
+   */
   count?(): Promise<number>;
   /** Drop all documents */
   drop?(): Promise<void>;
+  /** EventEmitter: emit events (primarily 'change') */
+  emit(event: string, ...args: any[]): void;
+  /** Create a cursor for the given query */
+  find(query: TypedQuery<T>, options?: Record<string, any>): Cursor<T>;
+  /**
+   * @deprecated Use `Collection.insertMany` or `Collection.insertOne`.
+   *
+   * Insert documents into the collection
+   */
+  insert?(documents: T | T[], options?: any): Promise<any>;
+  /** EventEmitter: listen for events */
+  on(event: string, listener: (...args: any[]) => void): any;
+  /**
+   * @deprecated Use `Collection.deleteMany` or `Collection.deleteOne`.
+   *
+   * Remove documents matching the query
+   */
+  remove?(query: TypedQuery<T>, options?: any): Promise<void>;
+  /** EventEmitter: remove listener */
+  removeListener(event: string, listener: (...args: any[]) => void): any;
+  /**
+   * @deprecated Use `Collection.updateMany` or `Collection.updateOne`.
+   *
+   * Save (upsert) documents
+   * */
+  save?(documents: any, options?: any): Promise<any>;
+  /** Internal: retrieve documents matching the query object */
+  _getDocuments: GetDocumentsFn<T>;
 }

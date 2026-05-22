@@ -27,16 +27,11 @@ packages/viewdb_persistence_store_indexeddb/src/ - IndexedDB store
 packages/viewdb_persistence_store_mongodb/src/   - MongoDB store
 packages/viewdb_persistence_store_remote/src/    - Remote store (socket, REST, hybrid)
 packages/viewdb_persistence_store_lokijs/src/    - LokiJS store
-packages/shared-types/kuery/                     - kuery type shim (only shared type)
 
 ## Technical Constraints
 
-- CommonJS only. Core uses `export = Object.assign(ViewDB, { Cursor, Observer, merge, plugins })` pattern.
-- API supports both callbacks and promises. Prefer promises for new code.
-- ES2018 target, compiled from TypeScript.
 - Observer constructor returns { stop }, not this. Preserved with as-any cast in implementation.
-- Plugins (TimestampPlugin, VersioningPlugin) use monkey-patching. Not typed.
-- kuery is the only shared type shim, located at packages/shared-types/kuery/.
+- Plugins (TimestampPlugin, VersioningPlugin) use monkey-patching.
 - tsconfig: strict: false for lokijs store, strict: true for all others.
 - npm workspaces with Turborepo. Requires npm v8+.
 
