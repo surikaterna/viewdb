@@ -55,16 +55,16 @@ class LokiPartitioningAdapter {
     }
 
     // set collection paging defaults
-    if (!this.options.hasOwnProperty("paging")) {
+    if (!Object.hasOwn(this.options, "paging")) {
       this.options.paging = false;
     }
 
     // default to page size of 25 megs (can be up to your largest serialized object size larger than this)
-    if (!this.options.hasOwnProperty("pageSize")) {
+    if (!Object.hasOwn(this.options, "pageSize")) {
       this.options.pageSize = 25 * 1024 * 1024;
     }
 
-    if (!this.options.hasOwnProperty("delimiter")) {
+    if (!Object.hasOwn(this.options, "delimiter")) {
       this.options.delimiter = "$<\n";
     }
   }
