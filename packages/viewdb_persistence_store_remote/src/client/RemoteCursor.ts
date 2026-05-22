@@ -28,7 +28,7 @@ class RemoteCursor extends ViewDBCursor {
     params.limit = limit;
 
     return new Promise((resolve, reject) => {
-      (this._collection as any)._client.request(params, function (err: Error | null, result: any) {
+      (this._collection as any)._client.request(params, (err: Error | null, result: any) => {
         if (err) {
           reject(err);
           return;
@@ -56,29 +56,28 @@ class RemoteCursor extends ViewDBCursor {
   }
 
   observe(options: any): { stop: () => void } {
-    const self = this;
-    if (self._isObserving) {
+    if (this._isObserving) {
       LOG.error(
         "Already observing this cursor. Collection: %s - Query: %j",
-        _.get(self, "_collection._name"),
-        self._query
+        _.get(this, "_collection._name"),
+        this._query
       );
-      throw new Error("Already observing this cursor. Collection: " + _.get(self, "_collection._name"));
+      throw new Error(`Already observing this cursor. Collection: ${_.get(this, "_collection._name")}`);
     }
-    self._isObserving = true;
+    this._isObserving = true;
 
-    const refreshListener = function () {
+    const refreshListener = () => {
       LOG.info("restarting observer due to change");
-      self._handle.stop();
-      self._handle = new RemoteObserver(self._collection, options, self._query) as any;
+      this._handle.stop();
+      this._handle = new RemoteObserver(this._collection, options, this._query) as any;
     };
-    self._collection.on("change", refreshListener);
+    this._collection.on("change", refreshListener);
 
-    self._handle = new RemoteObserver(self._collection, options, self._query) as any;
+    this._handle = new RemoteObserver(this._collection, options, this._query) as any;
     return {
-      stop: function () {
-        self._handle.stop();
-        self._collection.removeListener("change", refreshListener);
+      stop: () => {
+        this._handle.stop();
+        this._collection.removeListener("change", refreshListener);
       },
     };
   }

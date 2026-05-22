@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { LokiJSStore } from "../src";
 
-describe("Collection", function () {
+describe("Collection", () => {
   let store;
   beforeEach(() => {
     store = new LokiJSStore("test-suite", { inMemoryOnly: true });

@@ -149,7 +149,7 @@ class HybridCursor {
         this._limit,
         this._sort,
         this._project,
-        function (_err: Error | null, data: any) {
+        (_err: Error | null, data: any) => {
           if (data) {
             wrappedCallback(null, data);
             return;
@@ -260,7 +260,6 @@ class HybridCursor {
   }
 
   count(options?: any, callback?: any): void {
-    const self = this;
     if (_.isFunction(options)) {
       callback = options;
       options = undefined;
@@ -273,13 +272,13 @@ class HybridCursor {
         this._limit,
         this._sort,
         this._project,
-        function (_err: Error | null, data: any) {
+        (_err: Error | null, data: any) => {
           if (data) {
             callback(null, data.length);
             return;
           }
 
-          self._count(options, callback);
+          this._count(options, callback);
         }
       );
     } else {

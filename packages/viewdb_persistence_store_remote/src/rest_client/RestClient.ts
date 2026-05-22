@@ -31,21 +31,21 @@ class RestClient implements VdbClient {
 
   _callRestService(path: string, payload: any, callback: any): void {
     const params: string[] = [];
-    _.forEach(Object.keys(payload), function (key: string) {
-      params.push(key + "=" + encodeURIComponent(JSON.stringify(payload[key])));
+    _.forEach(Object.keys(payload), (key: string) => {
+      params.push(`${key}=${encodeURIComponent(JSON.stringify(payload[key]))}`);
     });
-    let uri = this._baseUri + "/" + path;
+    let uri = `${this._baseUri}/${path}`;
     if (params.length > 0) {
-      uri += "?" + params.join("&");
+      uri += `?${params.join("&")}`;
     }
     const options = _.assign({}, this._requestOptions, { url: uri });
     axios(options)
-      .then(function (response: any) {
+      .then((response: any) => {
         callback(null, response.data);
       })
-      .catch(function (err: Error | null) {
+      .catch((err: Error | null) => {
         if (_.isUndefined(callback)) {
-          warn("API call failed. Error message: " + err);
+          warn(`API call failed. Error message: ${err}`);
         } else {
           callback(err);
         }
@@ -76,7 +76,7 @@ class RestClient implements VdbClient {
     const cache: any[] = [];
     payload.find = payload.observe;
     function poll() {
-      self.request(payload, function (err: Error | null, result: any) {
+      self.request(payload, (err: Error | null, result: any) => {
         if (err) {
           callback(err);
         }
@@ -86,24 +86,22 @@ class RestClient implements VdbClient {
           result,
           _.defaults(
             {
-              comparatorId: function (a: { id: string }, b: { id: string }) {
-                return a.id === b.id;
-              },
+              comparatorId: (a: { id: string }, b: { id: string }) => a.id === b.id,
             },
             {
-              added: function (e: any, i: number) {
+              added: (e: any, i: number) => {
                 delta.push({ a: { e: e, i: i } });
                 cache.splice(i, 0, e);
               },
-              removed: function (e: any, i: number) {
+              removed: (e: any, i: number) => {
                 delta.push({ r: { e: e, i: i } });
                 cache.splice(i, 1);
               },
-              changed: function (asis: any, tobe: any, index: number) {
+              changed: (asis: any, tobe: any, index: number) => {
                 delta.push({ c: { o: asis, n: tobe, i: index } });
                 cache[index] = tobe;
               },
-              moved: function (e: any, oldIndex: number, newIndex: number) {
+              moved: (e: any, oldIndex: number, newIndex: number) => {
                 delta.push({ m: { e: e, o: oldIndex, n: newIndex } });
                 cache.splice(oldIndex, 1);
                 cache.splice(newIndex, 0, e);
@@ -119,7 +117,7 @@ class RestClient implements VdbClient {
     // do first call now
     poll();
     return {
-      stop: function () {
+      stop: () => {
         clearInterval(pollId);
       },
     };

@@ -4,13 +4,13 @@ import getDb from "./util";
 
 runStoreTests({
   name: "indexeddb",
-  createStore: async function () {
+  createStore: async () => {
     const idb = getDb();
     const store = new IndexedDBStore(idb);
     await store.open();
     return store;
   },
-  destroyStore: async function (store) {
+  destroyStore: async (store) => {
     await store.close();
     const idb = store._idb;
     idb._databases.clear();

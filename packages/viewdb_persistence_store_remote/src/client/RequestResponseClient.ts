@@ -22,12 +22,12 @@ class RequestResponseClient {
     this._socket = socket;
     this._requests = {};
     this._requestId = 10;
-    const self = this;
-    this._socket.on("/vdb/response", function (event: any) {
+
+    this._socket.on("/vdb/response", (event: any) => {
       if (event.e) {
         throw new Error(event.e);
       }
-      const request = self._requests[event.i];
+      const request = this._requests[event.i];
       if (_.isUndefined(request)) {
         warn("Response for unregistered request", event);
       } else {
@@ -35,7 +35,7 @@ class RequestResponseClient {
         callback(null, event.p);
         if (!request.k) {
           // non persistent request
-          delete self._requests[event.i];
+          delete this._requests[event.i];
         }
       }
     });
@@ -52,11 +52,10 @@ class RequestResponseClient {
   }
 
   subscribe(payload: any, callback: any): { stop: () => void } {
-    const self = this;
     const i = this.request(payload, callback, true);
     return {
-      stop: function () {
-        delete self._requests[i];
+      stop: () => {
+        delete this._requests[i];
       },
     };
   }
@@ -64,14 +63,13 @@ class RequestResponseClient {
   // to signal that a socket reconnection have been made, and that observers need to start over.
   // - socket owner is responsible to ensure that proper authentication/setup have been made before calling this function.
   onClientReconnected(): void {
-    const self = this;
-    _.forEach(this._requests, function (request: any, index: any) {
+    _.forEach(this._requests, (request: any, index: any) => {
       if (request.k) {
         // persistent aka observe
         const callback = request.cb;
         callback("reconnected");
       } else {
-        delete self._requests[index];
+        delete this._requests[index];
       }
     });
   }

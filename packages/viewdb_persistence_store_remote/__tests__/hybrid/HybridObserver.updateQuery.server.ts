@@ -6,7 +6,7 @@ import RequestResponseClient from "../../src/client/RequestResponseClient";
 import HybridStore from "../../src/hybrid/HybridStore";
 import ViewDBSocketServer from "../../src/server/ViewDBSocketServer";
 
-describe("Observe-Update Remote", function () {
+describe("Observe-Update Remote", () => {
   let clientRemote, serverViewdb, socketServer, socketClient, clientStore, client, clientLocal, hybrid;
   beforeEach(
     () =>
@@ -33,7 +33,7 @@ describe("Observe-Update Remote", function () {
       hybrid
         .collection("dollhouse")
         .find({ _id: id })
-        .toArray(function () {
+        .toArray(() => {
           if (called === 0) {
             called++;
           } else {
@@ -49,10 +49,10 @@ describe("Observe-Update Remote", function () {
       const realDone = _.after(6, resolve);
 
       const handle = hybridCursor.observe({
-        init: function () {
+        init: () => {
           realDone(); // 1 call
         },
-        added: function (x) {
+        added: (x) => {
           realDone(); // 3 calls
           expect(x._id).toBe(id);
           if (x._id === "3") {
@@ -63,7 +63,7 @@ describe("Observe-Update Remote", function () {
             serverViewdb.collection("dollhouse").insert({ _id: id });
           }
         },
-        removed: function () {
+        removed: () => {
           realDone(); // 2 calls
         },
       });
@@ -76,7 +76,7 @@ describe("Observe-Update Remote", function () {
       const hybridCursor = hybrid.collection("dollhouse").find({ _id: id });
 
       const handle = hybridCursor.observe({
-        added: function (x) {
+        added: (x) => {
           expect(x._id).toBe(id);
           if (x._id === "3") {
             handle.stop();
@@ -97,7 +97,7 @@ describe("Observe-Update Remote", function () {
       const hybridCursor = hybrid.collection("dollhouse").find({ _id: { $in: ["1", "2"] } });
 
       const handle = hybridCursor.observe({
-        added: function (x) {
+        added: (x) => {
           if (x._id === "3") {
             handle.stop();
             realDone();
@@ -106,7 +106,7 @@ describe("Observe-Update Remote", function () {
             serverViewdb.collection("dollhouse").insert({ _id: "3" });
           }
         },
-        removed: function (x) {
+        removed: (x) => {
           expect(x._id).toBe("1");
           realDone();
         },

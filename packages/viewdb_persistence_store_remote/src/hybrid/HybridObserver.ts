@@ -8,7 +8,7 @@ function pushArray<T>(arr: T[], arr2: T[]): void {
 
 function buildOptions(cache: any[], callback: (result: any) => void, removed: any[], isRemote: boolean): any {
   return {
-    init: function (result: any[]) {
+    init: (result: any[]) => {
       if (_.isEmpty(cache)) {
         pushArray(cache, result);
       } else {
@@ -17,14 +17,14 @@ function buildOptions(cache: any[], callback: (result: any) => void, removed: an
       }
       callback(result);
     },
-    added: function (e: any, index: number) {
+    added: (e: any, index: number) => {
       cache.splice(index, 0, e);
       if (isRemote && removed.length > 0) {
         removed = [];
       }
       callback(e);
     },
-    removed: function (e: any, index: number) {
+    removed: (e: any, index: number) => {
       cache.splice(index, 1);
       if (removed && !isRemote) {
         removed.push(e._id);
@@ -34,14 +34,14 @@ function buildOptions(cache: any[], callback: (result: any) => void, removed: an
       }
       callback(e);
     },
-    changed: function (_asis: any, tobe: any, index: number) {
+    changed: (_asis: any, tobe: any, index: number) => {
       cache[index] = tobe;
       if (isRemote && removed.length > 0) {
         removed = [];
       }
       callback(tobe);
     },
-    moved: function (e: any, oldIndex: number, newIndex: number) {
+    moved: (e: any, oldIndex: number, newIndex: number) => {
       cache.splice(oldIndex, 1);
       cache.splice(newIndex, 0, e);
       if (isRemote && removed.length > 0) {
@@ -99,7 +99,7 @@ class HybridObserver {
       this._localHandle = this._localCursor.observe(buildOptions(this._localCache, _refresh, this._removed, false));
       this._remoteHandle = this._remoteCursor.observe(remoteOptions);
     } else {
-      this._getCache(function (_err: Error | null, data: any) {
+      this._getCache((_err: Error | null, data: any) => {
         if (data) {
           self._remoteCache.concat(data);
           self.refresh();
@@ -108,7 +108,7 @@ class HybridObserver {
         self._remoteHandle = self._remoteCursor.observe(remoteOptions);
       });
 
-      const cacheUpdater = function () {
+      const cacheUpdater = () => {
         self._cacheCallback(self._remoteCache);
       };
 
@@ -133,31 +133,26 @@ class HybridObserver {
   }
 
   refresh(): void {
-    const self = this;
     let remoteCache = this._remoteCache;
     if (this._removed.length > 0) {
-      remoteCache = _.filter(this._remoteCache, function (doc: any) {
-        return !_.includes(self._removed, doc._id);
-      });
+      remoteCache = _.filter(this._remoteCache, (doc: any) => !_.includes(this._removed, doc._id));
     }
     const result = reconcile(this._localCache, remoteCache);
 
     if (!this._initialized && this._options.init) {
       this._initialized = true;
-      self._reconciledCache = result;
+      this._reconciledCache = result;
       this._options.init(result);
     } else {
-      const old = self._reconciledCache;
+      const old = this._reconciledCache;
       this._reconciledCache = merge(
         old,
         result,
         _.defaults(
           {
-            comparatorId: function (a: { _id: string }, b: { _id: string }) {
-              return a._id === b._id;
-            },
+            comparatorId: (a: { _id: string }, b: { _id: string }) => a._id === b._id,
           },
-          self._options
+          this._options
         )
       );
     }

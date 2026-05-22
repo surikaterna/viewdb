@@ -38,7 +38,7 @@ class IndexedDBCollection extends EventEmitter {
   }
 
   _getKey(document: Record<string, any>): string {
-    return this._name + "_" + document["_id"];
+    return `${this._name}_${document["_id"]}`;
   }
 
   insert(documents: any, options?: any): any {
@@ -52,18 +52,18 @@ class IndexedDBCollection extends EventEmitter {
       documents = [documents];
     }
 
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
       const txn: IDBTransaction = self._db.transaction(["documents"], "readwrite");
       const docs: IDBObjectStore = txn.objectStore("documents");
 
-      txn.oncomplete = (txn as any).onsuccess = function () {
+      txn.oncomplete = (txn as any).onsuccess = () => {
         self.emit("change", documents);
-        process.nextTick(function () {
+        process.nextTick(() => {
           resolve(documents);
         });
       };
 
-      txn.onerror = function (event: Event) {
+      txn.onerror = (event: Event) => {
         reject(new Error(String(event)));
       };
       let currentIndex = 0;
@@ -76,12 +76,12 @@ class IndexedDBCollection extends EventEmitter {
         document.$collection = self._name;
         document.$collectionKey = self._getKey(document);
         const request: IDBRequest = (docs as any)[op](document);
-        request.onsuccess = function () {
+        request.onsuccess = () => {
           if (currentIndex < numberOfDocs) {
             addNext();
           }
         };
-        request.onerror = function (event: Event) {
+        request.onerror = (event: Event) => {
           reject(new Error(String(event)));
         };
       }
@@ -98,10 +98,10 @@ class IndexedDBCollection extends EventEmitter {
       const txn = this._db.transaction(["documents"], "readwrite");
       const docs = txn.objectStore("documents");
       const cursor = docs.index("$collection").openCursor(this._name);
-      cursor.onerror = function (event: Event) {
+      cursor.onerror = (event: Event) => {
         reject(new Error(String(event)));
       };
-      cursor.onsuccess = function (event: Event) {
+      cursor.onsuccess = (event: Event) => {
         const c = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
         if (c) {
           c.delete();
@@ -122,7 +122,7 @@ class IndexedDBCollection extends EventEmitter {
           resolve();
         };
 
-        txn.onerror = function (event: Event) {
+        txn.onerror = (event: Event) => {
           reject(new Error(String(event)));
         };
         const docs = txn.objectStore("documents");
@@ -141,10 +141,10 @@ class IndexedDBCollection extends EventEmitter {
       const docs = txn.objectStore("documents");
       const cursor = docs.index("$collection").openCursor(this._name);
       const result: any[] = [];
-      cursor.onerror = function (event: Event) {
+      cursor.onerror = (event: Event) => {
         reject(new Error(String(event)));
       };
-      cursor.onsuccess = function (event: Event) {
+      cursor.onsuccess = (event: Event) => {
         const c = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
         if (c) {
           result.push(c.value);
@@ -166,17 +166,17 @@ class IndexedDBCollection extends EventEmitter {
       const txn = this._db.transaction(["documents"], "readonly");
       const docs = txn.objectStore("documents");
       let key = qry["id"] || qry["_id"];
-      key = this._name + "_" + key;
+      key = `${this._name}_${key}`;
       const request = docs.get(key);
-      request.onsuccess = function (_event: Event) {
+      request.onsuccess = (_event: Event) => {
         const result: any[] = [];
         if (request.result !== undefined) {
           result.push(request.result);
         }
         resolve(result);
       };
-      request.onerror = function (_event: Event) {
-        reject(new Error("Unable to _getByKey " + key));
+      request.onerror = (_event: Event) => {
+        reject(new Error(`Unable to _getByKey ${key}`));
       };
     });
   }

@@ -30,15 +30,15 @@ describe("mongodb_persistence", () => {
     await _mongoClient.close();
   });
 
-  describe("Collection", function () {
+  describe("Collection", () => {
     it("#find with empty array should return 0 docs", () =>
       new Promise<void>((resolve) => {
         const store = new Store(getDb());
-        store.open().then(function () {
+        store.open().then(() => {
           store
             .collection(COLLECTION_NAME)
             .find({})
-            .toArray(function (_err, results) {
+            .toArray((_err, results) => {
               expect(results).toHaveLength(0);
               resolve();
             });
@@ -47,10 +47,10 @@ describe("mongodb_persistence", () => {
     it("#find with setReadPreference", () =>
       new Promise<void>((resolve) => {
         const store = new Store(getDb());
-        store.open().then(function () {
+        store.open().then(() => {
           const cursor = store.collection(COLLECTION_NAME).find({});
           cursor.setReadPreference(ReadPreference.PRIMARY);
-          cursor.toArray(function (_err, results) {
+          cursor.toArray((_err, results) => {
             expect(results).toHaveLength(0);
             resolve();
           });
@@ -59,9 +59,9 @@ describe("mongodb_persistence", () => {
     it("#insert two documents with same key should throw", () =>
       new Promise<void>((resolve, reject) => {
         const store = new Store(getDb());
-        store.open().then(function () {
-          store.collection(COLLECTION_NAME).insert({ _id: "echo" }, function () {
-            store.collection(COLLECTION_NAME).insert({ _id: "echo" }, function (err) {
+        store.open().then(() => {
+          store.collection(COLLECTION_NAME).insert({ _id: "echo" }, () => {
+            store.collection(COLLECTION_NAME).insert({ _id: "echo" }, (err) => {
               if (err) {
                 resolve();
               } else {
@@ -74,13 +74,13 @@ describe("mongodb_persistence", () => {
     it("#update documents already existing", () =>
       new Promise<void>((resolve) => {
         const store = new Store(getDb());
-        store.open().then(function () {
+        store.open().then(() => {
           store.collection(COLLECTION_NAME).insert({ _id: "existing" }, () => {
             store.collection(COLLECTION_NAME).save({ _id: "existing", version: 2 }, () => {
               store
                 .collection(COLLECTION_NAME)
                 .find({})
-                .toArray(function (_err, results) {
+                .toArray((_err, results) => {
                   expect(results).toHaveLength(1);
                   expect(results[0].version).toBe(2);
                   resolve();
@@ -92,7 +92,7 @@ describe("mongodb_persistence", () => {
     it("#update one document", () =>
       new Promise<void>((resolve) => {
         const store = new Store(getDb());
-        store.open().then(function () {
+        store.open().then(() => {
           store.collection(COLLECTION_NAME).insert({ _id: "existing" }, () => {
             store
               .collection(COLLECTION_NAME)
@@ -100,7 +100,7 @@ describe("mongodb_persistence", () => {
                 store
                   .collection(COLLECTION_NAME)
                   .find({})
-                  .toArray(function (_err, results) {
+                  .toArray((_err, results) => {
                     expect(results).toHaveLength(1);
                     expect(results[0].name).toBe("john");
                     resolve();
@@ -110,7 +110,7 @@ describe("mongodb_persistence", () => {
         });
       }));
 
-    it("#findAndModify upsert", async function () {
+    it("#findAndModify upsert", async () => {
       const store = new Store(getDb());
       const filter = { _id: "not-existing" };
       const sort = {};
@@ -134,7 +134,7 @@ describe("mongodb_persistence", () => {
       });
     });
 
-    it("#findAndModify modify", async function () {
+    it("#findAndModify modify", async () => {
       const store = new Store(getDb());
       const filter = { _id: "not-existing" };
       const sort = {};
@@ -167,7 +167,7 @@ describe("mongodb_persistence", () => {
     it("#update many documents", () =>
       new Promise<void>((resolve) => {
         const store = new Store(getDb());
-        store.open().then(function () {
+        store.open().then(() => {
           store.collection(COLLECTION_NAME).insert(
             [
               { _id: "existing1", name: "john" },
@@ -178,7 +178,7 @@ describe("mongodb_persistence", () => {
                 store
                   .collection(COLLECTION_NAME)
                   .find({})
-                  .toArray(function (_err, results) {
+                  .toArray((_err, results) => {
                     expect(results).toHaveLength(2);
                     expect(results[0]).toEqual({
                       _id: "existing1",
@@ -200,12 +200,12 @@ describe("mongodb_persistence", () => {
     it("#find {} should return single inserted document", () =>
       new Promise<void>((resolve) => {
         const store = new Store(getDb());
-        store.open().then(function () {
-          store.collection(COLLECTION_NAME).insert({ _id: "echo" }, function () {
+        store.open().then(() => {
+          store.collection(COLLECTION_NAME).insert({ _id: "echo" }, () => {
             store
               .collection(COLLECTION_NAME)
               .find({})
-              .toArray(function (_err, results) {
+              .toArray((_err, results) => {
                 expect(results).toHaveLength(1);
                 resolve();
               });
@@ -215,14 +215,14 @@ describe("mongodb_persistence", () => {
     it("#find {} should return multiple inserted documents", () =>
       new Promise<void>((resolve) => {
         const store = new Store(getDb());
-        store.open().then(function () {
+        store.open().then(() => {
           // store.collection(COLLECTION_NAME).insert([{ _id: 'echo' }, { _id: 'sierra' }]);
 
-          store.collection(COLLECTION_NAME).insert([{ _id: "echo" }, { _id: "sierra" }], function () {
+          store.collection(COLLECTION_NAME).insert([{ _id: "echo" }, { _id: "sierra" }], () => {
             store
               .collection(COLLECTION_NAME)
               .find({})
-              .toArray(function (_err, results) {
+              .toArray((_err, results) => {
                 expect(results).toHaveLength(2);
                 resolve();
               });
@@ -232,13 +232,13 @@ describe("mongodb_persistence", () => {
     it('#find {_id:"echo"} should return correct document', () =>
       new Promise<void>((resolve) => {
         const store = new Store(getDb());
-        store.open().then(function () {
-          store.collection(COLLECTION_NAME).insert({ _id: "echo" }, function () {
-            store.collection(COLLECTION_NAME).insert({ _id: "sierra" }, function () {
+        store.open().then(() => {
+          store.collection(COLLECTION_NAME).insert({ _id: "echo" }, () => {
+            store.collection(COLLECTION_NAME).insert({ _id: "sierra" }, () => {
               store
                 .collection(COLLECTION_NAME)
                 .find({ _id: "echo" })
-                .toArray(function (_err, results) {
+                .toArray((_err, results) => {
                   expect(results).toHaveLength(1);
                   expect(results[0]._id).toBe("echo");
                   resolve();
@@ -250,54 +250,50 @@ describe("mongodb_persistence", () => {
     it('#find with complex key {"name.first":"echo"} should return correct document', () =>
       new Promise<void>((resolve) => {
         const store = new Store(getDb());
-        store.open().then(function () {
-          store.collection(COLLECTION_NAME).insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }, function () {
-            store
-              .collection(COLLECTION_NAME)
-              .insert({ _id: "sierra", name: { first: "SIERRA", last: "TV" } }, function () {
-                store
-                  .collection(COLLECTION_NAME)
-                  .find({ "name.first": "ECHO" })
-                  .toArray(function (_err, results) {
-                    expect(results).toHaveLength(1);
-                    expect(results[0]._id).toBe("echo");
-                    resolve();
-                  });
-              });
+        store.open().then(() => {
+          store.collection(COLLECTION_NAME).insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }, () => {
+            store.collection(COLLECTION_NAME).insert({ _id: "sierra", name: { first: "SIERRA", last: "TV" } }, () => {
+              store
+                .collection(COLLECTION_NAME)
+                .find({ "name.first": "ECHO" })
+                .toArray((_err, results) => {
+                  expect(results).toHaveLength(1);
+                  expect(results[0]._id).toBe("echo");
+                  resolve();
+                });
+            });
           });
         });
       }));
     it("#find with project should return correct projection", () =>
       new Promise<void>((resolve) => {
         const store = new Store(getDb());
-        store.open().then(function () {
+        store.open().then(() => {
           store.collection(COLLECTION_NAME).insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }, () => {
-            store
-              .collection(COLLECTION_NAME)
-              .insert({ _id: "sierra", name: { first: "SIERRA", last: "TV" } }, function () {
-                store
-                  .collection(COLLECTION_NAME)
-                  .find({})
-                  .project({ _id: 1 })
-                  .toArray(function (_err, results) {
-                    expect(results[0].name).toBeUndefined();
-                    expect(results[0]._id).toBe("echo");
-                    resolve();
-                  });
-              });
+            store.collection(COLLECTION_NAME).insert({ _id: "sierra", name: { first: "SIERRA", last: "TV" } }, () => {
+              store
+                .collection(COLLECTION_NAME)
+                .find({})
+                .project({ _id: 1 })
+                .toArray((_err, results) => {
+                  expect(results[0].name).toBeUndefined();
+                  expect(results[0]._id).toBe("echo");
+                  resolve();
+                });
+            });
           });
         });
       }));
     it("#drop should remove all documents", () =>
       new Promise<void>((resolve) => {
         const store = new Store(getDb());
-        store.open().then(function () {
-          store.collection(COLLECTION_NAME).insert({ _id: "echo" }, function () {
-            store.collection(COLLECTION_NAME).drop(function () {
+        store.open().then(() => {
+          store.collection(COLLECTION_NAME).insert({ _id: "echo" }, () => {
+            store.collection(COLLECTION_NAME).drop(() => {
               store
                 .collection(COLLECTION_NAME)
                 .find({})
-                .toArray(function (_err, results) {
+                .toArray((_err, results) => {
                   expect(results).toHaveLength(0);
                   resolve();
                 });
@@ -320,26 +316,24 @@ describe("mongodb_persistence", () => {
     it("#remove should remove one document", () =>
       new Promise<void>((resolve) => {
         const store = new Store(getDb());
-        store.open().then(function () {
-          store.collection(COLLECTION_NAME).insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }, function () {
-            store
-              .collection(COLLECTION_NAME)
-              .insert({ _id: "sierra", name: { first: "SIERRA", last: "TV" } }, function () {
-                store.collection(COLLECTION_NAME).remove({ _id: "echo" }, null, function () {
-                  store
-                    .collection(COLLECTION_NAME)
-                    .find({ "name.first": "ECHO" })
-                    .toArray(function (_err, results) {
-                      expect(results).toHaveLength(0);
-                      resolve();
-                    });
-                });
+        store.open().then(() => {
+          store.collection(COLLECTION_NAME).insert({ _id: "echo", name: { first: "ECHO", last: "TV" } }, () => {
+            store.collection(COLLECTION_NAME).insert({ _id: "sierra", name: { first: "SIERRA", last: "TV" } }, () => {
+              store.collection(COLLECTION_NAME).remove({ _id: "echo" }, null, () => {
+                store
+                  .collection(COLLECTION_NAME)
+                  .find({ "name.first": "ECHO" })
+                  .toArray((_err, results) => {
+                    expect(results).toHaveLength(0);
+                    resolve();
+                  });
               });
+            });
           });
         });
       }));
-    const populate = function (collection, id, cb) {
-      collection.insert({ a: "a", id: id }, function () {
+    const populate = (collection, id, cb) => {
+      collection.insert({ a: "a", id: id }, () => {
         if (id === 9) {
           cb();
         } else {
@@ -351,12 +345,12 @@ describe("mongodb_persistence", () => {
       new Promise<void>((resolve) => {
         const store = new Store(getDb());
         const collection = store.collection(COLLECTION_NAME);
-        populate(collection, 0, function () {
+        populate(collection, 0, () => {
           collection
             .find({ a: "a" })
             .skip(8)
             .limit(10)
-            .toArray(function (_err, res) {
+            .toArray((_err, res) => {
               expect(res[1].id).toBe(9);
               expect(res).toHaveLength(2); // only 2 left after skipping 8/10
               resolve();
@@ -367,8 +361,8 @@ describe("mongodb_persistence", () => {
       new Promise<void>((resolve) => {
         const store = new Store(getDb());
         const collection = store.collection(COLLECTION_NAME);
-        populate(collection, 0, function () {
-          collection.find({}).count(function (_err, res) {
+        populate(collection, 0, () => {
+          collection.find({}).count((_err, res) => {
             expect(res).toBe(10);
             resolve();
           });
@@ -378,11 +372,11 @@ describe("mongodb_persistence", () => {
       new Promise<void>((resolve) => {
         const store = new Store(getDb());
         const collection = store.collection(COLLECTION_NAME);
-        populate(collection, 0, function () {
+        populate(collection, 0, () => {
           collection
             .find({})
             .skip(8)
-            .count(function (_err, res) {
+            .count((_err, res) => {
               expect(res).toBe(2);
               resolve();
             });

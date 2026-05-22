@@ -3,14 +3,14 @@ import assert from "assert";
 export default function (config) {
   const COLL = "test_shared";
 
-  describe("cursor", function () {
+  describe("cursor", () => {
     let store;
 
-    beforeEach(async function () {
+    beforeEach(async () => {
       store = await config.createStore();
     });
 
-    afterEach(async function () {
+    afterEach(async () => {
       await config.destroyStore(store);
     });
 
@@ -22,19 +22,19 @@ export default function (config) {
       await col.insert({ _id: "dingo" });
     }
 
-    it("sort ascending returns first element correctly", async function () {
+    it("sort ascending returns first element correctly", async () => {
       await insertFour();
       const results = await store.collection(COLL).find({}).sort({ _id: 1 }).toArray();
       assert.strictEqual(results[0]._id, "alpha");
     });
 
-    it("sort descending returns first element correctly", async function () {
+    it("sort descending returns first element correctly", async () => {
       await insertFour();
       const results = await store.collection(COLL).find({}).sort({ _id: -1 }).toArray();
       assert.strictEqual(results[0]._id, "dingo");
     });
 
-    it("skip and limit return correct subset", async function () {
+    it("skip and limit return correct subset", async () => {
       await insertFour();
       const results = await store.collection(COLL).find({}).sort({ _id: 1 }).skip(1).limit(2).toArray();
       assert.strictEqual(results.length, 2);

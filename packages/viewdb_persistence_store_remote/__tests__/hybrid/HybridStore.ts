@@ -1,7 +1,7 @@
 import { InMemoryStore, ViewDBCursor } from "viewdb";
 import HybridStore from "../../src/hybrid/HybridStore";
 
-describe("HybridStore", function () {
+describe("HybridStore", () => {
   it("should cache", async () => {
     const localStore = new InMemoryStore();
     const remoteStore = new InMemoryStore();
@@ -13,16 +13,16 @@ describe("HybridStore", function () {
       hcursor
         .collection("alfa")
         .find({})
-        .toArray(function (err, res) {
+        .toArray((err, res) => {
           if (err) {
             reject(err);
             return;
           }
           if (res.length > 0) {
-            setTimeout(function () {
+            setTimeout(() => {
               hcursor
                 .collection("alfa")
-                ._getCachedData({}, undefined, undefined, undefined, undefined, function (cacheErr, data) {
+                ._getCachedData({}, undefined, undefined, undefined, undefined, (cacheErr, data) => {
                   if (cacheErr) {
                     reject(cacheErr);
                     return;
@@ -52,49 +52,42 @@ describe("HybridStore", function () {
         .collection("alfa")
         .find({ id: "abc" })
         .project({ id: 1 })
-        .toArray(function (err, res) {
+        .toArray((err, res) => {
           if (err) {
             reject(err);
             return;
           }
           if (res.length > 0) {
-            setTimeout(function () {
+            setTimeout(() => {
               hcursor
                 .collection("alfa")
                 .find({ id: "abc" })
-                .toArray(function (err2, projectedRes) {
+                .toArray((err2, projectedRes) => {
                   if (err2) {
                     reject(err2);
                     return;
                   }
                   if (projectedRes.length > 0) {
-                    setTimeout(function () {
+                    setTimeout(() => {
                       hcursor
                         .collection("alfa")
-                        ._getCachedData(
-                          { id: "abc" },
-                          undefined,
-                          undefined,
-                          undefined,
-                          undefined,
-                          function (_err, data) {
-                            hcursor
-                              .collection("alfa")
-                              ._getCachedData(
-                                { id: "abc" },
-                                undefined,
-                                undefined,
-                                undefined,
-                                { id: 1 },
-                                function (_err2, projectedData) {
-                                  expect(data.length).toBe(1);
-                                  expect(projectedData.length).toBe(1);
-                                  expect(projectedData[0]._insertedAt).toBeLessThanOrEqual(data[0]._insertedAt);
-                                  resolve();
-                                }
-                              );
-                          }
-                        );
+                        ._getCachedData({ id: "abc" }, undefined, undefined, undefined, undefined, (_err, data) => {
+                          hcursor
+                            .collection("alfa")
+                            ._getCachedData(
+                              { id: "abc" },
+                              undefined,
+                              undefined,
+                              undefined,
+                              { id: 1 },
+                              (_err2, projectedData) => {
+                                expect(data.length).toBe(1);
+                                expect(projectedData.length).toBe(1);
+                                expect(projectedData[0]._insertedAt).toBeLessThanOrEqual(data[0]._insertedAt);
+                                resolve();
+                              }
+                            );
+                        });
                     });
                   }
                 });
@@ -115,16 +108,16 @@ describe("HybridStore", function () {
       hcursor
         .collection("alfa")
         .find({})
-        .toArray(function (err, res) {
+        .toArray((err, res) => {
           if (err) {
             reject(err);
             return;
           }
           if (res.length > 0) {
-            setTimeout(function () {
+            setTimeout(() => {
               hcursor
                 .collection("alfa")
-                ._getCachedData({}, undefined, undefined, undefined, undefined, function (cacheErr, data) {
+                ._getCachedData({}, undefined, undefined, undefined, undefined, (cacheErr, data) => {
                   if (cacheErr) {
                     reject(cacheErr);
                     return;
@@ -136,13 +129,13 @@ describe("HybridStore", function () {
         });
 
       let iterations = 0;
-      setTimeout(function () {
+      setTimeout(() => {
         hcursor._local._collections._cache._documents[0].resultSet = ["xyz"];
         hcursor._collections._cache._documents.resultSet = ["xyz"];
         hcursor
           .collection("alfa")
           .find({})
-          .toArray(function (err, res) {
+          .toArray((err, res) => {
             if (err) {
               reject(err);
               return;

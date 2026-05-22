@@ -179,9 +179,8 @@ class LokiJSCollection extends EventEmitter {
   // options.versionCheck - will not store to db if not a higher version (if version does not exist - will store)
   save(documents: any, options?: any) {
     if (isArray(documents)) {
-      const self = this;
       documents.forEach((doc: any) => {
-        self._updateSingle(doc, options);
+        this._updateSingle(doc, options);
       });
     } else {
       this._updateSingle(documents, options);

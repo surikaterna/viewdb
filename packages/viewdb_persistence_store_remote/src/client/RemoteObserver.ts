@@ -4,7 +4,7 @@ import { v4 as uuid } from "uuid";
 
 const LOG = Logger.getLogger("viewdb:remote:observe");
 
-const buildParams = function (defaults: any, query: any, collection: any): any {
+const buildParams = (defaults: any, query: any, collection: any): any => {
   let skip: any, limit: any, sort: any, project: any;
   if (query.query) {
     skip = query.skip;
@@ -34,8 +34,8 @@ class RemoteObserver {
 
   constructor(collection: any, options: any, query: any) {
     let remoteHandle: any = null;
-    const self = this;
-    self.handles = [];
+
+    this.handles = [];
     const events = {
       i: !_.isNil(options.init),
       a: !_.isNil(options.added),
@@ -45,8 +45,8 @@ class RemoteObserver {
     };
 
     const params = buildParams({ events: events }, query, collection);
-    const startObserver = function (): { stop: () => void } {
-      const handle = collection._client.subscribe(params, function (err: Error | null, result: any) {
+    const startObserver = (): { stop: () => void } => {
+      const handle = collection._client.subscribe(params, (err: Error | null, result: any) => {
         if (err) {
           handle.stop();
           startObserver();
@@ -55,12 +55,12 @@ class RemoteObserver {
         if (remoteHandle || result.handle) {
           remoteHandle = result.handle || remoteHandle;
 
-          if (self.handles.indexOf(params.id) > -1) {
+          if (this.handles.indexOf(params.id) > -1) {
             collection._client.request({ "observe.stop": { h: params.id } });
             handle.stop();
-            _.remove(self.handles, params.id);
+            _.remove(this.handles, params.id);
           } else {
-            _.forEach(result.changes, function (c: any) {
+            _.forEach(result.changes, (c: any) => {
               if (c.i) {
                 // init
                 options.init(c.i.r);
@@ -83,10 +83,10 @@ class RemoteObserver {
       });
 
       return {
-        stop: function () {
+        stop: () => {
           if (!remoteHandle) {
             LOG.warn("WARN unsubscribing before receiving subscription handle from server");
-            self.handles.push(params.id);
+            this.handles.push(params.id);
           } else {
             collection._client.request({ "observe.stop": { h: params.id } });
             handle.stop();

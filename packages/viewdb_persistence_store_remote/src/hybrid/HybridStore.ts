@@ -51,7 +51,6 @@ class HybridStore {
   }
 
   open(): Promise<HybridStore> {
-    const self = this;
     const storesToOpen: any[] = [];
     if (this._local.open) {
       storesToOpen.push(this._local.open());
@@ -60,9 +59,7 @@ class HybridStore {
       storesToOpen.push(this._remote.open());
     }
 
-    return Promise.all(storesToOpen).then(function () {
-      return self;
-    });
+    return Promise.all(storesToOpen).then(() => this);
   }
 
   collection(name: string): any {
@@ -90,7 +87,6 @@ class HybridStore {
   }
 
   _cleanCachedData(): void {
-    const self = this;
     const minimumChangeDateTime = new Date();
     minimumChangeDateTime.setMinutes(minimumChangeDateTime.getMinutes() - this._options.cacheLifeTime);
     const maxTimeEpoch = minimumChangeDateTime.getTime();
@@ -98,12 +94,12 @@ class HybridStore {
     // Clean cached query first to prevent query not pointing at anything
     this._cleanCollection(this._collections[this._options.cacheCollectionName], maxTimeEpoch, "createDateTime");
 
-    _.forEach(this._collections, function (collection: any, collectionName: string) {
-      if (collectionName === self._options.cacheCollectionName) {
+    _.forEach(this._collections, (collection: any, collectionName: string) => {
+      if (collectionName === this._options.cacheCollectionName) {
         return;
       }
 
-      self._cleanCollection(collection._local || collection, maxTimeEpoch);
+      this._cleanCollection(collection._local || collection, maxTimeEpoch);
     });
   }
 

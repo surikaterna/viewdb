@@ -18,7 +18,7 @@ class LokiJSStore {
   adapter: any;
   autosaveHandle: any;
   constructor(name?: any, options?: any, registerCleanUpHandler?: any) {
-    this._name = name ? "vdb_" + name : "vdb";
+    this._name = name ? `vdb_${name}` : "vdb";
     this._lokiOptions = {
       autosave: false,
     };

@@ -29,7 +29,7 @@ class ViewDBCursor implements Cursor {
 
   forEach(callback: (result: VDocument[]) => void): void {
     this._getDocuments(this._query).then((result) => {
-      _.forEach(result, function () {
+      _.forEach(result, () => {
         callback(result!);
       });
     });

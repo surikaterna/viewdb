@@ -12,7 +12,7 @@ function _projectLayer(document: Record<string, any>, projectObject: Record<stri
   let projectedLayer: any = {};
   const deletionKeys: string[] = [];
 
-  _.forEach(projectObject, function (value: any, key: string) {
+  _.forEach(projectObject, (value: any, key: string) => {
     if (_excludeKey(value)) {
       deletionKeys.push(key);
     }
@@ -22,11 +22,9 @@ function _projectLayer(document: Record<string, any>, projectObject: Record<stri
     projectedLayer = _.omit(document, deletionKeys);
   }
 
-  _.forEach(projectObject, function (value: any, key: string) {
+  _.forEach(projectObject, (value: any, key: string) => {
     if (_.isArray(document[key])) {
-      projectedLayer[key] = document[key].map(function (arrayValue: any) {
-        return _projectLayer(arrayValue, projectObject[key]);
-      });
+      projectedLayer[key] = document[key].map((arrayValue: any) => _projectLayer(arrayValue, projectObject[key]));
     } else if (_.isObject(value)) {
       projectedLayer[key] = _projectLayer(document[key], value);
     } else if (_includeKey(value)) {
@@ -43,21 +41,21 @@ if (typeof setImmediate === "function") {
 } else if (typeof process === "object" && process && process.nextTick) {
   nextTick = process.nextTick;
 } else {
-  nextTick = function (cb: () => void) {
+  nextTick = (cb: () => void) => {
     setTimeout(cb, 0);
   };
 }
 
-function nodeify<T>(promise: Promise<T>, cb?: Function): Promise<T | void> {
+function nodeify<T>(promise: Promise<T>, cb?: Function): Promise<T> | Promise<void> {
   if (typeof cb !== "function") return promise;
   return promise
-    .then(function (res: T) {
-      nextTick(function () {
+    .then((res: T) => {
+      nextTick(() => {
         cb(null, res);
       });
     })
-    .catch(function (err: Error) {
-      nextTick(function () {
+    .catch((err: Error) => {
+      nextTick(() => {
         cb(err);
       });
     });

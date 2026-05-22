@@ -15,21 +15,21 @@ class ViewDBSocketServer {
     const _observers: Record<string, { i: number; handle: { stop: () => void } }> = {};
     let _queryDecorator: any;
     if (!queryDecorator) {
-      _queryDecorator = function (_col: any, q: any, cb: any) {
+      _queryDecorator = (_col: any, q: any, cb: any) => {
         cb(q);
       };
     } else {
       _queryDecorator = queryDecorator;
     }
-    socket.on("disconnect", function () {
-      _.forOwn(_observers, function (observer: any, handle: string) {
+    socket.on("disconnect", () => {
+      _.forOwn(_observers, (observer: any, handle: string) => {
         observer.handle.stop();
         delete _observers[handle];
       });
     });
-    socket.on("/vdb/request", function (request: any) {
+    socket.on("/vdb/request", (request: any) => {
       if (request.p.find) {
-        _queryDecorator(request.p.collection, request.p.find, function (decoratedQuery: any) {
+        _queryDecorator(request.p.collection, request.p.find, (decoratedQuery: any) => {
           const cursor = viewdb.collection(request.p.collection).find(decoratedQuery);
           if (readPreference && cursor.setReadPreference) {
             cursor.setReadPreference(readPreference);
@@ -65,7 +65,7 @@ class ViewDBSocketServer {
             });
         });
       } else if (request.p.count) {
-        _queryDecorator(request.p.collection, request.p.count, function (decoratedQuery: any) {
+        _queryDecorator(request.p.collection, request.p.count, (decoratedQuery: any) => {
           const cursor = viewdb.collection(request.p.collection).find(decoratedQuery);
           if (readPreference && cursor.setReadPreference) {
             cursor.setReadPreference(readPreference);
@@ -95,7 +95,7 @@ class ViewDBSocketServer {
         });
       } else if (request.p.observe) {
         const observeId = request.p.id;
-        _queryDecorator(request.p.collection, request.p.observe, function (decoratedQuery: any) {
+        _queryDecorator(request.p.collection, request.p.observe, (decoratedQuery: any) => {
           const cursor = viewdb.collection(request.p.collection).find(decoratedQuery);
           if (readPreference && cursor.setReadPreference) {
             cursor.setReadPreference(readPreference);
@@ -115,19 +115,19 @@ class ViewDBSocketServer {
             cursor.project(request.p.project);
           }
           const observeOptions: any = {
-            init: function (result: any) {
+            init: (result: any) => {
               sendChange(socket, { i: { r: result } }, request);
             },
-            added: function (e: any, index: number) {
+            added: (e: any, index: number) => {
               sendChange(socket, { a: { e: e, i: index } }, request);
             },
-            removed: function (e: any, index: number) {
+            removed: (e: any, index: number) => {
               sendChange(socket, { r: { e: e, i: index } }, request);
             },
-            changed: function (asis: any, tobe: any, index: number) {
+            changed: (asis: any, tobe: any, index: number) => {
               sendChange(socket, { c: { o: asis, n: tobe, i: index } }, request);
             },
-            moved: function (e: any, oldIndex: number, newIndex: number) {
+            moved: (e: any, oldIndex: number, newIndex: number) => {
               sendChange(socket, { m: { e: e, o: oldIndex, n: newIndex } }, request);
             },
             oplog: true,
@@ -177,13 +177,13 @@ class ViewDBSocketServer {
             _observers[handle].handle.stop();
             delete _observers[handle];
           } else {
-            console.error("Observer not registered on this server: " + handle);
+            console.error(`Observer not registered on this server: ${handle}`);
           }
         } else {
-          console.log("Observe stopped failed: " + request.p["observe.stop"].h);
+          console.log(`Observe stopped failed: ${request.p["observe.stop"].h}`);
         }
       } else {
-        throw new Error("Unknown request from client: " + _.keys(request) + " || " + JSON.stringify(request.p));
+        throw new Error(`Unknown request from client: ${_.keys(request)} || ${JSON.stringify(request.p)}`);
       }
     });
   }

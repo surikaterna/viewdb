@@ -72,21 +72,19 @@ class HybridCollection {
     project: Record<string, 0 | 1> | undefined,
     documents: any[]
   ): void {
-    const self = this;
-
     if (!this._options.cacheQueries) {
       return;
     }
 
     const cachedDateTime = new Date().getTime();
     const documentIds: any[] = [];
-    _.forEach(documents, function (document: any) {
+    _.forEach(documents, (document: any) => {
       documentIds.push(document._id);
 
       const isProjected = !_.isEmpty(project);
-      let collection = self._local;
+      let collection = this._local;
       if (isProjected) {
-        collection = self._projectedDocumentCollection;
+        collection = this._projectedDocumentCollection;
       }
 
       collection.save(Object.assign({}, document, { _insertedAt: cachedDateTime }), {
@@ -95,7 +93,7 @@ class HybridCollection {
       });
     });
 
-    const queryHash = cacheUtils.generateQueryHash(query, self._name, skip, limit, sort, project);
+    const queryHash = cacheUtils.generateQueryHash(query, this._name, skip, limit, sort, project);
     this._cacheCollection.save(
       { _id: queryHash, createDateTime: cachedDateTime, resultSet: documentIds },
       { skipVersioning: true, skipTimestamp: true }
@@ -110,17 +108,16 @@ class HybridCollection {
     project: Record<string, 0 | 1> | undefined,
     callback: any
   ): void {
-    const self = this;
-    this._getCachedIds(query, skip, limit, sort, function (ids: any) {
+    this._getCachedIds(query, skip, limit, sort, (ids: any) => {
       if (!ids) {
         callback(undefined);
         return;
       }
 
-      let collection = self._local;
+      let collection = this._local;
       const isProjected = !_.isEmpty(project);
       if (isProjected) {
-        collection = self._projectedDocumentCollection;
+        collection = this._projectedDocumentCollection;
       }
 
       collection

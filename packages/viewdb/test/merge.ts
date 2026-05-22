@@ -8,7 +8,7 @@ describe("Merger", () => {
       const l2: any[] = [{ a: 1 }, "b"];
 
       const res = merge(l1, l2, {
-        removed: function (e) {
+        removed: (e) => {
           expect(e).toBe("d");
           resolve();
         },
@@ -25,7 +25,7 @@ describe("Merger", () => {
       const l2: any[] = [{ a: 1 }, "b"];
       const removed: any[] = [];
       const res = merge(l1, l2, {
-        removed: function (e) {
+        removed: (e) => {
           removed.push(e);
         },
         comparatorId: _.isEqual,
@@ -44,7 +44,7 @@ describe("Merger", () => {
       const l2: any[] = [{ a: 1 }, "b"];
       const removed: any[] = [];
       const res = merge(l1, l2, {
-        removed: function (e) {
+        removed: (e) => {
           removed.push(e);
         },
         comparatorId: _.isEqual,
@@ -63,11 +63,11 @@ describe("Merger", () => {
       const l2: any[] = [{ a: 1 }, "b", "c"];
 
       const res = merge(l1, l2, {
-        added: function (e) {
+        added: (e) => {
           expect(e).toBe("c");
           resolve();
         },
-        removed: function () {
+        removed: () => {
           reject(new Error("should not be called"));
         },
       });
@@ -79,11 +79,11 @@ describe("Merger", () => {
       const l2: any[] = [{ a: 1 }, "b", { c: 1 }];
 
       const res = merge(l1, l2, {
-        added: function (e) {
+        added: (e) => {
           expect(_.isEqual(e, { c: 1 })).toBe(true);
           resolve();
         },
-        removed: function () {
+        removed: () => {
           reject(new Error("should not be called"));
         },
       });
@@ -95,10 +95,10 @@ describe("Merger", () => {
       const l2: any[] = [{ a: 1 }, { c: 1 }, "b"];
       const moved: any[] = [];
       const res = merge(l1, l2, {
-        added: function () {
+        added: () => {
           reject(new Error("should not be called"));
         },
-        removed: function () {
+        removed: () => {
           reject(new Error("should not be called"));
         },
         moved: function () {
@@ -116,19 +116,17 @@ describe("Merger", () => {
       const l1 = [{ _id: 1, a: "Hello" }];
       const l2 = [{ _id: 1, a: "Hej" }];
       const res = merge(l1, l2, {
-        added: function () {
+        added: () => {
           reject(new Error("should not be called"));
         },
-        removed: function () {
+        removed: () => {
           reject(new Error("should not be called"));
         },
-        moved: function () {
+        moved: () => {
           reject(new Error("should not be called"));
         },
-        changed: function () {},
-        comparatorId: function (a, b) {
-          return a._id === b._id;
-        },
+        changed: () => {},
+        comparatorId: (a, b) => a._id === b._id,
       });
       expect(_.isEqual(l2, res)).toBe(true);
       resolve();
@@ -162,9 +160,7 @@ describe("Merger", () => {
         l2,
         _.defaults(
           {
-            comparatorId: function (a, b) {
-              return a._id === b._id;
-            },
+            comparatorId: (a, b) => a._id === b._id,
           },
           {}
         )
@@ -193,9 +189,7 @@ describe("Merger", () => {
         l2,
         _.defaults(
           {
-            comparatorId: function (a, b) {
-              return a._id === b._id;
-            },
+            comparatorId: (a, b) => a._id === b._id,
           },
           {}
         )

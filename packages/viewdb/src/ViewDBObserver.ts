@@ -20,33 +20,32 @@ class ViewDBObserver implements Observer {
     this._cache = [];
     this._refreshPending = false;
 
-    const self = this;
     const enableBatching = options.enableBatching === true;
 
-    const listener = function (changedDocs?: VDocument[]) {
-      if (self._cache !== null && self.isIrrelevant(changedDocs)) {
+    const listener = (changedDocs?: VDocument[]) => {
+      if (this._cache !== null && this.isIrrelevant(changedDocs)) {
         return;
       }
 
       if (enableBatching) {
-        if (!self._refreshPending) {
-          self._refreshPending = true;
+        if (!this._refreshPending) {
+          this._refreshPending = true;
           queueMicrotask(() => {
-            self._refreshPending = false;
-            if (self._cache !== null) {
-              self.refresh();
+            this._refreshPending = false;
+            if (this._cache !== null) {
+              this.refresh();
             }
           });
         }
       } else {
-        self.refresh();
+        this.refresh();
       }
     };
     collection.on("change", listener);
     this.refresh(true);
 
-    this.stop = function () {
-      self._cache = null;
+    this.stop = () => {
+      this._cache = null;
       collection.removeListener("change", listener);
     };
   }
@@ -82,26 +81,21 @@ class ViewDBObserver implements Observer {
   }
 
   refresh(initial?: boolean): void {
-    const self = this;
     this._collection._getDocuments(this._query).then((result) => {
-      if (initial && self._options.init) {
-        self._cache = result;
-        self._options.init(result);
+      if (initial && this._options.init) {
+        this._cache = result;
+        this._options.init(result);
       } else {
-        const old = self._cache;
-        self._cache = merge(
+        const old = this._cache;
+        this._cache = merge(
           old,
           result,
           _.defaults(
             {
-              comparatorId: function (a: VDocument, b: VDocument) {
-                return _.get(a, "_id") === _.get(b, "_id");
-              },
-              keyFn: function (doc: VDocument) {
-                return String(_.get(doc, "_id"));
-              },
+              comparatorId: (a: VDocument, b: VDocument) => _.get(a, "_id") === _.get(b, "_id"),
+              keyFn: (doc: VDocument) => String(_.get(doc, "_id")),
             },
-            self._options
+            this._options
           )
         );
       }

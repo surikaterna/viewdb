@@ -12,21 +12,17 @@
       "recommended": true,
       "correctness": {
         "noConstructorReturn": "off",
-        "noUnusedVariables": "off",
-        "noUnusedImports": "off"
+        "noUnusedVariables": "off"
       },
       "suspicious": {
         "noShadowRestrictedNames": "off",
         "noPrototypeBuiltins": "off",
-        "noConfusingVoidType": "off",
         "noImplicitAnyLet": "off",
         "noExplicitAny": "off"
       },
       "complexity": {
         "noUselessConstructor": "off",
         "useOptionalChain": "off",
-        "noUselessThisAlias": "off",
-        "useArrowFunction": "off",
         "noUselessTernary": "off",
         "noUselessRename": "off",
         "useLiteralKeys": "off",
@@ -38,7 +34,6 @@
         "useNodejsImportProtocol": "off",
         "noNonNullAssertion": "off",
         "useImportType": "off",
-        "useTemplate": "off",
         "useConst": "off"
       }
     }

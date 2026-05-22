@@ -1,7 +1,7 @@
 import { ViewDB as ViewDB } from "viewdb";
 import HybridStore from "../../src/hybrid/HybridStore";
 
-describe("Observe", function () {
+describe("Observe", () => {
   let local = null;
   let remote = null;
   let hybrid = null;
@@ -12,7 +12,7 @@ describe("Observe", function () {
         local = new ViewDB();
         remote = new ViewDB();
         hybrid = new ViewDB(new (HybridStore as any)(local, remote, { throttleObserveRefresh: 0 }));
-        hybrid.open().then(function () {
+        hybrid.open().then(() => {
           resolve();
         });
       })
@@ -22,7 +22,7 @@ describe("Observe", function () {
     new Promise<void>((resolve) => {
       const cursor = hybrid.collection("dollhouse").find({});
       const handle = cursor.observe({
-        added: function (x) {
+        added: (x) => {
           expect(x._id).toBe("echo");
           handle.stop();
           resolve();
@@ -35,7 +35,7 @@ describe("Observe", function () {
       remote.collection("dollhouse").insert({ _id: "echo" });
       const cursor = hybrid.collection("dollhouse").find({ _id: "echo2" });
       const handle = cursor.observe({
-        added: function (x) {
+        added: (x) => {
           expect(x._id).toBe("echo2");
           handle.stop();
           resolve();
@@ -49,12 +49,12 @@ describe("Observe", function () {
       const cursor = hybrid.collection("dollhouse").find({ _id: "echo2" });
       let called = 0;
       const handle = cursor.observe({
-        added: function () {
+        added: () => {
           if (++called === 2) {
             resolve();
           }
         },
-        changed: function () {
+        changed: () => {
           if (++called === 2) {
             handle.stop();
             resolve();
@@ -67,14 +67,14 @@ describe("Observe", function () {
   it("#observe with query and update", () =>
     new Promise<void>((resolve, reject) => {
       const store = new ViewDB();
-      store.open().then(function () {
+      store.open().then(() => {
         const cursor = store.collection("dollhouse").find({ _id: "echo" });
         const handle = cursor.observe({
-          added: function (x) {
+          added: (x) => {
             expect(x.age).toBe(10);
             expect(x._id).toBe("echo");
           },
-          changed: function (o, n) {
+          changed: (o, n) => {
             expect(o.age).toBe(10);
             expect(n.age).toBe(100);
             handle.stop();
@@ -85,9 +85,7 @@ describe("Observe", function () {
         store
           .collection("dollhouse")
           .insert({ _id: "echo", age: 10 })
-          .then(function () {
-            return store.collection("dollhouse").save({ _id: "echo", age: 100 });
-          })
+          .then(() => store.collection("dollhouse").save({ _id: "echo", age: 100 }))
           .catch(reject);
       });
     }));
@@ -95,12 +93,12 @@ describe("Observe", function () {
     new Promise<void>((resolve, reject) => {
       const cursor = hybrid.collection("dollhouse").find({ _id: "echo2" });
       const handle = cursor.observe({
-        init: function (r) {
+        init: (r) => {
           expect(r.length).toBe(0);
           handle.stop();
           resolve();
         },
-        added: function (x) {
+        added: (x) => {
           console.log(x);
           reject(new Error("uh oh"));
         },
@@ -115,19 +113,17 @@ describe("Observe", function () {
           queryMaxTime: 2,
         })
       );
-      hybrid.open().then(function () {
+      hybrid.open().then(() => {
         const cursor = hybrid.collection("dollhouse").find({});
         cursor.observe({
-          added: function () {
-            setTimeout(function () {
-              hybrid
-                .collection("dollhouse")
-                ._getCachedData({}, 0, 0, undefined, undefined, function (_err, cachedDocuments) {
-                  expect(cachedDocuments.length).toBe(1);
-                  expect(cachedDocuments[0]._id).toBe("alfa");
-                  expect(cachedDocuments[0].age).toBe(100);
-                  resolve();
-                });
+          added: () => {
+            setTimeout(() => {
+              hybrid.collection("dollhouse")._getCachedData({}, 0, 0, undefined, undefined, (_err, cachedDocuments) => {
+                expect(cachedDocuments.length).toBe(1);
+                expect(cachedDocuments[0]._id).toBe("alfa");
+                expect(cachedDocuments[0].age).toBe(100);
+                resolve();
+              });
             });
           },
         });

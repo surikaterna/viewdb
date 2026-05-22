@@ -1,6 +1,6 @@
 import { projectDocument } from "../src/utils";
 
-describe("Project document", function () {
+describe("Project document", () => {
   it("#Should pick property", () =>
     new Promise<void>((resolve) => {
       const result = projectDocument({ alfa: "abc" }, { alfa: 1 });

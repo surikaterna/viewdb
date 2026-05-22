@@ -87,7 +87,7 @@ function merge<T>(asis: T[] | null, tobe: T[], options?: MergeOptions<T>): T[] {
   const list = _.slice(asis as T[]);
 
   // check removed
-  _.forEach(asis, function (e: T) {
+  _.forEach(asis, (e: T) => {
     const found = contains(tobe, e, comparatorId);
     if (found === undefined) {
       const index = list.indexOf(e);
@@ -99,7 +99,7 @@ function merge<T>(asis: T[] | null, tobe: T[], options?: MergeOptions<T>): T[] {
   });
 
   let indexInNew = -1;
-  _.forEach(tobe, function (e: T) {
+  _.forEach(tobe, (e: T) => {
     indexInNew++;
     const found = contains(list, e, comparatorId);
     // added

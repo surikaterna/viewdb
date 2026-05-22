@@ -67,7 +67,7 @@ class RemoteCollection extends EventEmitter {
   _getDocuments(query: any): Promise<any> {
     const params = this._buildParams(query);
     return new Promise((resolve, reject) => {
-      this._client.request(params, function (err: Error | null, res: any) {
+      this._client.request(params, (err: Error | null, res: any) => {
         if (err) {
           reject(err);
         } else {
@@ -102,7 +102,7 @@ class RemoteCollection extends EventEmitter {
       }
     }
 
-    this._client.request(params, function (err: Error | null, result: any) {
+    this._client.request(params, (err: Error | null, result: any) => {
       callback(err, result);
     });
   }

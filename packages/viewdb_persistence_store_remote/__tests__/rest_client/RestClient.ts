@@ -7,8 +7,8 @@ const testOptions = {
   pollInterval: 15,
 };
 
-describe("RestClient", function () {
-  afterEach(function () {
+describe("RestClient", () => {
+  afterEach(() => {
     nock.cleanAll();
   });
   it("#request should work", () =>
@@ -16,7 +16,7 @@ describe("RestClient", function () {
       const restClient = new Client("http://www.example.com/", {}, testOptions);
       nock("http://www.example.com").get("/party?q=%7B%22name%22%3A%22Firstname%22%7D").reply(200, mockResponse);
 
-      restClient.request({ find: { name: "Firstname" }, collection: "party" }, function (_err, result) {
+      restClient.request({ find: { name: "Firstname" }, collection: "party" }, (_err, result) => {
         expect(result).toEqual(mockResponse);
         resolve();
       });
@@ -27,7 +27,7 @@ describe("RestClient", function () {
       const restClient = new Client("http://www.example.com/", {}, testOptions);
       nock("http://www.example.com")
         .get("/party?q=%7B%22name%22%3A%22Firstname%22%7D&skip=50&limit=77")
-        .reply(function () {
+        .reply(() => {
           resolve();
           return [201, mockResponse, {}];
         });
@@ -37,7 +37,7 @@ describe("RestClient", function () {
         .find({ name: "Firstname" })
         .skip(50)
         .limit(77)
-        .toArray(function () {});
+        .toArray(() => {});
     }));
 
   it("#observe should work", () =>
@@ -45,16 +45,16 @@ describe("RestClient", function () {
       const restClient = new Client("http://www.example.com/", {}, testOptions);
       const handle = restClient.subscribe(
         { observe: { name: "a" }, collection: "shipment", events: {}, skip: 1, limit: 100 },
-        function () {}
+        () => {}
       );
-      const realDone = _.after(2, function () {
+      const realDone = _.after(2, () => {
         handle.stop();
         resolve();
       });
       nock("http://www.example.com")
         .persist() // keep nock alive after first call
         .get("/shipment?q=%7B%22name%22%3A%22a%22%7D&skip=1&limit=100")
-        .reply(function () {
+        .reply(() => {
           realDone();
           return [201, mockResponse, {}];
         });
@@ -70,19 +70,16 @@ describe("RestClient", function () {
       nock("http://www.example.com")
         .persist() // keep nock alive after first call
         .get("/parcel?q=%7B%22name%22%3A%22a%22%7D")
-        .reply(function () {
+        .reply(() => {
           hitCount++;
           stop();
           return [201, mockResponse, {}];
         });
 
-      const observer = restClient.subscribe(
-        { observe: { name: "a" }, collection: "parcel", events: {} },
-        function () {}
-      );
+      const observer = restClient.subscribe({ observe: { name: "a" }, collection: "parcel", events: {} }, () => {});
       const stop = _.after(1, observer.stop);
 
-      setTimeout(function () {
+      setTimeout(() => {
         expect(hitCount).toBe(1);
         resolve();
       }, 15);
@@ -98,7 +95,7 @@ describe("RestClient", function () {
       nock("http://www.example.com").get("/party?q=%7B%22name%22%3A%22a%22%7D").reply(201, {});
 
       let hits = 0;
-      const verify = function (res) {
+      const verify = (res) => {
         ++hits;
         if (hits === 1) {
           expect(res.changes[0].a.e.name).toBe("firstName");
@@ -111,13 +108,10 @@ describe("RestClient", function () {
         }
       };
 
-      const handle = restClient.subscribe(
-        { observe: { name: "a" }, collection: "party", events: {} },
-        function (_err, res) {
-          if (res) {
-            verify(res);
-          }
+      const handle = restClient.subscribe({ observe: { name: "a" }, collection: "party", events: {} }, (_err, res) => {
+        if (res) {
+          verify(res);
         }
-      );
+      });
     }));
 });

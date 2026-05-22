@@ -35,7 +35,7 @@ class MongoDBStore {
         const dbName = _.get(this._mongodb, "databaseName");
         let namespaceFilter;
         if (dbName) {
-          namespaceFilter = dbName + "." + collectionName;
+          namespaceFilter = `${dbName}.${collectionName}`;
         }
         this._oplogListeners[collectionName] = new this._oplogListener(this._mongodb, namespaceFilter, collectionName);
       } else if (this._oplogEnabled) {

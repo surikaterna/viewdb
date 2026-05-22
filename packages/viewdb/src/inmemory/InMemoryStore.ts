@@ -1,4 +1,4 @@
-import { Collection, Store } from "../types";
+import { Store } from "../types";
 import InMemoryCollection from "./InMemoryCollection";
 
 class InMemoryStore implements Store {

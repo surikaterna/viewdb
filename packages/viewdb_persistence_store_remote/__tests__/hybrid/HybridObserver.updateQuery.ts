@@ -3,7 +3,7 @@ import { ViewDB as ViewDB } from "viewdb";
 import { SocketClient, Client as ViewDBRemoteClient } from "../../";
 import HybridStore from "../../src/hybrid/HybridStore";
 
-describe("Observe-Update", function () {
+describe("Observe-Update", () => {
   let local = null;
   let remote = null;
   let hybrid = null;
@@ -13,12 +13,12 @@ describe("Observe-Update", function () {
       new Promise<void>((resolve) => {
         local = new ViewDB();
         const socketIoMock = {
-          emit: function () {},
-          on: function () {},
+          emit: () => {},
+          on: () => {},
         };
         remote = new ViewDBRemoteClient(new SocketClient(socketIoMock));
         hybrid = new ViewDB(new (HybridStore as any)(local, remote, { throttleObserveRefresh: 0 }));
-        hybrid.open().then(function () {
+        hybrid.open().then(() => {
           resolve();
         });
       })
@@ -31,7 +31,7 @@ describe("Observe-Update", function () {
       const cursor = hybrid.collection("dollhouse").find({ _id: id });
 
       const handle = cursor.observe({
-        added: function (x) {
+        added: (x) => {
           expect(x._id).toBe(id);
           if (x._id === "3") {
             handle.stop();
@@ -52,7 +52,7 @@ describe("Observe-Update", function () {
       const cursor = hybrid.collection("dollhouse").find({ _id: { $in: ["1", "2"] } });
 
       const handle = cursor.observe({
-        added: function (x) {
+        added: (x) => {
           if (x._id === "3") {
             handle.stop();
             realDone();
@@ -61,7 +61,7 @@ describe("Observe-Update", function () {
             local.collection("dollhouse").insert({ _id: "3" });
           }
         },
-        removed: function (x) {
+        removed: (x) => {
           expect(x._id).toBe("1");
           realDone();
         },

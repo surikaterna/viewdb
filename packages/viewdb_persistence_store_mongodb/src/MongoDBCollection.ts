@@ -43,11 +43,11 @@ class MongoDBCollection extends EventEmitter {
     return new Promise((resolve, reject) => {
       this._collection
         .findOneAndUpdate(query, update, options)
-        .then(function (res: any) {
+        .then((res: any) => {
           resolve(res);
           callback(null, res);
         })
-        .catch(function (err: Error) {
+        .catch((err: Error) => {
           reject(err);
           callback(err);
         });
@@ -55,15 +55,14 @@ class MongoDBCollection extends EventEmitter {
   }
 
   updateMany(query: any, update: any, options?: any, cb?: (err: Error | null, result?: any) => void): any {
-    const self = this;
     if (isFunction(options)) {
       cb = options;
       options = undefined;
     }
     const promise = this._collection.updateMany(query, update, options);
     return nodeify(
-      promise.then(function (res: any) {
-        self.emit("change", { updateMany: update });
+      promise.then((res: any) => {
+        this.emit("change", { updateMany: update });
         return res;
       }),
       cb
@@ -71,15 +70,14 @@ class MongoDBCollection extends EventEmitter {
   }
 
   updateOne(query: any, update: any, options?: any, cb?: (err: Error | null, result?: any) => void): any {
-    const self = this;
     if (isFunction(options)) {
       cb = options;
       options = undefined;
     }
     const promise = this._collection.updateOne(query, update, options);
     return nodeify(
-      promise.then(function (res: any) {
-        self.emit("change", { updateOne: update });
+      promise.then((res: any) => {
+        this.emit("change", { updateOne: update });
         return res;
       }),
       cb
@@ -88,15 +86,15 @@ class MongoDBCollection extends EventEmitter {
 
   remove(query: any, options?: any, cb?: (err: Error | null, result?: any) => void): any {
     console.warn("Deprecated: use deleteMany or deleteOne instead");
-    const self = this;
+
     if (isFunction(options)) {
       cb = options;
       options = undefined;
     }
     const promise = this._collection.deleteMany(query, options);
     return nodeify(
-      promise.then(function (res: any) {
-        self.emit("change", { remove: query });
+      promise.then((res: any) => {
+        this.emit("change", { remove: query });
         return res;
       }),
       cb
@@ -104,30 +102,27 @@ class MongoDBCollection extends EventEmitter {
   }
 
   deleteMany(query: any, options?: any): any {
-    const self = this;
-    return this._collection.deleteMany(query, options).then(function (res: any) {
-      self.emit("change", { remove: query });
+    return this._collection.deleteMany(query, options).then((res: any) => {
+      this.emit("change", { remove: query });
       return res;
     });
   }
 
   deleteOne(query: any, options?: any): any {
-    const self = this;
-    return this._collection.deleteOne(query, options).then(function (res: any) {
-      self.emit("change", { remove: query });
+    return this._collection.deleteOne(query, options).then((res: any) => {
+      this.emit("change", { remove: query });
       return res;
     });
   }
 
   insert(docs: any, cb?: (err: Error | null, docs?: any) => void): any {
-    const self = this;
-    const onFulfilled = function () {
-      self.emit("change", { insert: docs });
+    const onFulfilled = () => {
+      this.emit("change", { insert: docs });
       if (isFunction(cb)) {
         cb(null, docs);
       }
     };
-    const onRejected = function (err: Error) {
+    const onRejected = (err: Error) => {
       if (isFunction(cb)) {
         cb(err);
       }
@@ -142,12 +137,11 @@ class MongoDBCollection extends EventEmitter {
   }
 
   save(docs: any, cb?: (err: Error | null, docs?: any) => void): any {
-    const self = this;
     if (!isArray(docs)) {
       docs = [docs];
     }
     const operations: any[] = [];
-    forEach(docs, function (d: any) {
+    forEach(docs, (d: any) => {
       if (!d._id) {
         operations.push({ insertOne: { document: d } });
       } else {
@@ -156,13 +150,13 @@ class MongoDBCollection extends EventEmitter {
     });
     return this._collection
       .bulkWrite(operations)
-      .then(function () {
-        self.emit("change", { save: docs });
+      .then(() => {
+        this.emit("change", { save: docs });
         if (isFunction(cb)) {
           cb(null, docs);
         }
       })
-      .catch(function (err: Error) {
+      .catch((err: Error) => {
         if (isFunction(cb)) {
           cb(err);
         }
@@ -170,11 +164,10 @@ class MongoDBCollection extends EventEmitter {
   }
 
   drop(cb?: (err: Error | null, result?: any) => void): any {
-    const self = this;
     const promise = this._collection.drop();
     return nodeify(
-      promise.then(function (res: any) {
-        self.emit("change", { drop: true });
+      promise.then((res: any) => {
+        this.emit("change", { drop: true });
         return res;
       }),
       cb

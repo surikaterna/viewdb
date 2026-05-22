@@ -57,7 +57,7 @@ describe("Viewdb versioning plugin", () => {
       { _id: "999", version: 101 },
     ]);
     const objects = await collection.find({}).toArray();
-    _.forEach(objects, function (o, i) {
+    _.forEach(objects, (o, i) => {
       (o as any).name = Number(i) === 0 ? "Pelle" : "Kalle";
     });
     await collection.save!(objects);

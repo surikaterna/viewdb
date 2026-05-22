@@ -3,23 +3,19 @@ import ViewDBCursor from "../src/ViewDBCursor";
 
 describe("Cursor", () => {
   it("#toArray", async () => {
-    const cursor = new ViewDBCursor(null, {}, null, function () {
-      return Promise.resolve([{ v: 1 }, { v: 2 }, { v: 3 }, { v: 4 }]);
-    });
+    const cursor = new ViewDBCursor(null, {}, null, () => Promise.resolve([{ v: 1 }, { v: 2 }, { v: 3 }, { v: 4 }]));
     const result = await cursor.toArray();
     expect(result.length).toBe(4);
   });
   it("#forEach", () =>
     new Promise<void>((resolve) => {
-      const cursor = new ViewDBCursor(null, {}, null, function () {
-        return Promise.resolve([{ v: 1 }, { v: 2 }, { v: 3 }, { v: 4 }]);
-      });
+      const cursor = new ViewDBCursor(null, {}, null, () => Promise.resolve([{ v: 1 }, { v: 2 }, { v: 3 }, { v: 4 }]));
       let calls = 0;
-      cursor.forEach(function (result) {
+      cursor.forEach((result) => {
         expect(result).toBeTruthy();
         calls++;
       });
-      setTimeout(function () {
+      setTimeout(() => {
         expect(calls).toBe(4);
         resolve();
       }, 0);

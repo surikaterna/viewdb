@@ -17,10 +17,10 @@ function runStoreTests(config) {
   const defaults = { settleDelay: 50 };
   config.observeOptions = Object.assign(defaults, config.observeOptions || {});
 
-  describe(config.name + " shared store tests", function () {
-    suites.forEach(function (name) {
+  describe(`${config.name} shared store tests`, () => {
+    suites.forEach((name) => {
       if (!suiteMap[name]) {
-        throw new Error("Unknown suite: " + name);
+        throw new Error(`Unknown suite: ${name}`);
       }
       suiteMap[name](config);
     });

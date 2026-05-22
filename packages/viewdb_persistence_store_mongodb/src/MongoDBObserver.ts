@@ -1,7 +1,7 @@
 import Kuery from "kuery";
 import _ from "lodash";
 import { LoggerFactory } from "slf";
-import type { ObserveHandle, ObserveOptions } from "viewdb";
+import type { ObserveOptions } from "viewdb";
 import { merge, ViewDBObserver } from "viewdb";
 import { projectDocument } from "./utils";
 
@@ -23,8 +23,7 @@ class MongoDBObserver {
   _kuery: any;
 
   constructor(query: any, queryOptions: any, collection: any, options: any, oplogListener?: any) {
-    const self = this;
-    self._queryOptions = queryOptions;
+    this._queryOptions = queryOptions;
 
     if (!oplogListener) {
       return new ViewDBObserver(query, queryOptions, collection, options) as any;
@@ -37,15 +36,15 @@ class MongoDBObserver {
     this.listener = undefined;
     this._kuery = new Kuery(this._query.query);
 
-    self.loadInitial(function () {
-      self.listener = oplogListener.listen(namespace, self._onOperation, self);
+    this.loadInitial(() => {
+      this.listener = oplogListener.listen(namespace, this._onOperation, this);
     });
 
-    const dispose = function () {
-      if (self.listener) {
-        self.listener.dispose();
+    const dispose = () => {
+      if (this.listener) {
+        this.listener.dispose();
       }
-      self._cache = null;
+      this._cache = null;
       return Promise.resolve();
     };
     return {
@@ -55,16 +54,15 @@ class MongoDBObserver {
   }
 
   loadInitial(cb: () => void): void {
-    const self = this;
-    const newQuery = _.merge(this._query, self._queryOptions);
-    this._collection._getDocuments(newQuery, function (_err: Error | null, result?: any[]) {
+    const newQuery = _.merge(this._query, this._queryOptions);
+    this._collection._getDocuments(newQuery, (_err: Error | null, result?: any[]) => {
       const documents = result || [];
-      if (self._options.init) {
-        self._options.init(documents);
+      if (this._options.init) {
+        this._options.init(documents);
       } else {
-        merge(null, documents, _.defaults({ comparatorId: comparator }, self._options));
+        merge(null, documents, _.defaults({ comparatorId: comparator }, this._options));
       }
-      self._cache = _.map(documents, "_id");
+      this._cache = _.map(documents, "_id");
       cb();
     });
   }
@@ -146,8 +144,6 @@ class MongoDBObserver {
   }
 }
 
-const comparator = function (a: { _id: string }, b: { _id: string }) {
-  return a._id === b._id;
-};
+const comparator = (a: { _id: string }, b: { _id: string }) => a._id === b._id;
 
 export default MongoDBObserver;

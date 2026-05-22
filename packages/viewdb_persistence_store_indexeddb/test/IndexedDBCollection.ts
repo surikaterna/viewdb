@@ -1,7 +1,7 @@
 import IndexedDBStore from "../src/IndexedDBStore";
 import getDb from "./util";
 
-describe("Collection", function () {
+describe("Collection", () => {
   let store;
 
   beforeEach(() => {

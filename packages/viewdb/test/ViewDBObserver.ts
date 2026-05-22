@@ -8,7 +8,7 @@ describe("Observe", () => {
     const cursor = store.collection("dollhouse").find({});
     await new Promise<void>((resolve) => {
       const handle = cursor.observe({
-        added: function (x) {
+        added: (x) => {
           expect(x._id).toBe("echo");
           handle.stop();
           resolve();
@@ -25,7 +25,7 @@ describe("Observe", () => {
     const cursor = store.collection("dollhouse").find({ _id: "echo2" });
     await new Promise<void>((resolve) => {
       cursor.observe({
-        added: function (x) {
+        added: (x) => {
           expect(x._id).toBe("echo2");
           resolve();
         },
@@ -40,11 +40,11 @@ describe("Observe", () => {
     const cursor = store.collection("dollhouse").find({ _id: "echo" });
     await new Promise<void>((resolve) => {
       const handle = cursor.observe({
-        added: function (x) {
+        added: (x) => {
           expect(x.age).toBe(10);
           expect(x._id).toBe("echo");
         },
-        changed: function (o, n) {
+        changed: (o, n) => {
           expect(o.age).toBe(10);
           expect(n.age).toBe(100);
           handle.stop();
@@ -69,7 +69,7 @@ describe("Observe", () => {
     cursor.limit(1);
 
     await new Promise<void>((resolve) => {
-      const realDone = _.after(3, async function () {
+      const realDone = _.after(3, async () => {
         const res = await cursor.toArray();
         expect(res.length).toBe(0);
         handle.stop();
@@ -77,7 +77,7 @@ describe("Observe", () => {
       });
 
       const handle = cursor.observe({
-        added: function () {
+        added: () => {
           cursor.skip(++skip);
           realDone();
         },
@@ -91,7 +91,7 @@ describe("Observe", () => {
     const cursor = store.collection("dollhouse").find({});
     await new Promise<void>((resolve) => {
       const handle = cursor.observe({
-        init: function (coll) {
+        init: (coll) => {
           expect(coll.length).toBe(0);
           handle.stop();
           resolve();
@@ -107,7 +107,7 @@ describe("Observe", () => {
     const cursor = store.collection("dollhouse").find({});
     await new Promise<void>((resolve) => {
       const handle = cursor.observe({
-        init: function (coll) {
+        init: (coll) => {
           expect(coll.length).toBe(1);
           handle.stop();
           resolve();
@@ -122,16 +122,16 @@ describe("Observe", () => {
     const cursor = store.collection("dollhouse").find({});
     await new Promise<void>((resolve) => {
       const handle = cursor.observe({
-        init: function (coll) {
+        init: (coll) => {
           expect(coll.length).toBe(0);
         },
-        added: function (a) {
+        added: (a) => {
           expect(a._id).toBe("echo");
           handle.stop();
           resolve();
         },
       });
-      setTimeout(function () {
+      setTimeout(() => {
         store.collection("dollhouse").insert!({ _id: "echo" });
       }, 5);
     });

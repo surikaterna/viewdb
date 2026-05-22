@@ -1,7 +1,7 @@
 import { ViewDB as ViewDB } from "viewdb";
 import HybridStore from "../../src/hybrid/HybridStore";
 
-describe("Sort / Limit / Skip", function () {
+describe("Sort / Limit / Skip", () => {
   let local = null;
   let remote = null;
   let hybrid = null;
@@ -12,7 +12,7 @@ describe("Sort / Limit / Skip", function () {
         local = new ViewDB();
         remote = new ViewDB();
         hybrid = new ViewDB(new (HybridStore as any)(local, remote, { throttleObserveRefresh: 0 }));
-        hybrid.open().then(function () {
+        hybrid.open().then(() => {
           resolve();
         });
       })
@@ -40,7 +40,7 @@ describe("Sort / Limit / Skip", function () {
       .limit(LIMIT);
     let calls = 0;
     await new Promise<void>((resolve, reject) => {
-      cursor.toArray(function (err, res) {
+      cursor.toArray((err, res) => {
         if (err) {
           reject(err);
           return;

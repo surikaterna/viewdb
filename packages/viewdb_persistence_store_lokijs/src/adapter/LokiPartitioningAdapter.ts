@@ -78,12 +78,11 @@ class LokiPartitioningAdapter {
    * @memberof LokiPartitioningAdapter
    */
   loadDatabase(dbname: any, callback: any) {
-    const self = this;
     this.dbname = dbname;
     this.dbref = new Loki(dbname);
 
     // load the db container (without data)
-    this.adapter.loadDatabase(dbname, function (result: any) {
+    this.adapter.loadDatabase(dbname, (result: any) => {
       // empty database condition is for inner adapter return null/undefined/falsy
       if (!result) {
         // partition 0 not found so new database, no need to try to load other partitions.
@@ -100,23 +99,23 @@ class LokiPartitioningAdapter {
 
       // I will want to use loki destructuring helper methods so i will inflate into typed instance
       let db = JSON.parse(result);
-      self.dbref.loadJSONObject(db);
+      this.dbref.loadJSONObject(db);
       db = null;
       // eslint-disable-next-line
-      let clen = self.dbref.collections.length;
+      let clen = this.dbref.collections.length;
 
-      if (self.dbref.collections.length === 0) {
-        callback(self.dbref);
+      if (this.dbref.collections.length === 0) {
+        callback(this.dbref);
         return;
       }
 
-      self.pageIterator = {
+      this.pageIterator = {
         collection: 0,
         pageIndex: 0,
       };
 
-      self.loadNextPartition(0, function () {
-        callback(self.dbref);
+      this.loadNextPartition(0, () => {
+        callback(this.dbref);
       });
     });
   }
@@ -128,8 +127,7 @@ class LokiPartitioningAdapter {
    * @param {function} callback - adapter callback to return load result to caller
    */
   loadNextPartition(partition: any, callback: any) {
-    const keyname = this.dbname + "." + partition;
-    const self = this;
+    const keyname = `${this.dbname}.${partition}`;
 
     if (this.options.paging === true) {
       this.pageIterator.pageIndex = 0;
@@ -137,15 +135,15 @@ class LokiPartitioningAdapter {
       return;
     }
 
-    this.adapter.loadDatabase(keyname, function (result: any) {
-      const data = self.dbref.deserializeCollection(result, {
+    this.adapter.loadDatabase(keyname, (result: any) => {
+      const data = this.dbref.deserializeCollection(result, {
         delimited: true,
         collectionIndex: partition,
       });
-      self.dbref.collections[partition].data = data;
+      this.dbref.collections[partition].data = data;
 
-      if (++partition < self.dbref.collections.length) {
-        self.loadNextPartition(partition, callback);
+      if (++partition < this.dbref.collections.length) {
+        this.loadNextPartition(partition, callback);
       } else {
         callback();
       }
@@ -159,17 +157,16 @@ class LokiPartitioningAdapter {
    */
   loadNextPage(callback: any) {
     // calculate name for next saved page in sequence
-    const keyname = this.dbname + "." + this.pageIterator.collection + "." + this.pageIterator.pageIndex;
-    const self = this;
+    const keyname = `${this.dbname}.${this.pageIterator.collection}.${this.pageIterator.pageIndex}`;
 
     // load whatever page is next in sequence
-    this.adapter.loadDatabase(keyname, function (result: any) {
+    this.adapter.loadDatabase(keyname, (result: any) => {
       let data;
       // ** Surikat override **
       if (!result) {
         data = [""];
       } else {
-        data = result.split(self.options.delimiter);
+        data = result.split(this.options.delimiter);
       }
       // ** end Surikat override **
 
@@ -191,7 +188,7 @@ class LokiPartitioningAdapter {
 
       // convert stringified array elements to object instances and push to collection data
       for (idx = 0; idx < dlen; idx++) {
-        self.dbref.collections[self.pageIterator.collection].data.push(JSON.parse(data[idx]));
+        this.dbref.collections[this.pageIterator.collection].data.push(JSON.parse(data[idx]));
         data[idx] = null;
       }
       data = [];
@@ -199,14 +196,14 @@ class LokiPartitioningAdapter {
       // if last page, we are done with this partition
       if (isLastPage) {
         // if there are more partitions, kick off next partition load
-        if (++self.pageIterator.collection < self.dbref.collections.length) {
-          self.loadNextPartition(self.pageIterator.collection, callback);
+        if (++this.pageIterator.collection < this.dbref.collections.length) {
+          this.loadNextPartition(this.pageIterator.collection, callback);
         } else {
           callback();
         }
       } else {
-        self.pageIterator.pageIndex++;
-        self.loadNextPage(callback);
+        this.pageIterator.pageIndex++;
+        this.loadNextPage(callback);
       }
     });
   }
@@ -222,8 +219,6 @@ class LokiPartitioningAdapter {
    * @memberof LokiPartitioningAdapter
    */
   exportDatabase(dbname: any, dbref: any, callback: any) {
-    // eslint-disable-next-line
-    let self = this;
     let idx;
     const clen = dbref.collections.length;
 
@@ -238,7 +233,7 @@ class LokiPartitioningAdapter {
       }
     }
 
-    this.saveNextPartition(function (err: any) {
+    this.saveNextPartition((err: any) => {
       callback(err);
     });
   }
@@ -249,9 +244,8 @@ class LokiPartitioningAdapter {
    * @param {function} callback - adapter callback to return load result to caller
    */
   saveNextPartition(callback: any) {
-    const self = this;
     const partition = this.dirtyPartitions?.shift();
-    const keyname = this.dbname + (partition === -1 ? "" : "." + partition);
+    const keyname = this.dbname + (partition === -1 ? "" : `.${partition}`);
 
     // if we are doing paging and this is collection partition
     if (this.options.paging && partition !== -1) {
@@ -262,11 +256,11 @@ class LokiPartitioningAdapter {
       };
 
       // since saveNextPage recursively calls itself until done, our callback means this whole paged partition is finished
-      this.saveNextPage(function (err: any) {
-        if (self.dirtyPartitions?.length === 0) {
+      this.saveNextPage((err: any) => {
+        if (this.dirtyPartitions?.length === 0) {
           callback(err);
         } else {
-          self.saveNextPartition(callback);
+          this.saveNextPartition(callback);
         }
       });
       return;
@@ -279,16 +273,16 @@ class LokiPartitioningAdapter {
       partition: partition,
     });
 
-    this.adapter.saveDatabase(keyname, result, function (err: any) {
+    this.adapter.saveDatabase(keyname, result, (err: any) => {
       if (err) {
         callback(err);
         return;
       }
 
-      if (self.dirtyPartitions?.length === 0) {
+      if (this.dirtyPartitions?.length === 0) {
         callback(null);
       } else {
-        self.saveNextPartition(callback);
+        this.saveNextPartition(callback);
       }
     });
   }
@@ -299,9 +293,8 @@ class LokiPartitioningAdapter {
    * @param {function} callback - adapter callback to return load result to caller
    */
   saveNextPage(callback: any) {
-    const self = this;
     const coll = this.dbref.collections[this.pageIterator.collection];
-    const keyname = this.dbname + "." + this.pageIterator.collection + "." + this.pageIterator.pageIndex;
+    const keyname = `${this.dbname}.${this.pageIterator.collection}.${this.pageIterator.pageIndex}`;
     let pageLen = 0;
     const cdlen = coll.data.length,
       delimlen = this.options.delimiter.length;
@@ -310,7 +303,7 @@ class LokiPartitioningAdapter {
     let doneWithPartition = false,
       doneWithPage = false;
 
-    const pageSaveCallback = function (err: any) {
+    const pageSaveCallback = (err: any) => {
       pageBuilder = "";
 
       if (err) {
@@ -321,8 +314,8 @@ class LokiPartitioningAdapter {
       if (doneWithPartition) {
         callback(null);
       } else {
-        self.pageIterator.pageIndex++;
-        self.saveNextPage(callback);
+        this.pageIterator.pageIndex++;
+        this.saveNextPage(callback);
       }
     };
 

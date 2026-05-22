@@ -13,7 +13,7 @@ describe("Viewdb timestamp plugin", () => {
     const currentTime = new Date().valueOf();
 
     await new Promise<void>((resolve, reject) => {
-      setTimeout(async function () {
+      setTimeout(async () => {
         await collection.insert!(obj);
         const objects = await collection.find({ id: "123" }).toArray();
         const object = objects[0];
@@ -35,11 +35,11 @@ describe("Viewdb timestamp plugin", () => {
     const currentTime = new Date().valueOf();
 
     await new Promise<void>((resolve, reject) => {
-      setTimeout(async function () {
+      setTimeout(async () => {
         await collection.insert!([{ _id: "123" }, { _id: "999" }]);
         const objects = await collection.find({}).toArray();
         let hasError = false;
-        objects.forEach(function (object) {
+        objects.forEach((object) => {
           expect(object.createDateTime).toBeDefined();
           if (currentTime >= object.createDateTime) {
             hasError = true;
@@ -72,7 +72,7 @@ describe("Viewdb timestamp plugin", () => {
       { _id: "999", name: "Kalle", createDateTime: insertTime, changeDateTime: insertTime },
     ]);
     const updated = await collection.find({}).toArray();
-    updated.forEach(function (object) {
+    updated.forEach((object) => {
       expect(object.createDateTime).toBe(insertTime);
       expect(object.changeDateTime).toBeGreaterThan(insertTime);
     });

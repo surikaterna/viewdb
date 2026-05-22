@@ -5,7 +5,7 @@ import RequestResponseClient from "../../src/client/RequestResponseClient";
 import HybridStore from "../../src/hybrid/HybridStore";
 import ViewDBSocketServer from "../../src/server/ViewDBSocketServer";
 
-describe("Remote server/client", function () {
+describe("Remote server/client", () => {
   let clientVdb, remote, socketServer, socketClient, clientStore, client;
   beforeEach(() => {
     socketServer = new SocketMock();
@@ -19,11 +19,11 @@ describe("Remote server/client", function () {
 
   it("#socketMock should work", () =>
     new Promise<void>((resolve) => {
-      socketClient.on("ping", function (message) {
+      socketClient.on("ping", (message) => {
         expect(message).toBe("Hello");
         socketClient.emit("pong", "heya");
       });
-      socketServer.on("pong", function (message) {
+      socketServer.on("pong", (message) => {
         expect(message).toBe("heya");
         resolve();
       });
@@ -36,10 +36,10 @@ describe("Remote server/client", function () {
     expect(res[0].test).toBe("success");
   });
 
-  it("#remote cursor sort should not trigger refresh when not observing", function () {
+  it("#remote cursor sort should not trigger refresh when not observing", () => {
     const collection = clientVdb.collection("dollhouse");
     let changes = 0;
-    collection.on("change", function () {
+    collection.on("change", () => {
       changes++;
     });
 
@@ -83,7 +83,7 @@ describe("Remote server/client", function () {
     new Promise<void>((resolve) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
-      clientVdb.collection("dollhouse").count({ _id: "echo" }, function (_err, res) {
+      clientVdb.collection("dollhouse").count({ _id: "echo" }, (_err, res) => {
         expect(res).toBe(1);
         resolve();
       });
@@ -93,7 +93,7 @@ describe("Remote server/client", function () {
     new Promise<void>((resolve) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
-      clientVdb.collection("dollhouse").count({}, { skip: 1 }, function (_err, res) {
+      clientVdb.collection("dollhouse").count({}, { skip: 1 }, (_err, res) => {
         expect(res).toBe(1);
         resolve();
       });
@@ -103,7 +103,7 @@ describe("Remote server/client", function () {
     new Promise<void>((resolve) => {
       remote.collection("dollhouse").insert({ _id: "echo" });
       remote.collection("dollhouse").insert({ _id: "echo2" });
-      clientVdb.collection("dollhouse").count({}, { limit: 1 }, function (_err, res) {
+      clientVdb.collection("dollhouse").count({}, { limit: 1 }, (_err, res) => {
         expect(res).toBe(1);
         resolve();
       });
@@ -115,10 +115,10 @@ describe("Remote server/client", function () {
       remote.collection("dollhouse").insert({ _id: "echo2" });
       const cursor = clientVdb.collection("dollhouse").find({ _id: { $in: ["echo2", "echo3"] } });
       cursor.observe({
-        init: function (init) {
+        init: (init) => {
           expect(init.length).toBe(1);
         },
-        added: function (a) {
+        added: (a) => {
           expect(a._id).toBe("echo3");
           resolve();
         },
@@ -132,7 +132,7 @@ describe("Remote server/client", function () {
       const cursor = clientVdb.collection("dollhouse").find({ _id: { $in: ["echo2", "echo3"] } });
       let inits = 0;
       cursor.observe({
-        init: function (init) {
+        init: (init) => {
           inits++;
           if (inits === 1) {
             expect(init.length).toBe(1);
@@ -152,7 +152,7 @@ describe("Remote server/client", function () {
       const cursor = clientVdb.collection("dollhouse").find({ _id: { $in: ["echo2", "echo3"] } });
       let inits = 0;
       cursor.observe({
-        init: function (init) {
+        init: (init) => {
           inits++;
           expect(init.length).toBe(1);
           if (inits === 1) {
@@ -162,11 +162,11 @@ describe("Remote server/client", function () {
             expect(inits).toBe(2);
           }
         },
-        added: function (item) {
+        added: (item) => {
           expect(item._id).toBe("echo3");
           remote.collection("dollhouse").save({ _id: "echo3", updated: true });
         },
-        changed: function (_asis, tobe) {
+        changed: (_asis, tobe) => {
           expect(tobe.updated).toBe(true);
           resolve();
         },
@@ -180,18 +180,18 @@ describe("Remote server/client", function () {
       const hybrid = new ViewDB(new (HybridStore as any)(local, clientStore, { throttleObserveRefresh: 0 }));
       let list = [];
       let changes = 0;
-      hybrid.open().then(function () {
+      hybrid.open().then(() => {
         const cursor = hybrid.collection("dollhouse").find({ _id: { $in: ["echo2"] } });
         cursor.observe({
-          init: function (init) {
+          init: (init) => {
             list = init;
           },
-          added: function (_element, index) {
+          added: (_element, index) => {
             list.splice(index, 1);
             remote.collection("dollhouse").save({ _id: "echo2", changed: 1 });
             client.onClientReconnected();
           },
-          changed: function (_asis, tobe, index) {
+          changed: (_asis, tobe, index) => {
             changes++;
             remote.collection("dollhouse").save({ _id: "echo2", changed: 2 });
             list[index] = tobe;

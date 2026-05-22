@@ -21,24 +21,18 @@ function reconcile<T extends VersionedDoc = VersionedDoc>(local: T[], remote: T[
   const alldocs = local.concat(remote);
 
   // add all new docs
-  const result = _.filter(alldocs, function (doc: T) {
-    return _.includes(newIds, doc._id);
-  });
+  const result = _.filter(alldocs, (doc: T) => _.includes(newIds, doc._id));
   const localSame = _(local)
-    .filter(function (doc: T) {
-      return _.includes(inBothIds, doc._id);
-    })
+    .filter((doc: T) => _.includes(inBothIds, doc._id))
     .sortBy("_id")
     .value();
   const remoteSame = _(remote)
-    .filter(function (doc: T) {
-      return _.includes(inBothIds, doc._id);
-    })
+    .filter((doc: T) => _.includes(inBothIds, doc._id))
     .sortBy("_id")
     .value();
 
   // TODO; optimize so not a scan per id is needed
-  _.forEach(localSame, function (localDoc: T, n: number) {
+  _.forEach(localSame, (localDoc: T, n: number) => {
     const remoteDoc = remoteSame[n];
 
     if (!_.isUndefined(localDoc?.version) && !_.isUndefined(remoteDoc?.version)) {
