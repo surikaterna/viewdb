@@ -1,5 +1,5 @@
 import InMemoryStore from "./inmemory/InMemoryStore";
-import { Collection, Store } from "./types";
+import type { Collection, Store } from "./types";
 
 class ViewDB {
   _store: Store;

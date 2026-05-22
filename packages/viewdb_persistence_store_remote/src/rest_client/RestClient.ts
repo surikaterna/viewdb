@@ -1,7 +1,7 @@
 import axios from "axios";
 import debug from "debug";
 import _ from "lodash";
-import { VdbClient } from "../types";
+import type { VdbClient } from "../types";
 
 const warn = debug("viewdb:warn");
 

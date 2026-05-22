@@ -66,7 +66,7 @@ describe("Reconcile", () => {
       remote.push({ _id: String(i), version: 1 });
     }
     const start = new Date().getTime();
-    const result = reconcileAny(local, remote);
+    reconcileAny(local, remote);
     const end = new Date().getTime();
     expect(end - start).toBeLessThan(500);
   });

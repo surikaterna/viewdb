@@ -15,7 +15,7 @@ describe("Observe-Update Remote", () => {
         socketClient = socketServer.socketClient;
         client = new RequestResponseClient(socketClient);
         serverViewdb = new ViewDB();
-        const vdbSocketServer = new ViewDBSocketServer(serverViewdb, socketServer);
+        new ViewDBSocketServer(serverViewdb, socketServer);
 
         clientLocal = new ViewDB(); // client local viewdb (typically IndexedDB)
         clientStore = new RemoteStore(client);

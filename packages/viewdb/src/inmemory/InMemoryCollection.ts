@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import Kuery from "kuery";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
-import { Collection, QueryObject, VDocument } from "../types";
+import type { Collection, QueryObject, VDocument } from "../types";
 import ViewDBCursor from "../ViewDBCursor";
 
 class InMemoryCollection extends EventEmitter implements Collection {

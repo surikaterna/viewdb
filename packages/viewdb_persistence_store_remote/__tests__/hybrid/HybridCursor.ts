@@ -31,7 +31,6 @@ describe("Cursor", () => {
       const lcursor = new LocalCursorAny(null, {}, null, () => Promise.resolve([{ _id: "1" }, { _id: "2" }]));
       const rcursor = new LocalCursorAny(null, {}, null, () => Promise.resolve([{ _id: "1" }, { _id: "2" }]));
       const hcursor = new HybridCursor({}, lcursor, rcursor, {}, { localFirst: false });
-      const calls = 0;
       hcursor.toArray((_err) => {
         resolve();
       });
@@ -51,7 +50,6 @@ describe("Cursor", () => {
         ])
       );
       const hcursor = new HybridCursor({}, lcursor, rcursor, {}, { localFirst: false });
-      const calls = 0;
       hcursor.toArray((_err, result) => {
         expect(result[0].local).not.toBe(true);
         expect(result[1].local).toBe(true);
@@ -82,7 +80,6 @@ describe("Cursor", () => {
         ])
       );
       const hcursor = new HybridCursor({}, lcursor, rcursor, {}, { localFirst: false });
-      const calls = 0;
       hcursor.toArray((_err, result) => {
         expect(result[0].local).not.toBe(true);
         expect(result[1].local).toBe(true);
@@ -99,7 +96,6 @@ describe("Cursor", () => {
         ])
       );
       const hcursor = new HybridCursor({}, lcursor, rcursor, {}, { localFirst: false });
-      const calls = 0;
       hcursor.toArray((err) => {
         expect(err).toBeTruthy();
         resolve();
@@ -115,7 +111,6 @@ describe("Cursor", () => {
       );
       const rcursor = new LocalCursorAny(null, {}, null, () => Promise.reject(new Error()));
       const hcursor = new HybridCursor({}, lcursor, rcursor, {}, { localFirst: false, throwRemoteErr: true });
-      const calls = 0;
       hcursor.toArray((err) => {
         expect(err).toBeTruthy();
         resolve();
@@ -131,7 +126,6 @@ describe("Cursor", () => {
       );
       const rcursor = new LocalCursorAny(null, {}, null, () => Promise.reject(new Error()));
       const hcursor = new HybridCursor({}, lcursor, rcursor, {}, { localFirst: false, throwRemoteErr: false });
-      const calls = 0;
       hcursor.toArray((err, result) => {
         expect(err).toBeNull();
         expect(result.length).toBe(2);
@@ -173,7 +167,6 @@ describe("Cursor", () => {
       );
       const rcursor = new LocalCursorAny(null, query, null, () => Promise.reject(new Error()));
       const hcursor = new HybridCursor(query, lcursor, rcursor, {}, { localFirst: false, throwRemoteErr: false });
-      const calls = 0;
       hcursor.toArray((err, result) => {
         expect(err).toBeNull();
         expect(result.length).toBe(1);
@@ -200,7 +193,6 @@ describe("Cursor", () => {
       );
       const rcursor = new LocalCursorAny(null, {}, null, () => Promise.reject(new Error()));
       const hcursor = new HybridCursor({}, lcursor, rcursor, {}, { localFirst: false, throwRemoteErr: false });
-      const calls = 0;
       hcursor.toArray((err, result) => {
         expect(err).toBeNull();
         expect(result.length).toBe(2);
@@ -225,7 +217,6 @@ describe("Cursor", () => {
       );
       const rcursor = new LocalCursorAny(null, {}, null, () => Promise.reject(new Error()));
       const hcursor = new HybridCursor({}, lcursor, rcursor, {}, { localFirst: false, throwRemoteErr: true });
-      const calls = 0;
       hcursor.toArray((err) => {
         expect(err).toBeTruthy();
         resolve();

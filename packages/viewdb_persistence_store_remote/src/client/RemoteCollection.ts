@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
-import { VdbClient } from "../types";
+import type { VdbClient } from "../types";
 import RemoteCursor from "./RemoteCursor";
 
 class RemoteCollection extends EventEmitter {
@@ -17,7 +17,6 @@ class RemoteCollection extends EventEmitter {
 
   find(query: any, options?: any): any {
     if (this._isIdentityQuery(query)) {
-      const id = query.id;
       return [];
     }
     return new RemoteCursor(this, { query: query }, options, this._getDocuments.bind(this));

@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { VdbSocket } from "../types";
+import type { VdbSocket } from "../types";
 
 function sendChange(socket: VdbSocket, change: any, request: any): void {
   socket.emit("/vdb/response", {

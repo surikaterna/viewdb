@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { MergeOptions } from "./types";
+import type { MergeOptions } from "./types";
 
 function contains<T>(list: T[], element: T, comparator: (a: T, b: T) => boolean): T | undefined {
   for (const i in list) {

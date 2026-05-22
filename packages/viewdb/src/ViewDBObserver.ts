@@ -1,7 +1,7 @@
 import Kuery from "kuery";
 import _ from "lodash";
 import merge from "./merge";
-import { Collection, ObserveOptions, Observer, QueryObject, VDocument } from "./types";
+import type { Collection, ObserveOptions, Observer, QueryObject, VDocument } from "./types";
 
 class ViewDBObserver implements Observer {
   _query: QueryObject;

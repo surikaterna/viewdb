@@ -1,4 +1,4 @@
-import { VdbClient } from "../types";
+import type { VdbClient } from "../types";
 import RemoteCollection from "./RemoteCollection";
 
 class RemoteStore {

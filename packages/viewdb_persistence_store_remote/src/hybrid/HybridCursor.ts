@@ -37,7 +37,6 @@ class HybridCursor {
     const self = this;
     let localData: any[] | null = null;
     let remoteData: any[] | null = null;
-    let localErr: Error | null = null;
     let remoteErr: Error | null = null;
     const kuery = new Kuery(this._query);
     const sort = this._sort;
@@ -75,7 +74,6 @@ class HybridCursor {
 
     function localResult(err: Error | null, result: any) {
       if (err) {
-        localErr = err;
         return callback(err, result);
       }
 

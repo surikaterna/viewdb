@@ -1,6 +1,6 @@
 import debug from "debug";
 import _ from "lodash";
-import { VdbSocket } from "../types";
+import type { VdbSocket } from "../types";
 
 const warn = debug("viewdb:warn");
 

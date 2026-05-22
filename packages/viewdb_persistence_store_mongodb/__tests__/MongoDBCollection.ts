@@ -21,7 +21,7 @@ describe("mongodb_persistence", () => {
   beforeEach(async () => {
     try {
       await _db.collection(COLLECTION_NAME).drop();
-    } catch (err) {
+    } catch {
       // No-op
     }
   });

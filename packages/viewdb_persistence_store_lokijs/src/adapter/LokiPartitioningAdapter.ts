@@ -101,8 +101,6 @@ class LokiPartitioningAdapter {
       let db = JSON.parse(result);
       this.dbref.loadJSONObject(db);
       db = null;
-      // eslint-disable-next-line
-      let clen = this.dbref.collections.length;
 
       if (this.dbref.collections.length === 0) {
         callback(this.dbref);

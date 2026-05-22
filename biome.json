@@ -11,8 +11,7 @@
     "rules": {
       "recommended": true,
       "correctness": {
-        "noConstructorReturn": "off",
-        "noUnusedVariables": "off"
+        "noConstructorReturn": "off"
       },
       "suspicious": {
         "noShadowRestrictedNames": "off",
@@ -29,7 +28,6 @@
       "style": {
         "useNodejsImportProtocol": "off",
         "noNonNullAssertion": "off",
-        "useImportType": "off",
         "useConst": "off"
       }
     }
