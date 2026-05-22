@@ -48,7 +48,7 @@ class LokiJSCollection extends EventEmitter {
     this.db = db;
     const collection = this.db.addCollection(name);
     this.collection = collection;
-    if (this.collection.constraints?.unique?.["_id"]) {
+    if (this.collection.constraints?.unique?._id) {
       try {
         unset(this.collection.constraints.unique, "_id");
         remove(this.collection.uniqueNames, (key) => key === "_id");
@@ -58,7 +58,7 @@ class LokiJSCollection extends EventEmitter {
     }
     fixCorruptedLoki(collection);
     this.name = name;
-    if (options && options.disableThrottle) {
+    if (options?.disableThrottle) {
       this.emitThrottled = this.emit;
     } else {
       this.emitThrottled = throttle(this.emit, 1000 * 2);

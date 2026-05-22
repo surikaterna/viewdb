@@ -17,7 +17,7 @@ function VersioningPlugin(viewDb: any): void {
       const oldSave = coll.save;
       coll.save = function (this: any, docs: any, options: any) {
         let newdocs = docs;
-        if (!(options && options.skipVersioning)) {
+        if (!options?.skipVersioning) {
           if (!_.isArray(docs)) {
             newdocs = [docs];
           }
@@ -31,7 +31,7 @@ function VersioningPlugin(viewDb: any): void {
 
       const oldInsert = coll.insert;
       coll.insert = function (this: any, docs: any, options: any) {
-        if (!(options && options.skipVersioning)) {
+        if (!options?.skipVersioning) {
           if (!_.isArray(docs)) {
             docs = [docs];
           }
@@ -45,7 +45,7 @@ function VersioningPlugin(viewDb: any): void {
 
       const oldFindAndModify = coll.findAndModify;
       coll.findAndModify = function (this: any, _query: any, _sort: any, update: any, options: any, _cb: any) {
-        if (!(options && options.skipVersioning)) {
+        if (!options?.skipVersioning) {
           const inc = update.$inc || {};
           inc.version = 1;
           update.$inc = inc;
@@ -58,7 +58,7 @@ function VersioningPlugin(viewDb: any): void {
 
       const oldUpdateMany = coll.updateMany;
       coll.updateMany = function (this: any, _query: any, update: any, options: any, _cb: any) {
-        if (!(options && options.skipVersioning)) {
+        if (!options?.skipVersioning) {
           const inc = update.$inc || {};
           inc.version = 1;
           update.$inc = inc;
@@ -71,7 +71,7 @@ function VersioningPlugin(viewDb: any): void {
 
       const oldUpdateOne = coll.updateOne;
       coll.updateOne = function (this: any, _query: any, update: any, options: any, _cb: any) {
-        if (!(options && options.skipVersioning)) {
+        if (!options?.skipVersioning) {
           const inc = update.$inc || {};
           inc.version = 1;
           update.$inc = inc;

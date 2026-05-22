@@ -10,7 +10,7 @@ function TimestampPlugin(viewDb: any): void {
       const oldSave = coll.save;
       coll.save = function (this: any, docs: any, options: any) {
         let newdocs = docs;
-        if (!(options && options.skipTimestamp)) {
+        if (!options?.skipTimestamp) {
           const timestamp = new Date().valueOf();
           if (!_.isArray(docs)) {
             newdocs = [docs];
@@ -28,7 +28,7 @@ function TimestampPlugin(viewDb: any): void {
 
       const oldInsert = coll.insert;
       coll.insert = function (this: any, docs: any, options: any) {
-        if (!(options && options.skipTimestamp)) {
+        if (!options?.skipTimestamp) {
           if (!_.isArray(docs)) {
             docs = [docs];
           }

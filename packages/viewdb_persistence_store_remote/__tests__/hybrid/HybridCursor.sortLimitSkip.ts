@@ -1,4 +1,4 @@
-import { ViewDB as ViewDB } from "viewdb";
+import { ViewDB } from "viewdb";
 import HybridStore from "../../src/hybrid/HybridStore";
 
 describe("Sort / Limit / Skip", () => {

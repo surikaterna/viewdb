@@ -1,4 +1,4 @@
-import { plugins, ViewDB as ViewDB } from "../..";
+import { plugins, ViewDB } from "../..";
 
 const TimestampPlugin = plugins.TimestampPlugin;
 const VersioningPlugin = plugins.VersioningPlugin;

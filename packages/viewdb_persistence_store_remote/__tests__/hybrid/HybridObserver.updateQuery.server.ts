@@ -1,6 +1,6 @@
 import _ from "lodash";
 import SocketMock from "socket.io-mock";
-import { ViewDB as ViewDB } from "viewdb";
+import { ViewDB } from "viewdb";
 import RemoteStore from "../../src/client/RemoteStore";
 import RequestResponseClient from "../../src/client/RequestResponseClient";
 import HybridStore from "../../src/hybrid/HybridStore";

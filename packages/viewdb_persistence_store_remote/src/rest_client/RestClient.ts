@@ -16,7 +16,7 @@ class RestClient implements VdbClient {
     if (!url) {
       throw Error("Cannot use REST viewdb client without URL");
     }
-    this._pollInterval = (options && options.pollInterval) || 1000 * 30;
+    this._pollInterval = options?.pollInterval || 1000 * 30;
 
     if (url.slice(-1) === "/") {
       this._baseUri = url.substring(0, url.length - 1);

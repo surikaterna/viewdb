@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { ViewDB as ViewDB } from "..";
+import { ViewDB } from "..";
 
 describe("Observe", () => {
   it("#observe with insert", async () => {

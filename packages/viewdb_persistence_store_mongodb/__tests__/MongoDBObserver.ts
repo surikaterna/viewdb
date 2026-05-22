@@ -1,6 +1,6 @@
 import _ from "lodash";
 import { MongoClient } from "mongodb";
-import { ViewDB as ViewDB } from "viewdb";
+import { ViewDB } from "viewdb";
 import MongoDBStore from "../src/MongoDBStore";
 
 describe("Observe", () => {

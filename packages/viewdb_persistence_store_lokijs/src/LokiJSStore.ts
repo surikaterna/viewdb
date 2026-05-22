@@ -22,7 +22,7 @@ class LokiJSStore {
     this._lokiOptions = {
       autosave: false,
     };
-    if (options && options.inMemoryOnly) {
+    if (options?.inMemoryOnly) {
       this._lokiOptions = {};
       this.adapter = null;
     } else {

@@ -1,6 +1,6 @@
 import _ from "lodash";
 
-import { plugins, ViewDB as ViewDB } from "../..";
+import { plugins, ViewDB } from "../..";
 
 const VersioningPlugin = plugins.VersioningPlugin;
 

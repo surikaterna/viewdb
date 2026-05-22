@@ -169,7 +169,7 @@ describe("Collection", () => {
       .collection("_syncProfiles")
       .insert({ id: "echo", query: { $or: ["1", "2"] }, subQueries: { $or: ["1", "2"] } });
     const results = await store.collection("_syncProfiles").find({ id: "echo" }).toArray();
-    const equal = _.isEqual(["1", "2"], results[0].query["$or"]);
+    const equal = _.isEqual(["1", "2"], results[0].query.$or);
     expect(equal).toBe(true);
   });
 });

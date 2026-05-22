@@ -21,7 +21,7 @@ class IndexedDBCollection extends EventEmitter {
     if (
       keys.length === 1 &&
       (keys[0] === "id" || keys[0] === "_id") &&
-      (typeof query["id"] === "string" || typeof query["_id"] === "string")
+      (typeof query.id === "string" || typeof query._id === "string")
     ) {
       return true;
     } else {
@@ -38,7 +38,7 @@ class IndexedDBCollection extends EventEmitter {
   }
 
   _getKey(document: Record<string, any>): string {
-    return `${this._name}_${document["_id"]}`;
+    return `${this._name}_${document._id}`;
   }
 
   insert(documents: any, options?: any): any {
@@ -71,7 +71,7 @@ class IndexedDBCollection extends EventEmitter {
       function addNext() {
         const document = documents[currentIndex++];
         if (!_.has(document, "_id")) {
-          document["_id"] = document["id"] || uuid();
+          (document as any)._id = (document as any).id || uuid();
         }
         document.$collection = self._name;
         document.$collectionKey = self._getKey(document);
@@ -165,7 +165,7 @@ class IndexedDBCollection extends EventEmitter {
     return new Promise((resolve, reject) => {
       const txn = this._db.transaction(["documents"], "readonly");
       const docs = txn.objectStore("documents");
-      let key = qry["id"] || qry["_id"];
+      let key = qry.id || qry._id;
       key = `${this._name}_${key}`;
       const request = docs.get(key);
       request.onsuccess = (_event: Event) => {

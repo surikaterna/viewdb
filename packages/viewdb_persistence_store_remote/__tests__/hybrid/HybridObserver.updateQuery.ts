@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { ViewDB as ViewDB } from "viewdb";
+import { ViewDB } from "viewdb";
 import { SocketClient, Client as ViewDBRemoteClient } from "../../";
 import HybridStore from "../../src/hybrid/HybridStore";
 

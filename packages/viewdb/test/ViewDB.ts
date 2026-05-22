@@ -88,7 +88,7 @@ describe("ViewDB", () => {
       const db = new ViewDB();
       const collection = db.collection("documents");
       const docs = await collection.save!({ a: 1 });
-      docs[0]["b"] = 2;
+      docs[0].b = 2;
       await collection.save!(docs);
       const count = await collection.count!();
       expect(count).toBe(1);

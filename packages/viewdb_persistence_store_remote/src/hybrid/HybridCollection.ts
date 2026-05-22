@@ -158,7 +158,7 @@ class HybridCollection {
       .find({ _id: queryHash, createDateTime: { $gt: minTimeEpoch } })
       .toArray()
       .then((result: any) => {
-        const hasResult = result && result[0];
+        const hasResult = result?.[0];
 
         if (!hasResult) {
           callback(undefined);
