@@ -5,6 +5,7 @@ import { v4 as uuid } from "uuid";
 import {
   type Collection,
   type CountDocumentsOptions,
+  type DeleteResult,
   isQueryObject,
   type QueryObject,
   type VDocument,
@@ -31,6 +32,60 @@ class IndexedDBCollection<T extends VDocument = VDocument> extends EventEmitter 
 
     const docs = await this._getDocuments(queryObject);
     return docs.length;
+  }
+
+  async deleteMany(query?: TypedQuery<T>): Promise<DeleteResult> {
+    try {
+      const docs = await this._getDocuments(query || {});
+      const deletedCount = docs.length;
+      if (deletedCount === 0) {
+        return { acknowledged: true, deletedCount: 0 };
+      }
+
+      return await new Promise<DeleteResult>((resolve, reject) => {
+        const txn = this._db.transaction(["documents"], "readwrite");
+        txn.oncomplete = () => {
+          this.emit("change", { remove: query });
+          resolve({ acknowledged: true, deletedCount });
+        };
+        txn.onerror = (event: Event) => {
+          reject(new Error(String(event)));
+        };
+        const objectStore = txn.objectStore("documents");
+        _.forEach(docs, (doc: any) => {
+          const key = this._getKey(doc);
+          objectStore.delete(key);
+        });
+      });
+    } catch {
+      return { acknowledged: false };
+    }
+  }
+
+  async deleteOne(query?: TypedQuery<T>): Promise<DeleteResult> {
+    try {
+      const docs = await this._getDocuments(query || {});
+      if (!docs || docs.length === 0) {
+        return { acknowledged: true, deletedCount: 0 };
+      }
+      const doc = docs[0];
+
+      return await new Promise<DeleteResult>((resolve, reject) => {
+        const txn = this._db.transaction(["documents"], "readwrite");
+        txn.oncomplete = () => {
+          this.emit("change", { remove: query });
+          resolve({ acknowledged: true, deletedCount: 1 });
+        };
+        txn.onerror = (event: Event) => {
+          reject(new Error(String(event)));
+        };
+        const objectStore = txn.objectStore("documents");
+        const key = this._getKey(doc);
+        objectStore.delete(key);
+      });
+    } catch {
+      return { acknowledged: false };
+    }
   }
 
   estimatedDocumentCount(): Promise<number> {

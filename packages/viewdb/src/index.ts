@@ -10,6 +10,8 @@ export type {
   Collection,
   CountDocumentsOptions,
   Cursor,
+  DeleteOptions,
+  DeleteResult,
   GetDocumentsFn,
   MergeOptions,
   ObserveHandle,

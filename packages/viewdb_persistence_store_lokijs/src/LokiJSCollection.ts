@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+import type { TypedQuery } from "kuery";
 import {
   findIndex,
   first,
@@ -16,7 +17,7 @@ import {
   values,
 } from "lodash";
 import { LoggerFactory } from "slf";
-import { ViewDBCursor } from "viewdb";
+import { type Collection, type DeleteResult, type VDocument, ViewDBCursor } from "viewdb";
 import parseLokiSort from "./parseLokiSort";
 
 const LOG = LoggerFactory.getLogger("viewdb:lokijs:collection");
@@ -35,14 +36,14 @@ const fixCorruptedLoki = (collection: any) => {
   }
 };
 
-class LokiJSCollection extends EventEmitter {
+class LokiJSCollection<T extends VDocument = VDocument> extends EventEmitter implements Collection<T> {
   private db: any;
   private collection: any;
-  private name: any;
+  private name: string;
   private emitThrottled: (eventName: string | symbol, ...args: any[]) => boolean;
   private ttl: { daemonInterval: number; fields: any; daemon: any };
 
-  constructor(name: any, db: any, options: any) {
+  constructor(name: string, db: any, options: any) {
     super();
     this.db = db;
     const collection = this.db.addCollection(name);
@@ -78,6 +79,67 @@ class LokiJSCollection extends EventEmitter {
 
     const docs = await this._getDocuments(queryObject);
     return docs.length;
+  }
+
+  async deleteMany(query?: TypedQuery<T>): Promise<DeleteResult> {
+    try {
+      if (!query) {
+        const data = get(this.collection, "data", []);
+        const deletedCount = Array.isArray(data) ? data.length : 0;
+
+        // clear entire collection
+        if (typeof this.collection.clear === "function") {
+          this.collection.clear();
+        } else if (Array.isArray(data)) {
+          data.length = 0;
+        }
+
+        this.emitThrottled("change", { remove: {} });
+        return { acknowledged: true, deletedCount };
+      }
+
+      const chain = this.collection.chain().find(query);
+      const docs = chain.data({ removeMeta: true });
+      const deletedCount = docs.length;
+      chain.remove();
+      this.emitThrottled("change", { remove: query });
+
+      return { acknowledged: true, deletedCount };
+    } catch (e: any) {
+      LOG.warn("deleteMany failed: %s", e?.message);
+      return { acknowledged: false };
+    }
+  }
+
+  async deleteOne(query?: TypedQuery<T>): Promise<DeleteResult> {
+    try {
+      if (!query) {
+        const data = get(this.collection, "data", []);
+        if (!Array.isArray(data) || data.length === 0) {
+          return { acknowledged: true, deletedCount: 0 };
+        }
+
+        try {
+          this.collection.remove(data[0]);
+        } catch {
+          data.shift();
+        }
+        this.emitThrottled("change", { remove: {} });
+        return { acknowledged: true, deletedCount: 1 };
+      }
+
+      const doc = this.collection.findOne(query);
+      if (!doc) {
+        return { acknowledged: true, deletedCount: 0 };
+      }
+
+      this.collection.remove(doc);
+      this.emitThrottled("change", { remove: query });
+      return { acknowledged: true, deletedCount: 1 };
+    } catch (e: any) {
+      LOG.warn("deleteOne failed: %s", e?.message);
+      return { acknowledged: false };
+    }
   }
 
   async estimatedDocumentCount(): Promise<number> {
@@ -211,12 +273,11 @@ class LokiJSCollection extends EventEmitter {
     return Promise.resolve(documents);
   }
 
-  drop() {
+  async drop(): Promise<void> {
     this.db.removeCollection(this.name);
-    return Promise.resolve();
   }
 
-  remove(query: any, _options?: any) {
+  remove(query: TypedQuery<T>): Promise<void> {
     this.collection.chain().find(query).remove();
     this.emitThrottled("change", { remove: query });
     return Promise.resolve();

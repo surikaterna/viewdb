@@ -111,6 +111,10 @@ export interface Collection<T extends VDocument = VDocument> {
   count?(query?: TypedQuery<T>, options?: CountDocumentsOptions): Promise<number>;
   /** Gets the number of documents matching the filter. */
   countDocuments(query: TypedQuery<T>, options?: CountDocumentsOptions): Promise<number>;
+  /** Delete multiple documents from a collection. */
+  deleteMany(query?: TypedQuery<T>, options?: DeleteOptions): Promise<DeleteResult>;
+  /** Delete a document from a collection. */
+  deleteOne(query?: TypedQuery<T>, options?: DeleteOptions): Promise<DeleteResult>;
   /** Drop all documents */
   drop?(): Promise<void>;
   /** EventEmitter: emit events (primarily 'change') */
@@ -151,3 +155,20 @@ export type CountDocumentsOptions = Record<string, any> & {
   /** Set the limit for the cursor. */
   limit?: number;
 };
+
+export type DeleteOptions = Record<string, any>;
+
+export type DeleteResult = {
+  /** Indicates whether this write result was acknowledged. */
+  acknowledged: boolean;
+  /** The number of documents that were deleted. */
+  deletedCount?: number;
+} & (
+  | {
+      acknowledged: true;
+      deletedCount: number;
+    }
+  | {
+      acknowledged: false;
+    }
+);

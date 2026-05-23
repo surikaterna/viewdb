@@ -1,8 +1,8 @@
 import { EventEmitter } from "events";
-import Kuery, { type TypedQuery } from "kuery";
+import Kuery, { findOne, type TypedQuery } from "kuery";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
-import type { Collection, CountDocumentsOptions, QueryObject, VDocument } from "../types";
+import type { Collection, CountDocumentsOptions, DeleteResult, QueryObject, VDocument } from "../types";
 import { isQueryObject } from "../utils";
 import ViewDBCursor from "../ViewDBCursor";
 
@@ -29,6 +29,43 @@ class InMemoryCollection<T extends VDocument = VDocument> extends EventEmitter i
 
     const docs = await this._getDocuments(queryObject);
     return docs.length;
+  }
+
+  async deleteMany(query?: TypedQuery<T>): Promise<DeleteResult> {
+    try {
+      if (!query) {
+        const deletedCount = this._documents.length;
+        this._documents.length = 0;
+        return { acknowledged: true, deletedCount };
+      }
+
+      const q = new Kuery(query);
+      const docs = q.find(this._documents);
+      this._documents = _.pullAll(this._documents, docs);
+      return { acknowledged: true, deletedCount: docs.length };
+    } catch {
+      return { acknowledged: false };
+    }
+  }
+
+  async deleteOne(query?: TypedQuery<T>): Promise<DeleteResult> {
+    try {
+      if (!query) {
+        const doc = this._documents.shift();
+        return { acknowledged: true, deletedCount: doc ? 1 : 0 };
+      }
+
+      const doc = findOne(this._documents, query);
+      if (!doc) {
+        return { acknowledged: true, deletedCount: 0 };
+      }
+
+      const index = this._documents.indexOf(doc);
+      this._documents.splice(index, 1);
+      return { acknowledged: true, deletedCount: 1 };
+    } catch {
+      return { acknowledged: false };
+    }
   }
 
   async estimatedDocumentCount(): Promise<number> {
