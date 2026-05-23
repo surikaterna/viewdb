@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import Kuery, { type TypedQuery } from "kuery";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
-import type { Collection, QueryObject, VDocument } from "../types";
+import type { Collection, CountDocumentsOptions, QueryObject, VDocument } from "../types";
 import { isQueryObject } from "../utils";
 import ViewDBCursor from "../ViewDBCursor";
 
@@ -16,8 +16,23 @@ class InMemoryCollection<T extends VDocument = VDocument> extends EventEmitter i
     this._name = name;
   }
 
-  count(): Promise<number> {
-    return Promise.resolve(this._documents.length);
+  async count(): Promise<number> {
+    return this.estimatedDocumentCount();
+  }
+
+  async countDocuments(query: TypedQuery<T>, options?: CountDocumentsOptions): Promise<number> {
+    const queryObject: QueryObject<T> = {
+      query,
+      limit: options?.limit,
+      skip: options?.skip,
+    };
+
+    const docs = await this._getDocuments(queryObject);
+    return docs.length;
+  }
+
+  async estimatedDocumentCount(): Promise<number> {
+    return this._documents.length;
   }
 
   _write(op: string, documents: T | T[], _options?: Record<string, any>): Promise<T[]> {

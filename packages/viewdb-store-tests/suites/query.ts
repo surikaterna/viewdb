@@ -6,12 +6,20 @@ export default function (config) {
   describe("query", () => {
     let store;
 
+    beforeAll(async () => {
+      await config.initialize?.();
+    });
+
     beforeEach(async () => {
       store = await config.createStore();
     });
 
     afterEach(async () => {
       await config.destroyStore(store);
+    });
+
+    afterAll(async () => {
+      await config.cleanup?.();
     });
 
     it("find by _id returns correct document", async () => {

@@ -5,11 +5,11 @@ import observe from "./suites/observe";
 import query from "./suites/query";
 
 const suiteMap = {
-  crud: crud,
-  query: query,
-  cursor: cursor,
-  count: count,
-  observe: observe,
+  crud,
+  query,
+  cursor,
+  count,
+  observe,
 };
 
 function runStoreTests(config) {

@@ -2,7 +2,14 @@ import { EventEmitter } from "events";
 import Kuery, { type TypedQuery } from "kuery";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
-import { type Collection, isQueryObject, type QueryObject, type VDocument, ViewDBCursor } from "viewdb";
+import {
+  type Collection,
+  type CountDocumentsOptions,
+  isQueryObject,
+  type QueryObject,
+  type VDocument,
+  ViewDBCursor,
+} from "viewdb";
 
 class IndexedDBCollection<T extends VDocument = VDocument> extends EventEmitter implements Collection<T> {
   static Cursor: any = ViewDBCursor;
@@ -13,6 +20,36 @@ class IndexedDBCollection<T extends VDocument = VDocument> extends EventEmitter 
     super();
     this._db = db;
     this._name = name;
+  }
+
+  async countDocuments(query: TypedQuery<T>, options?: CountDocumentsOptions): Promise<number> {
+    const queryObject: QueryObject<T> = {
+      query,
+      limit: options?.limit,
+      skip: options?.skip,
+    };
+
+    const docs = await this._getDocuments(queryObject);
+    return docs.length;
+  }
+
+  estimatedDocumentCount(): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
+      try {
+        const txn = this._db.transaction(["documents"], "readonly");
+        const objectStore = txn.objectStore("documents");
+        const index = objectStore.index("$collection");
+        const request: IDBRequest = index.count(this._name);
+        request.onsuccess = () => {
+          resolve(request.result as number);
+        };
+        request.onerror = (event: Event) => {
+          reject(new Error(String(event)));
+        };
+      } catch (e: any) {
+        reject(e);
+      }
+    });
   }
 
   _isIdentityQuery(query: Record<string, any>, _options?: Record<string, any>): boolean {

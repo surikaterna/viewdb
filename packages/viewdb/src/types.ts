@@ -108,11 +108,15 @@ export interface Collection<T extends VDocument = VDocument> {
    *
    * Count documents
    */
-  count?(): Promise<number>;
+  count?(query?: TypedQuery<T>, options?: CountDocumentsOptions): Promise<number>;
+  /** Gets the number of documents matching the filter. */
+  countDocuments(query: TypedQuery<T>, options?: CountDocumentsOptions): Promise<number>;
   /** Drop all documents */
   drop?(): Promise<void>;
   /** EventEmitter: emit events (primarily 'change') */
   emit(event: string, ...args: any[]): void;
+  /** Gets an estimate of the count of documents in a collection using collection metadata. */
+  estimatedDocumentCount(): Promise<number>;
   /** Create a cursor for the given query */
   find(query: TypedQuery<T>, options?: Record<string, any>): Cursor<T>;
   /**
@@ -140,3 +144,10 @@ export interface Collection<T extends VDocument = VDocument> {
   /** Internal: retrieve documents matching the query object */
   _getDocuments: GetDocumentsFn<T>;
 }
+
+export type CountDocumentsOptions = Record<string, any> & {
+  /** Set the skip for the cursor. */
+  skip?: number;
+  /** Set the limit for the cursor. */
+  limit?: number;
+};

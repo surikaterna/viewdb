@@ -8,6 +8,7 @@ import ViewDBObserver from "./ViewDBObserver";
 export type {
   Callback,
   Collection,
+  CountDocumentsOptions,
   Cursor,
   GetDocumentsFn,
   MergeOptions,

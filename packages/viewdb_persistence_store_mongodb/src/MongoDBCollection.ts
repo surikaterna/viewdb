@@ -1,21 +1,31 @@
 import { EventEmitter } from "events";
+import type { TypedQuery } from "kuery";
 import { forEach, isArray, isFunction } from "lodash";
-import type { Collection as MongoCollection, Document as MongoDocument } from "mongodb";
+import type { Filter, Collection as MongoCollection } from "mongodb";
+import type { Collection, CountDocumentsOptions, VDocument } from "viewdb";
 import MongoDBCursor from "./MongoDBCursor";
 import { nodeify } from "./utils";
 
-class MongoDBCollection extends EventEmitter {
-  _collection: MongoCollection<MongoDocument>;
+class MongoDBCollection<T extends VDocument = VDocument> extends EventEmitter implements Collection<T> {
+  _collection: MongoCollection<T>;
   _oplogListener: any;
 
-  constructor(collection: MongoCollection<MongoDocument>, oplogListener?: any) {
+  constructor(collection: MongoCollection<T>, oplogListener?: any) {
     super();
     this._collection = collection;
     this._oplogListener = oplogListener;
   }
 
-  count(): any {
-    return (this._collection as any).count.apply(this._collection, arguments);
+  count(query?: TypedQuery<T>, options?: CountDocumentsOptions): Promise<number> {
+    return this._collection.count(query as Filter<T>, options);
+  }
+
+  countDocuments(query: TypedQuery<T>, options?: CountDocumentsOptions): Promise<number> {
+    return this._collection.countDocuments(query as Filter<T>, options);
+  }
+
+  estimatedDocumentCount(): Promise<number> {
+    return this._collection.estimatedDocumentCount();
   }
 
   find(query: any, options?: any): MongoDBCursor {

@@ -1,11 +1,29 @@
-import { ViewDB } from "..";
+import { ViewDB } from "../src";
 
 describe("ViewDB", () => {
   describe("#count", () => {
     it("should return 0 for empty collection", async () => {
       const db = new ViewDB();
       const collection = db.collection("documents");
-      const count = await collection.count!();
+      const count = await collection.count();
+      expect(count).toBe(0);
+    });
+  });
+
+  describe("#countDocuments", () => {
+    it("should return 0 for empty collection", async () => {
+      const db = new ViewDB();
+      const collection = db.collection("documents");
+      const count = await collection.countDocuments({});
+      expect(count).toBe(0);
+    });
+  });
+
+  describe("#estimatedDocumentCount", () => {
+    it("should return 0 for empty collection", async () => {
+      const db = new ViewDB();
+      const collection = db.collection("documents");
+      const count = await collection.estimatedDocumentCount();
       expect(count).toBe(0);
     });
   });

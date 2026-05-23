@@ -69,6 +69,29 @@ class LokiJSCollection extends EventEmitter {
     };
   }
 
+  async countDocuments(query: any, options?: any): Promise<number> {
+    const queryObject: any = {
+      query,
+      limit: options?.limit,
+      skip: options?.skip,
+    };
+
+    const docs = await this._getDocuments(queryObject);
+    return docs.length;
+  }
+
+  async estimatedDocumentCount(): Promise<number> {
+    try {
+      if (typeof this.collection.count === "function") {
+        return this.collection.count();
+      }
+      const data = get(this.collection, "data", []);
+      return Array.isArray(data) ? data.length : 0;
+    } catch {
+      return 0;
+    }
+  }
+
   find(query: Record<string, any>) {
     return new ViewDBCursor(this, { query }, this._getDocuments.bind(this));
   }

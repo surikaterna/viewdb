@@ -16,12 +16,20 @@ export default function (config) {
   describe("observe", () => {
     let store;
 
+    beforeAll(async () => {
+      await config.initialize?.();
+    });
+
     beforeEach(async () => {
       store = await config.createStore();
     });
 
     afterEach(async () => {
       await config.destroyStore(store);
+    });
+
+    afterAll(async () => {
+      await config.cleanup?.();
     });
 
     it("init fires with empty collection", () =>
