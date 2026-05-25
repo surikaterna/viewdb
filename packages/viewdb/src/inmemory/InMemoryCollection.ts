@@ -2,7 +2,15 @@ import { EventEmitter } from "events";
 import Kuery, { findOne, type TypedQuery } from "kuery";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
-import type { Collection, CountDocumentsOptions, DeleteResult, QueryObject, VDocument } from "../types";
+import type {
+  Collection,
+  CountDocumentsOptions,
+  DeleteResult,
+  InsertManyResult,
+  InsertOneResult,
+  QueryObject,
+  VDocument,
+} from "../types";
 import { isQueryObject } from "../utils";
 import ViewDBCursor from "../ViewDBCursor";
 
@@ -72,42 +80,99 @@ class InMemoryCollection<T extends VDocument = VDocument> extends EventEmitter i
     return this._documents.length;
   }
 
-  _write(op: string, documents: T | T[], _options?: Record<string, any>): Promise<T[]> {
+  async _write(op: string, documents: T | T[], _options?: Record<string, any>): Promise<T[]> {
     const docs: T[] = _.isArray(documents) ? documents : [documents];
-    const promise = new Promise<T[]>((resolve, reject) => {
-      for (let i = 0; i < docs.length; i++) {
-        const document: Record<string, any> = docs[i];
-        if (!_.isObject(document)) {
-          reject(new Error("Document must be object"));
-          return;
-        }
-        if (!_.has(document, "_id")) {
-          document._id = document.id || uuid();
-        }
-        const idx = _.findIndex(this._documents, { _id: document._id });
-        if (op === "insert" && idx >= 0) {
-          reject(new Error("Unique constraint!"));
-          return;
-        }
-        if (idx === -1) {
-          this._documents.push(document as T);
-        } else {
-          this._documents[idx] = document as T;
+
+    for (let i = 0; i < docs.length; i++) {
+      const document: Record<string, any> = docs[i];
+      if (!_.isObject(document)) {
+        throw new Error("Document must be object");
+      }
+      if (!_.has(document, "_id")) {
+        document._id = document.id || uuid();
+      }
+      const idx = _.findIndex(this._documents, { _id: document._id });
+      if (op === "insert" && idx >= 0) {
+        throw new Error("Unique constraint!");
+      }
+      if (idx === -1) {
+        this._documents.push(document as T);
+      } else {
+        this._documents[idx] = document as T;
+      }
+    }
+
+    this.emit("change", docs);
+    return docs;
+  }
+
+  insert(docs: T | T[], options?: Record<string, any>): Promise<T[]> {
+    return this._write("insert", docs, options);
+  }
+
+  async insertMany(docs: T[]): Promise<InsertManyResult> {
+    try {
+      let insertedCount = 0;
+      const insertedDocs: T[] = [];
+      const insertedIds: Record<number, string> = {};
+
+      for (const doc of docs) {
+        try {
+          const index = this.insertSingle(doc);
+          insertedIds[index] = doc._id as string;
+          insertedDocs.push(doc);
+          insertedCount += 1;
+        } catch {
+          // continue inserting
         }
       }
-      this.emit("change", docs);
-      resolve(docs);
-    });
 
-    return promise;
+      this.emit("insertMany", insertedDocs);
+
+      return {
+        acknowledged: true,
+        insertedCount,
+        insertedIds,
+      };
+    } catch {
+      return {
+        acknowledged: false,
+      };
+    }
   }
 
-  insert(documents: T | T[], options?: Record<string, any>): Promise<T[]> {
-    return this._write("insert", documents, options);
+  async insertOne(doc: T): Promise<InsertOneResult> {
+    try {
+      this.insertSingle(doc);
+      this.emit("insertOne", doc);
+
+      return {
+        acknowledged: true,
+        insertedId: doc._id as string,
+      };
+    } catch {
+      return {
+        acknowledged: false,
+      };
+    }
   }
 
-  save(documents: T | T[], options?: Record<string, any>): Promise<T[]> {
-    return this._write("save", documents, options);
+  private insertSingle(doc: T): number {
+    if (!doc._id) {
+      doc._id = "id" in doc ? doc.id : uuid();
+    }
+
+    const index = this._documents.findIndex((d) => d._id === doc._id);
+    if (index > -1) {
+      throw new Error("Unique constraint!");
+    }
+
+    this._documents.push(doc);
+    return this._documents.length - 1;
+  }
+
+  save(docs: T | T[], options?: Record<string, any>): Promise<T[]> {
+    return this._write("save", docs, options);
   }
 
   drop(): Promise<void> {

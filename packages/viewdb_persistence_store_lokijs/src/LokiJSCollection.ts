@@ -17,7 +17,14 @@ import {
   values,
 } from "lodash";
 import { LoggerFactory } from "slf";
-import { type Collection, type DeleteResult, type VDocument, ViewDBCursor } from "viewdb";
+import {
+  type Collection,
+  type DeleteResult,
+  type InsertManyResult,
+  type InsertOneResult,
+  type VDocument,
+  ViewDBCursor,
+} from "viewdb";
 import parseLokiSort from "./parseLokiSort";
 
 const LOG = LoggerFactory.getLogger("viewdb:lokijs:collection");
@@ -168,6 +175,34 @@ class LokiJSCollection<T extends VDocument = VDocument> extends EventEmitter imp
     } catch (e) {
       LOG.warn("insert failed, docments: %j. Error:", documents, e);
       return Promise.reject(e);
+    }
+  }
+
+  insertMany(docs: T[]): Promise<InsertManyResult> {
+    try {
+      const inserted = this.collection.insert(docs);
+      const insertedIds: { [key: number]: string } = {};
+      for (let i = 0; i < docs.length; i++) {
+        const id = docs[i]?._id ?? (inserted?.[i] ? inserted[i]._id : undefined);
+        insertedIds[i] = id !== undefined ? String(id) : "";
+      }
+      this.emitThrottled("change", { insertMany: docs });
+      return Promise.resolve({ acknowledged: true, insertedCount: docs.length, insertedIds });
+    } catch (e) {
+      LOG.warn("insertMany failed: %s", e?.message);
+      return Promise.resolve({ acknowledged: false });
+    }
+  }
+
+  insertOne(doc: T): Promise<InsertOneResult> {
+    try {
+      const inserted = this.collection.insert(doc);
+      const insertedId = Array.isArray(inserted) ? (inserted[0]?._id ?? doc?._id) : (inserted?._id ?? doc?._id);
+      this.emitThrottled("change", { insertOne: doc });
+      return Promise.resolve({ acknowledged: true, insertedId: String(insertedId) });
+    } catch (e) {
+      LOG.warn("insertOne failed: %s", e?.message);
+      return Promise.resolve({ acknowledged: false });
     }
   }
 

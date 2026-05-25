@@ -111,9 +111,9 @@ export interface Collection<T extends VDocument = VDocument> {
   count?(query?: TypedQuery<T>, options?: CountDocumentsOptions): Promise<number>;
   /** Gets the number of documents matching the filter. */
   countDocuments(query: TypedQuery<T>, options?: CountDocumentsOptions): Promise<number>;
-  /** Delete multiple documents from a collection. */
+  /** Delete multiple documents. */
   deleteMany(query?: TypedQuery<T>, options?: DeleteOptions): Promise<DeleteResult>;
-  /** Delete a document from a collection. */
+  /** Delete a single document. */
   deleteOne(query?: TypedQuery<T>, options?: DeleteOptions): Promise<DeleteResult>;
   /** Drop all documents */
   drop?(): Promise<void>;
@@ -123,6 +123,10 @@ export interface Collection<T extends VDocument = VDocument> {
   estimatedDocumentCount(): Promise<number>;
   /** Create a cursor for the given query */
   find(query: TypedQuery<T>, options?: Record<string, any>): Cursor<T>;
+  /** Insert multiple documents. */
+  insertMany(docs: T[], options?: InsertManyOptions): Promise<InsertManyResult>;
+  /** Insert a single document. */
+  insertOne(doc: T, options?: InsertOneOptions): Promise<InsertOneResult>;
   /**
    * @deprecated Use `Collection.insertMany` or `Collection.insertOne`.
    *
@@ -158,17 +162,35 @@ export type CountDocumentsOptions = Record<string, any> & {
 
 export type DeleteOptions = Record<string, any>;
 
-export type DeleteResult = {
-  /** Indicates whether this write result was acknowledged. */
-  acknowledged: boolean;
+export type DeleteResult = AckResult<{
   /** The number of documents that were deleted. */
   deletedCount?: number;
-} & (
-  | {
+}> & {};
+
+export type InsertManyOptions = Record<string, any>;
+
+export type InsertManyResult = AckResult<{
+  /** The number of documents that were inserted. */
+  insertedCount: number;
+  /** Map of the index of the inserted document to the id of the inserted document. */
+  insertedIds: {
+    [key: number]: string;
+  };
+}> & {};
+
+export type InsertOneOptions = Record<string, any>;
+
+export type InsertOneResult = AckResult<{
+  /** The ID of the document that were inserted. */
+  insertedId: string;
+}> & {};
+
+type AckResult<T extends Record<string, unknown>> =
+  | ({
+      /** Indicates whether this write result was acknowledged. */
       acknowledged: true;
-      deletedCount: number;
-    }
-  | {
+    } & { [K in keyof T]-?: T[K] })
+  | ({
+      /** Indicates whether this write result was acknowledged. */
       acknowledged: false;
-    }
-);
+    } & { [K in keyof T]?: T[K] });

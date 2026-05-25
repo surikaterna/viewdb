@@ -1,8 +1,16 @@
 import { EventEmitter } from "events";
 import type { TypedQuery } from "kuery";
 import { forEach, isArray, isFunction } from "lodash";
-import type { Filter, Collection as MongoCollection } from "mongodb";
-import type { Collection, CountDocumentsOptions, VDocument } from "viewdb";
+import type { Filter, Collection as MongoCollection, OptionalUnlessRequiredId } from "mongodb";
+import type {
+  Collection,
+  CountDocumentsOptions,
+  InsertManyOptions,
+  InsertManyResult,
+  InsertOneOptions,
+  InsertOneResult,
+  VDocument,
+} from "viewdb";
 import MongoDBCursor from "./MongoDBCursor";
 import { nodeify } from "./utils";
 
@@ -144,6 +152,23 @@ class MongoDBCollection<T extends VDocument = VDocument> extends EventEmitter im
       promise = this._collection.insertOne(docs).then(onFulfilled).catch(onRejected);
     }
     return promise;
+  }
+
+  async insertMany(docs: T[], options?: InsertManyOptions): Promise<InsertManyResult> {
+    const result = (await this._collection.insertMany(
+      docs as Array<OptionalUnlessRequiredId<T>>,
+      options
+    )) as InsertManyResult;
+
+    this.emit("change", { insertMany: docs });
+    return result;
+  }
+
+  async insertOne(doc: T, options?: InsertOneOptions): Promise<InsertOneResult> {
+    const result = (await this._collection.insertOne(doc as OptionalUnlessRequiredId<T>, options)) as InsertOneResult;
+
+    this.emit("change", { insertOne: doc });
+    return result;
   }
 
   save(docs: any, cb?: (err: Error | null, docs?: any) => void): any {

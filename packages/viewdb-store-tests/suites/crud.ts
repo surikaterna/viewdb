@@ -23,7 +23,39 @@ export default function (config) {
     });
 
     describe("#create", () => {
-      describe("#insert", () => {
+      describe("#insertMany", () => {
+        it("inserts multiple documents", async () => {
+          const result = await store.collection(COLL).insertMany([{ _id: "echo" }, { _id: "sierra" }]);
+          assert.strictEqual(result.acknowledged, true);
+          assert.strictEqual(result.insertedCount, 2);
+          assert.strictEqual(result.insertedIds[0], "echo");
+          assert.strictEqual(result.insertedIds[1], "sierra");
+
+          const results = await store.collection(COLL).find({}).toArray();
+          assert.strictEqual(results.length, 2);
+        });
+      });
+
+      describe("#insertOne", () => {
+        it("inserts a single document", async () => {
+          const result = await store.collection(COLL).insertOne({ _id: "echo" });
+          assert.strictEqual(result.acknowledged, true);
+          assert.strictEqual(result.insertedId, "echo");
+
+          const results = await store.collection(COLL).find({}).toArray();
+          assert.strictEqual(results.length, 1);
+        });
+      });
+
+      describe("#insert (deprecated)", () => {
+        it("insert bulk inserts multiple documents", async () => {
+          await store.collection(COLL).insert([{ _id: "echo" }, { _id: "sierra" }]);
+          const results = await store.collection(COLL).find({}).toArray();
+          assert.strictEqual(results.length, 2);
+        });
+      });
+
+      describe("#insert (deprecated)", () => {
         it("insert bulk inserts multiple documents", async () => {
           await store.collection(COLL).insert([{ _id: "echo" }, { _id: "sierra" }]);
           const results = await store.collection(COLL).find({}).toArray();

@@ -6,6 +6,8 @@ import {
   type Collection,
   type CountDocumentsOptions,
   type DeleteResult,
+  type InsertManyResult,
+  type InsertOneResult,
   isQueryObject,
   type QueryObject,
   type VDocument,
@@ -134,6 +136,84 @@ class IndexedDBCollection<T extends VDocument = VDocument> extends EventEmitter 
 
   insert(documents: T | T[], options?: Record<string, any>): Promise<T[]> {
     return this._write("add", documents, options);
+  }
+
+  async insertMany(docs: T[]): Promise<InsertManyResult> {
+    try {
+      for (const doc of docs) {
+        if (!doc._id) {
+          doc._id = doc.id || uuid();
+        }
+        (doc as VDocument).$collection = this._name;
+        (doc as Record<string, any>).$collectionKey = this._getKey(doc);
+      }
+
+      return await new Promise<InsertManyResult>((resolve, reject) => {
+        const txn = this._db.transaction(["documents"], "readwrite");
+        const objectStore = txn.objectStore("documents");
+
+        txn.oncomplete = () => {
+          const insertedIds: { [key: number]: string } = {};
+          for (let i = 0; i < docs.length; i++) {
+            insertedIds[i] = String(docs[i]._id);
+          }
+          this.emit("change", { insertMany: docs });
+          resolve({ acknowledged: true, insertedCount: docs.length, insertedIds });
+        };
+
+        txn.onerror = (event: Event) => {
+          reject(new Error(String(event)));
+        };
+
+        let i = 0;
+        function addNext() {
+          if (i >= docs.length) return;
+          const doc = docs[i++];
+          const request: IDBRequest = objectStore.add(doc);
+          request.onsuccess = () => {
+            if (i < docs.length) addNext();
+          };
+          request.onerror = (event: Event) => {
+            reject(new Error(String(event)));
+          };
+        }
+        addNext();
+      });
+    } catch {
+      return { acknowledged: false };
+    }
+  }
+
+  async insertOne(doc: T): Promise<InsertOneResult> {
+    try {
+      if (!_.has(doc, "_id")) {
+        (doc as any)._id = (doc as any).id || uuid();
+      }
+      (doc as Record<string, any>).$collection = this._name;
+      (doc as Record<string, any>).$collectionKey = this._getKey(doc);
+
+      return await new Promise<InsertOneResult>((resolve, reject) => {
+        const txn = this._db.transaction(["documents"], "readwrite");
+        const objectStore = txn.objectStore("documents");
+
+        txn.oncomplete = () => {
+          this.emit("change", { insertOne: doc });
+          resolve({ acknowledged: true, insertedId: String(doc._id) });
+        };
+
+        txn.onerror = (event: Event) => {
+          reject(new Error(String(event)));
+        };
+
+        const request: IDBRequest = objectStore.add(doc);
+        request.onsuccess = () => {};
+        request.onerror = (event: Event) => {
+          reject(new Error(String(event)));
+        };
+      });
+    } catch {
+      return { acknowledged: false };
+    }
   }
 
   _write(op: string, documents: T | T[], _options?: Record<string, any>): Promise<T[]> {
