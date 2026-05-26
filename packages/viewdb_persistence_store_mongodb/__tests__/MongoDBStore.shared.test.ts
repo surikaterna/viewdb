@@ -26,7 +26,6 @@ runStoreTests({
       // no-op
     }
   },
-  suites: ["crud", "query", "cursor", "count", "observe"],
   observeOptions: {
     settleDelay: 50,
   },

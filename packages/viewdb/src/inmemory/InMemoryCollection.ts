@@ -184,10 +184,11 @@ class InMemoryCollection<T extends VDocument = VDocument> extends EventEmitter i
     return new ViewDBCursor(this, { query }, this._getDocuments.bind(this));
   }
 
-  remove(query: TypedQuery<T>, _options?: Record<string, any>): Promise<void> {
+  remove(query: TypedQuery<T>): Promise<void> {
     const q = new Kuery(query);
     const documents = q.find(this._documents);
     this._documents = _.pullAll(this._documents, documents);
+    this.emit("change", { remove: query });
     return Promise.resolve();
   }
 

@@ -9,5 +9,4 @@ runStoreTests({
   destroyStore: async (store) => {
     await store.collection("test_shared").deleteMany();
   },
-  suites: ["crud", "query", "cursor", "count"],
 });

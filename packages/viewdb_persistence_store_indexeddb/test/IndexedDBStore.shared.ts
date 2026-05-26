@@ -15,5 +15,4 @@ runStoreTests({
     const idb = store._idb;
     idb._databases.clear();
   },
-  suites: ["crud", "query", "cursor", "count"],
 });

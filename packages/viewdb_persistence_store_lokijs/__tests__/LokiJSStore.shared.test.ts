@@ -13,7 +13,6 @@ runStoreTests({
     await store.close();
     store.clearAllIntervals();
   },
-  suites: ["crud", "query", "cursor", "count", "observe"],
   observeOptions: {
     settleDelay: 50,
   },
