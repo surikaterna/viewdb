@@ -1,24 +1,41 @@
 import { EventEmitter } from "events";
 import type { TypedQuery } from "kuery";
-import { forEach, isArray, isFunction } from "lodash";
-import type { Filter, Collection as MongoCollection, OptionalUnlessRequiredId } from "mongodb";
 import type {
-  Collection,
-  CountDocumentsOptions,
-  InsertManyOptions,
-  InsertManyResult,
-  InsertOneOptions,
-  InsertOneResult,
-  VDocument,
+  AnyBulkWriteOperation,
+  Filter,
+  Collection as MongoCollection,
+  OptionalId,
+  OptionalUnlessRequiredId,
+} from "mongodb";
+import {
+  type Collection,
+  type CountDocumentsOptions,
+  type CreateIndexOptions,
+  type DeleteOptions,
+  type DeleteResult,
+  type FindOneAndUpdateOptions,
+  type IndexSpecification,
+  type InsertManyOptions,
+  type InsertManyResult,
+  type InsertOneOptions,
+  type InsertOneResult,
+  isQueryObject,
+  type QueryObject,
+  type SortSpec,
+  type UpdateFilter,
+  type UpdateManyOptions,
+  type UpdateOneOptions,
+  type UpdateResult,
+  type VDocument,
 } from "viewdb";
 import MongoDBCursor from "./MongoDBCursor";
-import { nodeify } from "./utils";
+import type { OplogListener } from "./MongoDBObserver";
 
 class MongoDBCollection<T extends VDocument = VDocument> extends EventEmitter implements Collection<T> {
   _collection: MongoCollection<T>;
-  _oplogListener: any;
+  _oplogListener?: OplogListener<T>;
 
-  constructor(collection: MongoCollection<T>, oplogListener?: any) {
+  constructor(collection: MongoCollection<T>, oplogListener?: OplogListener<T>) {
     super();
     this._collection = collection;
     this._oplogListener = oplogListener;
@@ -36,122 +53,65 @@ class MongoDBCollection<T extends VDocument = VDocument> extends EventEmitter im
     return this._collection.estimatedDocumentCount();
   }
 
-  find(query: any, options?: any): MongoDBCursor {
-    const cursor = (this._collection as any).find.apply(this._collection, arguments);
-    return new MongoDBCursor(this, { query: query }, options, cursor, this._oplogListener);
+  find(query: TypedQuery<T>, options?: Record<string, any>): MongoDBCursor<T> {
+    const cursor = this._collection.find(query as Filter<T>, options);
+    return new MongoDBCursor<T>(this, { query }, options, cursor, this._oplogListener);
   }
 
-  findAndModify(
-    query: any,
-    sort: any,
-    update: any,
-    options: any,
-    cb?: (err: Error | null, doc?: any) => void
-  ): Promise<any> {
+  async findAndModify(
+    query: TypedQuery<T>,
+    sort: SortSpec | null,
+    update: UpdateFilter,
+    options: FindOneAndUpdateOptions
+  ): Promise<T> {
     if (sort) {
       Object.assign(options, sort);
     }
-    const self = this;
-    function callback(err: Error | null, doc?: any) {
-      self.emit("change", { findAndModify: update });
-      if (isFunction(cb)) {
-        cb(err, doc);
-      }
-    }
-    return new Promise((resolve, reject) => {
-      this._collection
-        .findOneAndUpdate(query, update, options)
-        .then((res: any) => {
-          resolve(res);
-          callback(null, res);
-        })
-        .catch((err: Error) => {
-          reject(err);
-          callback(err);
-        });
-    });
+
+    const result = await this._collection.findOneAndUpdate(query as Filter<T>, update, options);
+    this.emit("change", { findAndModify: update });
+    return result as T;
   }
 
-  updateMany(query: any, update: any, options?: any, cb?: (err: Error | null, result?: any) => void): any {
-    if (isFunction(options)) {
-      cb = options;
-      options = undefined;
-    }
-    const promise = this._collection.updateMany(query, update, options);
-    return nodeify(
-      promise.then((res: any) => {
-        this.emit("change", { updateMany: update });
-        return res;
-      }),
-      cb
-    );
+  async updateMany(query: TypedQuery<T>, update: UpdateFilter, options?: UpdateManyOptions): Promise<UpdateResult> {
+    const result = await this._collection.updateMany(query as Filter<T>, update, options);
+    this.emit("change", { updateMany: update });
+    return result as UpdateResult;
   }
 
-  updateOne(query: any, update: any, options?: any, cb?: (err: Error | null, result?: any) => void): any {
-    if (isFunction(options)) {
-      cb = options;
-      options = undefined;
-    }
-    const promise = this._collection.updateOne(query, update, options);
-    return nodeify(
-      promise.then((res: any) => {
-        this.emit("change", { updateOne: update });
-        return res;
-      }),
-      cb
-    );
+  async updateOne(query: TypedQuery<T>, update: UpdateFilter, options?: UpdateOneOptions): Promise<UpdateResult> {
+    const result = await this._collection.updateOne(query as Filter<T>, update, options);
+    this.emit("change", { updateOne: update });
+    return result as UpdateResult;
   }
 
-  remove(query: any, options?: any, cb?: (err: Error | null, result?: any) => void): any {
+  async remove(query: TypedQuery<T>, options?: DeleteOptions): Promise<any> {
     console.warn("Deprecated: use deleteMany or deleteOne instead");
 
-    if (isFunction(options)) {
-      cb = options;
-      options = undefined;
-    }
-    const promise = this._collection.deleteMany(query, options);
-    return nodeify(
-      promise.then((res: any) => {
-        this.emit("change", { remove: query });
-        return res;
-      }),
-      cb
-    );
+    const result = await this._collection.deleteMany(query as Filter<T>, options);
+    this.emit("change", { remove: query });
+    return result;
   }
 
-  deleteMany(query: any, options?: any): any {
-    return this._collection.deleteMany(query, options).then((res: any) => {
-      this.emit("change", { remove: query });
-      return res;
-    });
+  async deleteMany(query?: TypedQuery<T>, options?: DeleteOptions): Promise<DeleteResult> {
+    const result = await this._collection.deleteMany(query as Filter<T>, options);
+    this.emit("change", { remove: query });
+    return result;
   }
 
-  deleteOne(query: any, options?: any): any {
-    return this._collection.deleteOne(query, options).then((res: any) => {
-      this.emit("change", { remove: query });
-      return res;
-    });
+  async deleteOne(query?: TypedQuery<T>, options?: DeleteOptions): Promise<DeleteResult> {
+    const result = await this._collection.deleteOne(query as Filter<T>, options);
+    this.emit("change", { remove: query });
+    return result;
   }
 
-  insert(docs: any, cb?: (err: Error | null, docs?: any) => void): any {
-    const onFulfilled = () => {
-      this.emit("change", { insert: docs });
-      if (isFunction(cb)) {
-        cb(null, docs);
-      }
-    };
-    const onRejected = (err: Error) => {
-      if (isFunction(cb)) {
-        cb(err);
-      }
-    };
-    let promise;
-    if (isArray(docs)) {
-      promise = this._collection.insertMany(docs).then(onFulfilled).catch(onRejected);
-    } else {
-      promise = this._collection.insertOne(docs).then(onFulfilled).catch(onRejected);
-    }
-    return promise;
+  async insert(docs: T | T[]): Promise<any> {
+    await (Array.isArray(docs)
+      ? this._collection.insertMany(docs as Array<OptionalUnlessRequiredId<T>>)
+      : this._collection.insertOne(docs as OptionalUnlessRequiredId<T>));
+
+    this.emit("change", { insert: docs });
+    return docs;
   }
 
   async insertMany(docs: T[], options?: InsertManyOptions): Promise<InsertManyResult> {
@@ -171,68 +131,52 @@ class MongoDBCollection<T extends VDocument = VDocument> extends EventEmitter im
     return result;
   }
 
-  save(docs: any, cb?: (err: Error | null, docs?: any) => void): any {
-    if (!isArray(docs)) {
-      docs = [docs];
-    }
-    const operations: any[] = [];
-    forEach(docs, (d: any) => {
-      if (!d._id) {
-        operations.push({ insertOne: { document: d } });
+  async save(documents: T | T[]): Promise<any> {
+    const docs = Array.isArray(documents) ? documents : [documents];
+    const operations: Array<AnyBulkWriteOperation<T>> = [];
+
+    for (const doc of docs) {
+      if (!doc._id) {
+        operations.push({ insertOne: { document: doc as OptionalId<T> } });
       } else {
-        operations.push({ replaceOne: { filter: { _id: d._id }, replacement: d, upsert: true } });
+        operations.push({ replaceOne: { filter: { _id: doc._id } as Filter<T>, replacement: doc, upsert: true } });
       }
-    });
-    return this._collection
-      .bulkWrite(operations)
-      .then(() => {
-        this.emit("change", { save: docs });
-        if (isFunction(cb)) {
-          cb(null, docs);
-        }
-      })
-      .catch((err: Error) => {
-        if (isFunction(cb)) {
-          cb(err);
-        }
-      });
+    }
+
+    await this._collection.bulkWrite(operations);
+    this.emit("change", { save: docs });
+    return docs;
   }
 
-  drop(cb?: (err: Error | null, result?: any) => void): any {
-    const promise = this._collection.drop();
-    return nodeify(
-      promise.then((res: any) => {
-        this.emit("change", { drop: true });
-        return res;
-      }),
-      cb
-    );
+  async drop(): Promise<boolean> {
+    const result = await this._collection.drop();
+    this.emit("change", { drop: true });
+    return result;
   }
 
-  createIndex(indexSpec: any, options?: any, cb?: (err: Error | null, result?: any) => void): any {
-    if (isFunction(options)) {
-      cb = options;
-      options = {};
-    }
-    return nodeify(this._collection.createIndex(indexSpec, options), cb);
+  createIndex(indexSpec: IndexSpecification, options?: CreateIndexOptions): Promise<string> {
+    return this._collection.createIndex(indexSpec, options);
   }
 
-  _getDocuments(queryObject: any): Promise<any[]> {
-    const query = queryObject.query || queryObject;
-    const cursor = this._collection.find(query);
-    if (queryObject.skip) {
-      cursor.skip(queryObject.skip);
+  _getDocuments(queryObject: QueryObject<T> | TypedQuery<T>): Promise<T[]> {
+    const query = isQueryObject(queryObject) ? (queryObject.query as TypedQuery<T>) : queryObject;
+    const cursor = this._collection.find(query as Filter<T>);
+    if (isQueryObject(queryObject)) {
+      if (queryObject.skip) {
+        cursor.skip(queryObject.skip);
+      }
+      if (queryObject.limit) {
+        cursor.limit(queryObject.limit);
+      }
+      if (queryObject.sort) {
+        cursor.sort(queryObject.sort);
+      }
+      if (queryObject.project) {
+        cursor.project(queryObject.project);
+      }
     }
-    if (queryObject.limit) {
-      cursor.limit(queryObject.limit);
-    }
-    if (queryObject.sort) {
-      cursor.sort(queryObject.sort);
-    }
-    if (queryObject.project) {
-      cursor.project(queryObject.project);
-    }
-    return cursor.toArray();
+
+    return cursor.toArray() as Promise<T[]>;
   }
 }
 

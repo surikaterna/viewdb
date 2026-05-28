@@ -79,17 +79,22 @@ export interface Cursor<T extends VDocument = VDocument> {
   sort(sort: SortSpec): this;
   /** Add a project stage to the aggregation pipeline. */
   project(project: ProjectionSpec): this;
+  /** @deprecated Use `withReadPreference`. */
+  setReadPreference?(readPreference: ReadPreference): this;
   /** Returns an array of documents. */
   toArray(): Promise<T[]>;
   updateQuery?(query: Record<string, any>): void;
+  withReadPreference?(readPreference: ReadPreference): this;
 }
+
+export type ReadPreference = "primary" | "primaryPreferred" | "secondary" | "secondaryPreferred" | "nearest";
 
 /** Core observer contract returned from cursor.observe() */
 export interface Observer extends ObserveHandle {}
 
 /** Core store contract used by ViewDB */
 export interface Store {
-  open?(): Promise<any>;
+  open?(): Promise<this>;
   collection<T extends VDocument = VDocument>(name: string): Collection<T>;
 }
 
@@ -111,18 +116,26 @@ export interface Collection<T extends VDocument = VDocument> {
   count?(query?: TypedQuery<T>, options?: CountDocumentsOptions): Promise<number>;
   /** Gets the number of documents matching the filter. */
   countDocuments(query: TypedQuery<T>, options?: CountDocumentsOptions): Promise<number>;
+  createIndex?(indexSpec: IndexSpecification, options?: CreateIndexOptions): Promise<string>;
   /** Delete multiple documents. */
   deleteMany(query?: TypedQuery<T>, options?: DeleteOptions): Promise<DeleteResult>;
   /** Delete a single document. */
   deleteOne(query?: TypedQuery<T>, options?: DeleteOptions): Promise<DeleteResult>;
   /** Drop all documents */
-  drop?(): Promise<void>;
+  drop?(): Promise<boolean>;
   /** EventEmitter: emit events (primarily 'change') */
   emit(event: string, ...args: any[]): void;
   /** Gets an estimate of the count of documents in a collection using collection metadata. */
   estimatedDocumentCount(): Promise<number>;
   /** Create a cursor for the given query */
   find(query: TypedQuery<T>, options?: Record<string, any>): Cursor<T>;
+  /** @deprecated Use `findOneAndUpdate` or `updateOne`. */
+  findAndModify?(
+    query: TypedQuery<T>,
+    sort: SortSpec | null,
+    update: UpdateFilter,
+    options: FindOneAndUpdateOptions
+  ): Promise<T>;
   /** Insert multiple documents. */
   insertMany(docs: T[], options?: InsertManyOptions): Promise<InsertManyResult>;
   /** Insert a single document. */
@@ -149,6 +162,10 @@ export interface Collection<T extends VDocument = VDocument> {
    * Save (upsert) documents
    * */
   save?(documents: any, options?: any): Promise<any>;
+  /** Update multiple documents in a collection. */
+  updateMany?(query: TypedQuery<T>, update: UpdateFilter, options?: UpdateManyOptions): Promise<UpdateResult>;
+  /** Update a single document in a collection. */
+  updateOne?(query: TypedQuery<T>, update: UpdateFilter, options?: UpdateOneOptions): Promise<UpdateResult>;
   /** Internal: retrieve documents matching the query object */
   _getDocuments: GetDocumentsFn<T>;
 }
@@ -167,6 +184,33 @@ export type DeleteResult = AckResult<{
   deletedCount?: number;
 }> & {};
 
+export type CreateIndexOptions = Record<string, any>;
+/**
+ * @example
+ * ```ts
+ * // Basic syntax
+ * createIndex({ a: 1, b: -1 })
+ * // Ensure index order
+ * createIndex([["a", 1], ["b", -1]])
+ * // Alternative to { a: 1 }
+ * createIndex("a")
+ * // Alternative to { a: 1, b: 1 }
+ * createIndex(["a", "b"])
+ * // Alternative to { a: 1, b: -1 }
+ * createIndex([ { h: 1 }, { i: -1 } ])
+ * // Alternative to { "a": 1, "b": -1, "c": "2d" }
+ * createIndex(["a", ["b", -1], { c: "2d" })
+ * ```
+ */
+export type IndexSpecification = MaybeArray<
+  string | [string, IndexDirection] | Record<string, IndexDirection> | Map<string, IndexDirection>
+>;
+export type IndexDirection = -1 | 1 | "2d" | "2dsphere" | "text" | "geoHaystack" | "hashed" | number;
+
+export type MaybeArray<T> = T | T[];
+
+export type FindOneAndUpdateOptions = Record<string, any>;
+
 export type InsertManyOptions = Record<string, any>;
 
 export type InsertManyResult = AckResult<{
@@ -183,6 +227,22 @@ export type InsertOneOptions = Record<string, any>;
 export type InsertOneResult = AckResult<{
   /** The ID of the document that were inserted. */
   insertedId: string;
+}> & {};
+
+export type UpdateFilter = Record<string, any>;
+
+export type UpdateManyOptions = Record<string, any>;
+export type UpdateOneOptions = Record<string, any>;
+
+export type UpdateResult = AckResult<{
+  /** The number of documents that matched the filter. */
+  matchedCount: number;
+  /** The number of documents that were modified. */
+  modifiedCount: number;
+  /** The number of documents that were upserted. */
+  upsertedCount: number;
+  /** The identifier of the inserted document if an upsert took place. */
+  upsertedId: string | null;
 }> & {};
 
 type AckResult<T extends Record<string, unknown>> =

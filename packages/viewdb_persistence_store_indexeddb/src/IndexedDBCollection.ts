@@ -261,7 +261,7 @@ class IndexedDBCollection<T extends VDocument = VDocument> extends EventEmitter 
     return this._write("put", documents, options);
   }
 
-  drop(): Promise<void> {
+  drop(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const txn = this._db.transaction(["documents"], "readwrite");
       const objectStore = txn.objectStore("documents");
@@ -275,7 +275,7 @@ class IndexedDBCollection<T extends VDocument = VDocument> extends EventEmitter 
           c.delete();
           c.continue();
         } else {
-          resolve();
+          resolve(true);
         }
       };
     });

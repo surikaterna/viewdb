@@ -175,9 +175,9 @@ class InMemoryCollection<T extends VDocument = VDocument> extends EventEmitter i
     return this._write("save", docs, options);
   }
 
-  drop(): Promise<void> {
+  async drop(): Promise<boolean> {
     this._documents = [];
-    return Promise.resolve();
+    return true;
   }
 
   find(query: TypedQuery<T>): ViewDBCursor<T> {

@@ -1,53 +1,48 @@
-import _ from "lodash";
 import type { Db } from "mongodb";
+import type { Store, VDocument } from "viewdb";
 import MongoDBCollection from "./MongoDBCollection";
+import type { OplogListener } from "./MongoDBObserver";
 
-class MongoDBStore {
-  _mongodb: Db;
-  _oplogListeners: Record<string, any>;
-  _collections: Record<string, any>;
-  _oplogListener: any;
-  _oplogEnabled: boolean;
+type Constructor<T = object> = new (...args: any[]) => T;
 
-  constructor(mongodb: Db, oplogEnabled?: boolean, oplogListener?: any) {
-    this._mongodb = mongodb;
-    this._oplogListeners = {};
-    this._collections = {};
-    this._oplogListener = oplogListener;
-    this._oplogEnabled = !!oplogEnabled;
+class MongoDBStore implements Store {
+  private readonly db: Db;
+  private readonly oplogListeners: Record<string, OplogListener<any>>;
+  private readonly collections: Record<string, any>;
+  private readonly oplogListener?: Constructor<OplogListener<any>>;
+  private readonly oplogEnabled: boolean;
+
+  constructor(db: Db, oplogEnabled?: boolean, oplogListener?: Constructor<OplogListener<any>>) {
+    this.db = db;
+    this.oplogListeners = {};
+    this.collections = {};
+    this.oplogListener = oplogListener;
+    this.oplogEnabled = !!oplogEnabled;
   }
 
-  open(callback?: (err: Error | null, value?: MongoDBStore) => void): any {
-    const promise = Promise.resolve(this);
-    if (callback) {
-      promise.then(
-        (value) => callback(null, value),
-        (err) => callback(err)
-      );
-    }
-    return promise;
+  async open(): Promise<this> {
+    return this;
   }
 
-  collection(collectionName: string, callback?: (coll: any) => void): any {
-    let coll = this._collections[collectionName];
-    if (coll === undefined) {
-      if (this._oplogEnabled && this._oplogListener) {
-        const dbName = _.get(this._mongodb, "databaseName");
-        let namespaceFilter;
-        if (dbName) {
-          namespaceFilter = `${dbName}.${collectionName}`;
-        }
-        this._oplogListeners[collectionName] = new this._oplogListener(this._mongodb, namespaceFilter, collectionName);
-      } else if (this._oplogEnabled) {
-        console.warn("oplog listener must be provided to enable listening for updates");
-      }
-      coll = new MongoDBCollection(this._mongodb.collection(collectionName), this._oplogListeners[collectionName]);
-      this._collections[collectionName] = coll;
+  collection<T extends VDocument = VDocument>(name: string): MongoDBCollection<T> {
+    const existingCollection = this.collections[name];
+    if (existingCollection) {
+      return existingCollection;
     }
-    if (callback) {
-      callback(coll);
+
+    if (this.oplogEnabled && this.oplogListener) {
+      const dbName = this.db.databaseName;
+      const namespaceFilter = `${dbName}.${name}`;
+
+      console.log("****store.collection", { dbName, namespaceFilter });
+      this.oplogListeners[name] = new this.oplogListener(this.db, namespaceFilter, name);
+    } else if (this.oplogEnabled) {
+      console.warn("oplog listener must be provided to enable listening for updates");
     }
-    return coll;
+    const newCcollection = new MongoDBCollection<T>(this.db.collection(name), this.oplogListeners[name]);
+    this.collections[name] = newCcollection;
+
+    return newCcollection;
   }
 }
 

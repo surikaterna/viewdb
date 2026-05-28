@@ -1,21 +1,31 @@
-import type { FindCursor, Document as MongoDocument } from "mongodb";
-import MongoDBObserver from "./MongoDBObserver";
-import { nodeify } from "./utils";
+import type { FindCursor, WithId } from "mongodb";
+import type {
+  Cursor,
+  ObserveHandle,
+  ObserveOptions,
+  ProjectionSpec,
+  QueryObject,
+  ReadPreference,
+  SortSpec,
+  VDocument,
+} from "viewdb";
+import type MongoDBCollection from "./MongoDBCollection";
+import MongoDBObserver, { type OplogListener } from "./MongoDBObserver";
 
-class MongoDBCursor {
-  _query: any;
-  _queryOptions: {
-    query?: any;
-    skip?: number;
-    limit?: number;
-    sort?: Record<string, 1 | -1>;
-    project?: Record<string, 0 | 1>;
-  };
-  _cursor: FindCursor<MongoDocument>;
-  _oplogListener: any;
-  _collection: any;
+class MongoDBCursor<T extends VDocument = VDocument> implements Cursor<T> {
+  _query: QueryObject<T>;
+  _queryOptions: QueryObject<T>;
+  _cursor: FindCursor<WithId<T>>;
+  _oplogListener?: OplogListener<T>;
+  _collection: MongoDBCollection<T>;
 
-  constructor(collection: any, query: any, options: any, cursor: FindCursor<MongoDocument>, oplogListener?: any) {
+  constructor(
+    collection: MongoDBCollection<T>,
+    query: QueryObject<T>,
+    options: any,
+    cursor: FindCursor<WithId<T>>,
+    oplogListener?: OplogListener<T>
+  ) {
     this._query = query;
     this._queryOptions = options || {};
     this._cursor = cursor;
@@ -23,50 +33,51 @@ class MongoDBCursor {
     this._collection = collection;
   }
 
-  each(): any {
-    return (this._cursor as any).each.apply(this._cursor, arguments);
+  setReadPreference(readPreference: ReadPreference): this {
+    return this.withReadPreference(readPreference);
   }
 
-  setReadPreference(): this {
-    (this._cursor as any).withReadPreference.apply(this._cursor, arguments);
-    return this;
+  count(): Promise<number> {
+    return this._cursor.count();
   }
 
-  count(callback?: (err: Error | null, count?: number) => void): any {
-    return nodeify((this._cursor as any).count.apply(this._cursor, arguments), callback);
-  }
-
-  project(project: Record<string, 0 | 1>): this {
-    (this._cursor as any).project.apply(this._cursor, arguments);
+  project(project: ProjectionSpec): this {
     this._queryOptions.project = project;
+    this._cursor.project(project);
     return this;
   }
 
-  toArray(callback?: (err: Error | null, result?: any[]) => void): any {
-    return nodeify((this._cursor as any).toArray.apply(this._cursor, arguments), callback);
+  toArray(): Promise<T[]> {
+    return this._cursor.toArray() as Promise<T[]>;
   }
 
-  observe(options: any): any {
-    return new MongoDBObserver(this._query, this._queryOptions, this._collection, options, this._oplogListener);
+  observe(options: ObserveOptions<T>): ObserveHandle {
+    return new MongoDBObserver<T>(
+      this._query,
+      this._queryOptions,
+      this._collection,
+      options,
+      this._oplogListener
+    ) as unknown as ObserveHandle;
   }
 
   skip(skip: number): this {
-    (this._cursor as any).skip.apply(this._cursor, arguments);
     this._queryOptions.skip = skip;
+    this._cursor.skip(skip);
     this._refresh();
     return this;
   }
 
   limit(limit: number): this {
     this._queryOptions.limit = limit;
-    (this._cursor as any).limit.apply(this._cursor, arguments);
+    this._cursor.limit(limit);
     this._refresh();
     return this;
   }
 
-  sort(sort: Record<string, 1 | -1>): this {
+  sort(sort: SortSpec): this {
     this._queryOptions.sort = sort;
-    (this._cursor as any).sort.apply(this._cursor, arguments);
+    this._cursor.sort(sort);
     this._refresh();
     return this;
   }
@@ -79,8 +90,13 @@ class MongoDBCursor {
     return (this._cursor as any).rewind.apply(this._cursor, arguments);
   }
 
-  close(callback?: (err: Error | null) => void): any {
-    return nodeify((this._cursor as any).close.apply(this._cursor, arguments), callback);
+  async close(): Promise<void> {
+    return this._cursor.close();
+  }
+
+  withReadPreference(readPreference: ReadPreference): this {
+    this._cursor.withReadPreference(readPreference);
+    return this;
   }
 }
 

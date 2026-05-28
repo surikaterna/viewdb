@@ -5,13 +5,13 @@ import type { Collection, ObserveOptions, Observer, QueryObject, VDocument } fro
 
 class ViewDBObserver<T extends VDocument = VDocument> implements Observer {
   _query: QueryObject<T>;
-  _options: ObserveOptions;
+  _options: ObserveOptions<T>;
   _collection: Collection<T>;
   _cache: T[] | null;
   _refreshPending: boolean;
   stop!: () => void;
 
-  constructor(query: QueryObject<T>, collection: Collection<T>, options: ObserveOptions) {
+  constructor(query: QueryObject<T>, collection: Collection<T>, options: ObserveOptions<T>) {
     this._query = query;
     this._options = options;
     this._collection = collection;

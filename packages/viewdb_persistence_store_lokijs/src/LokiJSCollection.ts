@@ -308,8 +308,9 @@ class LokiJSCollection<T extends VDocument = VDocument> extends EventEmitter imp
     return Promise.resolve(documents);
   }
 
-  async drop(): Promise<void> {
+  async drop(): Promise<boolean> {
     this.db.removeCollection(this.name);
+    return true;
   }
 
   remove(query: TypedQuery<T>): Promise<void> {
@@ -345,7 +346,9 @@ class LokiJSCollection<T extends VDocument = VDocument> extends EventEmitter imp
     }
   }
 
-  createIndex(_options: any, _callback?: any) {}
+  async createIndex() {
+    return "";
+  }
 
   /*----------------------------+
   | TTL daemon                  |
