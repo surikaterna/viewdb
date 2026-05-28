@@ -1,6 +1,5 @@
 import _ from "lodash";
 import { Logger } from "slf";
-import { v4 as uuid } from "uuid";
 
 const LOG = Logger.getLogger("viewdb:remote:observe");
 
@@ -14,7 +13,7 @@ const buildParams = (defaults: any, query: any, collection: any): any => {
   }
   const params: any = _.defaults(
     {
-      id: uuid(),
+      id: crypto.randomUUID(),
       observe: query.query || query,
       collection: collection._name,
       skip: skip,

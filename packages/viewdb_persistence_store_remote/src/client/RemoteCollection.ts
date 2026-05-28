@@ -1,6 +1,5 @@
 import { EventEmitter } from "events";
 import _ from "lodash";
-import { v4 as uuid } from "uuid";
 import type { VdbClient } from "../types";
 import RemoteCursor from "./RemoteCursor";
 
@@ -87,7 +86,7 @@ class RemoteCollection extends EventEmitter {
     }
 
     const params: any = {
-      id: uuid(),
+      id: crypto.randomUUID(),
       count: query,
       collection: this._name,
     };

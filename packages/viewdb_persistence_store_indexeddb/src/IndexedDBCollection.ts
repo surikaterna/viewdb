@@ -1,7 +1,6 @@
 import { EventEmitter } from "events";
 import Kuery, { type TypedQuery } from "kuery";
 import _ from "lodash";
-import { v4 as uuid } from "uuid";
 import {
   type Collection,
   type CountDocumentsOptions,
@@ -142,7 +141,7 @@ class IndexedDBCollection<T extends VDocument = VDocument> extends EventEmitter 
     try {
       for (const doc of docs) {
         if (!doc._id) {
-          doc._id = doc.id || uuid();
+          doc._id = doc.id || crypto.randomUUID();
         }
         (doc as VDocument).$collection = this._name;
         (doc as Record<string, any>).$collectionKey = this._getKey(doc);
@@ -187,7 +186,7 @@ class IndexedDBCollection<T extends VDocument = VDocument> extends EventEmitter 
   async insertOne(doc: T): Promise<InsertOneResult> {
     try {
       if (!_.has(doc, "_id")) {
-        (doc as any)._id = (doc as any).id || uuid();
+        (doc as any)._id = (doc as any).id || crypto.randomUUID();
       }
       (doc as Record<string, any>).$collection = this._name;
       (doc as Record<string, any>).$collectionKey = this._getKey(doc);
@@ -239,7 +238,7 @@ class IndexedDBCollection<T extends VDocument = VDocument> extends EventEmitter 
       function addNext() {
         const doc = docs[currentIndex++];
         if (!_.has(doc, "_id")) {
-          (doc as any)._id = (doc as any).id || uuid();
+          (doc as any)._id = (doc as any).id || crypto.randomUUID();
         }
         (doc as Record<string, any>).$collection = self._name;
         (doc as Record<string, any>).$collectionKey = self._getKey(doc);

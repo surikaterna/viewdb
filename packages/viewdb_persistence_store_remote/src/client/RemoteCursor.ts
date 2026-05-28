@@ -1,6 +1,5 @@
 import _ from "lodash";
 import { Logger } from "slf";
-import { v4 as uuid } from "uuid";
 import RemoteObserver from "./RemoteObserver";
 
 const LOG = Logger.getLogger("viewdb:remote:cursor");
@@ -19,7 +18,7 @@ class RemoteCursor extends ViewDBCursor {
     const limit = _.get(this, "_query.limit", _.get(options, "limit", 0));
 
     const params: any = {
-      id: uuid(),
+      id: crypto.randomUUID(),
       count: this._query.query || this._query,
       collection: (this._collection as any)._name,
     };

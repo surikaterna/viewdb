@@ -1,7 +1,6 @@
 import { EventEmitter } from "events";
 import Kuery, { findOne, type TypedQuery } from "kuery";
 import _ from "lodash";
-import { v4 as uuid } from "uuid";
 import type {
   Collection,
   CountDocumentsOptions,
@@ -89,7 +88,7 @@ class InMemoryCollection<T extends VDocument = VDocument> extends EventEmitter i
         throw new Error("Document must be object");
       }
       if (!_.has(document, "_id")) {
-        document._id = document.id || uuid();
+        document._id = document.id || crypto.randomUUID();
       }
       const idx = _.findIndex(this._documents, { _id: document._id });
       if (op === "insert" && idx >= 0) {
@@ -159,7 +158,7 @@ class InMemoryCollection<T extends VDocument = VDocument> extends EventEmitter i
 
   private insertSingle(doc: T): number {
     if (!doc._id) {
-      doc._id = "id" in doc ? doc.id : uuid();
+      doc._id = "id" in doc ? doc.id : crypto.randomUUID();
     }
 
     const index = this._documents.findIndex((d) => d._id === doc._id);
