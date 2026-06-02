@@ -19,6 +19,10 @@ class Observer {
   _cacheIndex: Map<string, number> | null = new Map();
   listener: any = undefined;
   _kuery: any;
+  _batchMs: number = 0;
+  _pendingChanged: Map<string, { doc: any; index: number }> | null = null;
+  _emittedInWindow: Map<string, boolean> | null = null;
+  _flushTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(query: any, queryOptions: any, collection: any, options: any, oplogListener?: any) {
     var self = this;
@@ -36,11 +40,25 @@ class Observer {
     this.listener = undefined;
     this._kuery = new Kuery(this._query.query);
 
+    var batchMs = options.batchMs != null ? options.batchMs : 0;
+    if (batchMs > 0) {
+      this._batchMs = batchMs;
+      this._pendingChanged = new Map();
+      this._emittedInWindow = new Map();
+    }
+
     self.loadInitial(function () {
       self.listener = oplogListener.listen(namespace, self._onOperation, self);
     });
 
     var dispose = function () {
+      if (self._flushTimer) {
+        clearTimeout(self._flushTimer);
+        self._flushTimer = null;
+      }
+      self._flushPendingChanged();
+      self._pendingChanged = null;
+      self._emittedInWindow = null;
       if (self.listener) {
         self.listener.dispose();
       }
@@ -133,7 +151,19 @@ class Observer {
         this._cacheIndex!.set(doc.o._id, index);
       }
       if (this._options.changed) {
-        this._options.changed(null as any, doc.o, index); // have no access to asis / old document
+        if (this._batchMs > 0) {
+          if (!this._emittedInWindow!.has(doc.o._id)) {
+            // Leading edge: first change for this doc in this window — emit immediately
+            this._options.changed(null as any, doc.o, index);
+            this._emittedInWindow!.set(doc.o._id, true);
+            this._startBatchWindowIfNeeded();
+          } else {
+            // Already emitted for this doc — buffer latest for trailing edge
+            this._pendingChanged!.set(doc.o._id, { doc: doc.o, index: index });
+          }
+        } else {
+          this._options.changed(null as any, doc.o, index);
+        }
       }
     } else {
       this._onRemove(doc);
@@ -146,6 +176,11 @@ class Observer {
       this._cache!.splice(index, 1);
       this._cacheIndex!.delete(doc.o._id);
 
+      // Cancel any pending batched changed for this document
+      if (this._pendingChanged) {
+        this._pendingChanged.delete(doc.o._id);
+      }
+
       // Keep id->index map in sync for all shifted entries.
       for (var i = index; i < this._cache!.length; i++) {
         this._cacheIndex!.set(this._cache![i], i);
@@ -155,6 +190,29 @@ class Observer {
         this._options.removed(doc.o, index);
       }
     }
+  }
+
+  _startBatchWindowIfNeeded(): void {
+    if (this._flushTimer !== null) return;
+    var self = this;
+    this._flushTimer = setTimeout(function () {
+      self._flushTimer = null;
+      self._flushPendingChanged();
+      if (self._emittedInWindow) {
+        self._emittedInWindow.clear();
+      }
+    }, this._batchMs);
+  }
+
+  _flushPendingChanged(): void {
+    if (!this._pendingChanged || this._pendingChanged.size === 0) return;
+    var self = this;
+    this._pendingChanged.forEach(function (entry) {
+      if (self._options.changed && self._cache) {
+        self._options.changed(null as any, entry.doc, entry.index);
+      }
+    });
+    this._pendingChanged.clear();
   }
 }
 
