@@ -93,14 +93,13 @@ class Observer {
     }
   }
 
-  _checkKuery(coll: any[]): boolean {
-    var res = this._kuery.find(coll);
-    return res && res.length > 0;
+  _checkKuery(doc: any): boolean {
+    return this._kuery.test(doc);
   }
 
   _onInsert(doc: any): void {
     var index = this._cacheIndex!.get(doc.o._id);
-    var match = this._checkKuery([doc.o]);
+    var match = this._checkKuery(doc.o);
     if (match) {
       if (index !== undefined) {
         // already in cache - user has been notified by loadInitial method
@@ -122,7 +121,7 @@ class Observer {
   }
 
   _onUpdate(doc: any): void {
-    var match = this._checkKuery([doc.o]);
+    var match = this._checkKuery(doc.o);
     if (match) {
       var index = this._cacheIndex!.get(doc.o._id);
       if (index !== undefined) {
