@@ -35,6 +35,7 @@ class Observer {
   constructor(collection: any, options: any, query: any) {
     var remoteHandle: any = null;
     var self = this;
+    var stopped = false;
     self.handles = [];
     var events = {
       i: !_.isNil(options.init),
@@ -45,19 +46,23 @@ class Observer {
     };
 
     var params = buildParams({ events: events }, query, collection);
-    var startObserver = function (): { stop: () => void } {
-      var handle = collection._client.subscribe(params, function (err: Error | null, result: any) {
+    var currentHandle: { stop: () => void } | null = null;
+
+    var startObserver = function (): void {
+      currentHandle = collection._client.subscribe(params, function (err: Error | null, result: any) {
         if (err) {
-          handle.stop();
+          if (stopped) return;
+          currentHandle!.stop();
           startObserver();
           return;
         }
+        if (stopped) return;
         if (remoteHandle || result.handle) {
           remoteHandle = result.handle || remoteHandle;
 
           if (self.handles.indexOf(params.id) > -1) {
             collection._client.request({ 'observe.stop': { h: params.id } });
-            handle.stop();
+            currentHandle!.stop();
             _.remove(self.handles, params.id);
           } else {
             _.forEach(result.changes, function (c: any) {
@@ -81,20 +86,25 @@ class Observer {
           }
         }
       });
-
-      return {
-        stop: function () {
-          if (!remoteHandle) {
-            LOG.warn('WARN unsubscribing before receiving subscription handle from server');
-            self.handles.push(params.id);
-          } else {
-            collection._client.request({ 'observe.stop': { h: params.id } });
-            handle.stop();
-          }
-        }
-      };
     };
-    return startObserver() as any;
+
+    startObserver();
+
+    return {
+      stop: function () {
+        stopped = true;
+        if (!remoteHandle) {
+          LOG.warn('WARN unsubscribing before receiving subscription handle from server');
+          self.handles.push(params.id);
+        } else {
+          collection._client.request({ 'observe.stop': { h: params.id } });
+        }
+        if (currentHandle) {
+          currentHandle.stop();
+          currentHandle = null;
+        }
+      }
+    } as any;
   }
 }
 
