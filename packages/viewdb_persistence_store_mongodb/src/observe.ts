@@ -23,6 +23,10 @@ class Observer {
   _pendingChanged: Map<string, { doc: any; index: number }> | null = null;
   _emittedInWindow: Map<string, boolean> | null = null;
   _flushTimer: ReturnType<typeof setTimeout> | null = null;
+  _evalCount: number = 0;
+  _matchCount: number = 0;
+  _rawChangedCount: number = 0;
+  _emittedChangedCount: number = 0;
 
   constructor(query: any, queryOptions: any, collection: any, options: any, oplogListener?: any) {
     var self = this;
@@ -90,7 +94,17 @@ class Observer {
     });
   }
 
+  getStats(): { evalCount: number; matchCount: number; rawChangedCount: number; emittedChangedCount: number } {
+    return {
+      evalCount: this._evalCount,
+      matchCount: this._matchCount,
+      rawChangedCount: this._rawChangedCount,
+      emittedChangedCount: this._emittedChangedCount
+    };
+  }
+
   _onOperation(doc: any): void {
+    this._evalCount++;
     if (!this._cache) {
       log.warn('Got oplog event for document but cache was already disposed');
       return;
@@ -113,7 +127,9 @@ class Observer {
 
   _checkKuery(coll: any[]): boolean {
     var res = this._kuery.find(coll);
-    return res && res.length > 0;
+    var matched = res && res.length > 0;
+    if (matched) this._matchCount++;
+    return matched;
   }
 
   _onInsert(doc: any): void {
@@ -151,17 +167,20 @@ class Observer {
         this._cacheIndex!.set(doc.o._id, index);
       }
       if (this._options.changed) {
+        this._rawChangedCount++;
         if (this._batchMs > 0) {
           if (!this._emittedInWindow!.has(doc.o._id)) {
-            // Leading edge: first change for this doc in this window — emit immediately
+            // Leading edge: first change for this doc in this window ï¿½ emit immediately
+            this._emittedChangedCount++;
             this._options.changed(null as any, doc.o, index);
             this._emittedInWindow!.set(doc.o._id, true);
             this._startBatchWindowIfNeeded();
           } else {
-            // Already emitted for this doc — buffer latest for trailing edge
+            // Already emitted for this doc ï¿½ buffer latest for trailing edge
             this._pendingChanged!.set(doc.o._id, { doc: doc.o, index: index });
           }
         } else {
+          this._emittedChangedCount++;
           this._options.changed(null as any, doc.o, index);
         }
       }
@@ -209,6 +228,7 @@ class Observer {
     var self = this;
     this._pendingChanged.forEach(function (entry) {
       if (self._options.changed && self._cache) {
+        self._emittedChangedCount++;
         self._options.changed(null as any, entry.doc, entry.index);
       }
     });

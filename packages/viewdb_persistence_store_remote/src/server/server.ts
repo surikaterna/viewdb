@@ -17,7 +17,7 @@ interface ConsumerCallbacks {
 }
 
 interface SharedObserver {
-  handle: { stop: () => void };
+  handle: { stop: () => void; getStats?: () => { evalCount: number; matchCount: number; rawChangedCount: number; emittedChangedCount: number } };
   consumers: Map<string, ConsumerCallbacks>;
 }
 
@@ -28,8 +28,67 @@ function observeKey(collection: string, query: any, sort?: any, limit?: any, ski
 function getSharedRegistry(viewdb: any): Map<string, SharedObserver> {
   if (!viewdb._vdbSharedObservers) {
     viewdb._vdbSharedObservers = new Map<string, SharedObserver>();
+    viewdb._getObserverStats = function() { return getObserverStats(viewdb); };
   }
   return viewdb._vdbSharedObservers;
+}
+
+interface ObserverStats {
+  sharedObserverCount: number;
+  totalConsumerCount: number;
+  perCollection: Record<string, {
+    sharedObservers: number;
+    consumers: number;
+    evalCount: number;
+    matchCount: number;
+    missCount: number;
+    rawChangedCount: number;
+    emittedChangedCount: number;
+  }>;
+}
+
+function getObserverStats(viewdb: any): ObserverStats {
+  var registry = getSharedRegistry(viewdb);
+  var stats: ObserverStats = {
+    sharedObserverCount: registry.size,
+    totalConsumerCount: 0,
+    perCollection: {}
+  };
+
+  registry.forEach(function (shared, key) {
+    var parsed = JSON.parse(key);
+    var collection = parsed.collection;
+    var consumerCount = shared.consumers.size;
+    stats.totalConsumerCount += consumerCount;
+
+    if (!stats.perCollection[collection]) {
+      stats.perCollection[collection] = {
+        sharedObservers: 0,
+        consumers: 0,
+        evalCount: 0,
+        matchCount: 0,
+        missCount: 0,
+        rawChangedCount: 0,
+        emittedChangedCount: 0
+      };
+    }
+
+    var colStats = stats.perCollection[collection];
+    colStats.sharedObservers++;
+    colStats.consumers += consumerCount;
+
+    // Access observer stats if available
+    if (shared.handle && shared.handle.getStats) {
+      var observerStats = shared.handle.getStats();
+      colStats.evalCount += observerStats.evalCount;
+      colStats.matchCount += observerStats.matchCount;
+      colStats.missCount += (observerStats.evalCount - observerStats.matchCount);
+      colStats.rawChangedCount += observerStats.rawChangedCount;
+      colStats.emittedChangedCount += observerStats.emittedChangedCount;
+    }
+  });
+
+  return stats;
 }
 
 function removeConsumer(registry: Map<string, SharedObserver>, key: string, consumerId: string): void {
