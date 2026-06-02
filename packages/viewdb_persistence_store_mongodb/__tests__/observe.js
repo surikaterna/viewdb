@@ -2,6 +2,7 @@ var _ = require('lodash');
 var MongoClient = require('mongodb').MongoClient;
 var ViewDb = require('viewdb');
 var Store = require('../dist/store');
+var Observer = require('../dist/observe');
 
 describe('Observe', function () {
   const COLLECTION_NAME = 'observe';
@@ -139,4 +140,106 @@ describe('Observe', function () {
         });
       });
     }));
+
+  it('#oplog observe keeps cache index in sync after remove shifts and update', () => {
+    var buildDoc = function (id) {
+      return {
+        _id: id,
+        status: 'created',
+        shipTo: 'SE'
+      };
+    };
+
+    var setupObserver = function (initialDocs, options) {
+      var capturedHandler;
+      var capturedContext;
+
+      var oplogListener = {
+        listen: function (namespace, onOperation, context) {
+          capturedHandler = onOperation;
+          capturedContext = context;
+
+          return {
+            dispose: function () {}
+          };
+        }
+      };
+
+      var collection = {
+        _collection: {
+          s: {
+            namespace: {
+              db: 'db_test_suite',
+              collection: COLLECTION_NAME
+            }
+          }
+        },
+        _getDocuments: function (query, cb) {
+          cb(null, initialDocs);
+        }
+      };
+
+      new Observer({ query: {} }, {}, collection, options, oplogListener);
+
+      return {
+        observerContext: function () {
+          return capturedContext;
+        },
+        emit: function (payload) {
+          capturedHandler.call(capturedContext, payload);
+        }
+      };
+    };
+
+    var docA = buildDoc('A');
+    var docB = buildDoc('B');
+    var docC = buildDoc('C');
+
+    var addedCalls = [];
+    var changedCalls = [];
+    var removedCalls = [];
+
+    var observerSetup = setupObserver([docA, docB], {
+      added: function (doc, index) {
+        addedCalls.push([doc, index]);
+      },
+      changed: function (asis, doc, index) {
+        changedCalls.push([asis, doc, index]);
+      },
+      removed: function (doc, index) {
+        removedCalls.push([doc, index]);
+      }
+    });
+
+    // Initial load may invoke callbacks through merge(); clear to validate oplog updates only.
+    addedCalls = [];
+    changedCalls = [];
+    removedCalls = [];
+
+    observerSetup.emit({ op: 'i', o: docC });
+
+    var observer = observerSetup.observerContext();
+
+    expect(addedCalls).toHaveLength(1);
+    expect(addedCalls[0][0]._id).toBe('C');
+    expect(addedCalls[0][1]).toBe(2);
+    expect(observer._cacheIndex.get('C')).toBe(2);
+
+    observerSetup.emit({ op: 'd', o: { _id: 'A' } });
+
+    expect(removedCalls).toHaveLength(1);
+    expect(removedCalls[0][0]).toEqual({ _id: 'A' });
+    expect(removedCalls[0][1]).toBe(0);
+
+    expect(observer._cache).toEqual(['B', 'C']);
+    expect(observer._cacheIndex.get('B')).toBe(0);
+    expect(observer._cacheIndex.get('C')).toBe(1);
+
+    observerSetup.emit({ op: 'u', o: docB });
+
+    expect(changedCalls).toHaveLength(1);
+    expect(changedCalls[0][0]).toBe(null);
+    expect(changedCalls[0][1]).toEqual(docB);
+    expect(changedCalls[0][2]).toBe(0);
+  });
 });
