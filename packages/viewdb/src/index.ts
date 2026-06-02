@@ -1,8 +1,8 @@
-import ViewDB = require('./viewdb');
-import Cursor = require('./cursor');
-import Observer = require('./observe');
-import merge = require('./merger');
-import plugins = require('./plugins');
+import ViewDB from './viewdb';
+import Cursor from './cursor';
+import Observer from './observe';
+import merge from './merger';
+import * as plugins from './plugins';
 
 // Preserve the exact CommonJS export shape:
 // module.exports = ViewDB (callable as constructor)

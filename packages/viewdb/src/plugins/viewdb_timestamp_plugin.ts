@@ -1,6 +1,11 @@
-import _ = require('lodash');
+import _ from 'lodash';
 
-function ViewDBTimestampPlugin(viewDb: any): void {
+type ViewDBPlugin = {
+  (viewDb: any): void;
+  new (viewDb: any): void;
+};
+
+const ViewDBTimestampPlugin = (function (viewDb: any): void {
   const oldCollection = viewDb.collection;
   viewDb.collection = function (this: any) {
     const coll = oldCollection.apply(this, arguments);
@@ -98,6 +103,6 @@ function ViewDBTimestampPlugin(viewDb: any): void {
     }
     return coll;
   };
-}
+}) as unknown as ViewDBPlugin;
 
 export = ViewDBTimestampPlugin;

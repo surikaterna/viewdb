@@ -2,12 +2,12 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "target": "ES5",
-    "outDir": "dist",
-    "rootDir": "src",
-    "composite": true,
-    "types": ["node", "lodash"],
-    "typeRoots": ["../../node_modules/@types", "../shared-types"]
+    "noEmit": true,
+    "rootDir": ".",
+    "strict": true,
+    "types": ["vitest/globals", "node", "lodash"],
+    "typeRoots": ["../../node_modules/@types", "../../node_modules", "../shared-types"]
   },
-  "include": ["src", "../shared-types"],
-  "exclude": ["node_modules", "dist", "test"]
+  "include": ["src", "test", "../shared-types"],
+  "exclude": ["node_modules", "dist"]
 }

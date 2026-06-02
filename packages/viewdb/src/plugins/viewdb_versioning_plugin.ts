@@ -1,4 +1,9 @@
-import _ = require('lodash');
+import _ from 'lodash';
+
+type ViewDBPlugin = {
+  (viewDb: any): void;
+  new (viewDb: any): void;
+};
 
 function _getVersion(version: number | undefined): number {
   if (_.isUndefined(version)) {
@@ -7,7 +12,7 @@ function _getVersion(version: number | undefined): number {
   return version + 1;
 }
 
-function ViewDBVersioningPlugin(viewDb: any): void {
+const ViewDBVersioningPlugin = (function (viewDb: any): void {
   const oldCollection = viewDb.collection;
   viewDb.collection = function (this: any) {
     const coll = oldCollection.apply(this, arguments);
@@ -84,6 +89,6 @@ function ViewDBVersioningPlugin(viewDb: any): void {
     }
     return coll;
   };
-}
+}) as unknown as ViewDBPlugin;
 
 export = ViewDBVersioningPlugin;
