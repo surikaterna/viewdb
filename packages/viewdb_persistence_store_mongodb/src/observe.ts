@@ -170,13 +170,13 @@ class Observer {
         this._rawChangedCount++;
         if (this._batchMs > 0) {
           if (!this._emittedInWindow!.has(doc.o._id)) {
-            // Leading edge: first change for this doc in this window � emit immediately
+            // Leading edge: first change for this doc in this window - emit immediately
             this._emittedChangedCount++;
             this._options.changed(null as any, doc.o, index);
             this._emittedInWindow!.set(doc.o._id, true);
             this._startBatchWindowIfNeeded();
           } else {
-            // Already emitted for this doc � buffer latest for trailing edge
+            // Already emitted for this doc - buffer latest for trailing edge
             this._pendingChanged!.set(doc.o._id, { doc: doc.o, index: index });
           }
         } else {
@@ -195,10 +195,13 @@ class Observer {
       this._cache!.splice(index, 1);
       this._cacheIndex!.delete(doc.o._id);
 
-      // Cancel any pending batched changed for this document
-      if (this._pendingChanged) {
-        this._pendingChanged.delete(doc.o._id);
-      }
+    // Cancel any pending batched changed for this document
+    if (this._pendingChanged) {
+      this._pendingChanged.delete(doc.o._id);
+    }
+    if (this._emittedInWindow) {
+      this._emittedInWindow.delete(doc.o._id);
+    }
 
       // Keep id->index map in sync for all shifted entries.
       for (var i = index; i < this._cache!.length; i++) {
@@ -226,10 +229,13 @@ class Observer {
   _flushPendingChanged(): void {
     if (!this._pendingChanged || this._pendingChanged.size === 0) return;
     var self = this;
-    this._pendingChanged.forEach(function (entry) {
-      if (self._options.changed && self._cache) {
-        self._emittedChangedCount++;
-        self._options.changed(null as any, entry.doc, entry.index);
+    this._pendingChanged.forEach(function (entry, docId) {
+      if (self._options.changed && self._cache && self._cacheIndex) {
+        var currentIndex = self._cacheIndex.get(docId);
+        if (currentIndex !== undefined) {
+          self._emittedChangedCount++;
+          self._options.changed(null as any, entry.doc, currentIndex);
+        }
       }
     });
     this._pendingChanged.clear();

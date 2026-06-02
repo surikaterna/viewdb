@@ -14,6 +14,7 @@ interface ConsumerCallbacks {
   request: any;
   socket: VdbSocket;
   events: { i?: boolean; a?: boolean; r?: boolean; c?: boolean; m?: boolean };
+  ready: boolean;
 }
 
 interface SharedObserver {
@@ -102,10 +103,11 @@ function removeConsumer(registry: Map<string, SharedObserver>, key: string, cons
 }
 
 class ViewDbSocketServer {
-  constructor(viewdb: any, socket: VdbSocket, queryDecorator?: any, globalLimit?: number, readPreference?: any) {
+  constructor(viewdb: any, socket: VdbSocket, queryDecorator?: any, globalLimit?: number, readPreference?: any, batchMs?: number) {
     var _observers: Record<string, { i: number; key: string; consumerId: string }> = {};
     var _queryDecorator: any;
     var _socketId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    var _batchMs = batchMs || 0;
     var _disconnected = false;
     var _cancelledObserves = new Set<string>();
 
@@ -212,12 +214,13 @@ class ViewDbSocketServer {
           var consumer: ConsumerCallbacks = {
             request: request,
             socket: socket,
-            events: events
+            events: events,
+            ready: false
           };
 
           var shared = registry.get(key);
           if (shared) {
-            // Join existing shared observer � send fresh init to this consumer
+            // Join existing shared observer - send fresh init to this consumer
             shared.consumers.set(consumerId, consumer);
             if (events.i) {
               var initCursor = viewdb.collection(request.p.collection).find(decoratedQuery);
@@ -240,8 +243,11 @@ class ViewDbSocketServer {
                 if (!err && result) {
                   sendChange(socket, { i: { r: result } }, request);
                 }
+                consumer.ready = true;
                 initCursor.close(function (_err: Error | null) {});
               });
+            } else {
+              consumer.ready = true;
             }
           } else {
             // Create new shared observer
@@ -275,38 +281,39 @@ class ViewDbSocketServer {
                   if (entry.events.i) {
                     sendChange(entry.socket, { i: { r: result } }, entry.request);
                   }
+                  entry.ready = true;
                 });
               },
               added: function (e: any, index: number) {
                 newShared.consumers.forEach(function (entry) {
-                  if (entry.events.a) {
+                  if (entry.ready && entry.events.a) {
                     sendChange(entry.socket, { a: { e: e, i: index } }, entry.request);
                   }
                 });
               },
               removed: function (e: any, index: number) {
                 newShared.consumers.forEach(function (entry) {
-                  if (entry.events.r) {
+                  if (entry.ready && entry.events.r) {
                     sendChange(entry.socket, { r: { e: e, i: index } }, entry.request);
                   }
                 });
               },
               changed: function (asis: any, tobe: any, index: number) {
                 newShared.consumers.forEach(function (entry) {
-                  if (entry.events.c) {
+                  if (entry.ready && entry.events.c) {
                     sendChange(entry.socket, { c: { o: asis, n: tobe, i: index } }, entry.request);
                   }
                 });
               },
               moved: function (e: any, oldIndex: number, newIndex: number) {
                 newShared.consumers.forEach(function (entry) {
-                  if (entry.events.m) {
+                  if (entry.ready && entry.events.m) {
                     sendChange(entry.socket, { m: { e: e, o: oldIndex, n: newIndex } }, entry.request);
                   }
                 });
               },
               oplog: true,
-              batchMs: 50
+              batchMs: _batchMs
             };
 
             var observeHandle = cursor.observe(observeOptions);
