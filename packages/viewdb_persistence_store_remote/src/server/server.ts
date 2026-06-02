@@ -47,6 +47,8 @@ class ViewDbSocketServer {
     var _observers: Record<string, { i: number; key: string; consumerId: string }> = {};
     var _queryDecorator: any;
     var _socketId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    var _disconnected = false;
+    var _cancelledObserves = new Set<string>();
 
     if (!queryDecorator) {
       _queryDecorator = function (_col: any, q: any, cb: any) {
@@ -59,6 +61,7 @@ class ViewDbSocketServer {
     var registry = getSharedRegistry(viewdb);
 
     socket.on('disconnect', function () {
+      _disconnected = true;
       _.forOwn(_observers, function (observer: any, observeId: string) {
         removeConsumer(registry, observer.key, observer.consumerId);
         delete _observers[observeId];
@@ -128,6 +131,10 @@ class ViewDbSocketServer {
       } else if (request.p.observe) {
         var observeId = request.p.id;
         _queryDecorator(request.p.collection, request.p.observe, function (decoratedQuery: any) {
+          if (_disconnected || _cancelledObserves.has(observeId)) {
+            _cancelledObserves.delete(observeId);
+            return;
+          }
           var effectiveLimit = _.isNumber(request.p.limit) ? request.p.limit :
             (globalLimit && _.isNumber(globalLimit) ? globalLimit : undefined);
 
@@ -151,7 +158,7 @@ class ViewDbSocketServer {
 
           var shared = registry.get(key);
           if (shared) {
-            // Join existing shared observer — send fresh init to this consumer
+            // Join existing shared observer ï¿½ send fresh init to this consumer
             shared.consumers.set(consumerId, consumer);
             if (events.i) {
               var initCursor = viewdb.collection(request.p.collection).find(decoratedQuery);
@@ -269,7 +276,7 @@ class ViewDbSocketServer {
             removeConsumer(registry, obs.key, obs.consumerId);
             delete _observers[handle];
           } else {
-            console.error('Observer not registered on this server: ' + handle);
+            _cancelledObserves.add(handle);
           }
         } else {
           console.log('Observe stopped failed: ' + request.p['observe.stop'].h);
