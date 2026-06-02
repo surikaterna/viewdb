@@ -2,7 +2,7 @@ import _ = require('lodash');
 import Kuery = require('kuery');
 import { projectDocument } from './utils';
 import { LoggerFactory } from 'slf';
-import type { ObserveOptions, ObserveHandle } from 'viewdb/dist/types';
+import type { ObserveOptions } from 'viewdb/dist/types';
 
 var ViewDB = require('viewdb');
 var merge = ViewDB.merge;
@@ -16,6 +16,7 @@ class Observer {
   _options!: ObserveOptions;
   _collection: any;
   _cache: string[] | null = [];
+  _cacheIndex: Map<string, number> | null = new Map();
   listener: any = undefined;
   _kuery: any;
 
@@ -31,6 +32,7 @@ class Observer {
     this._options = options;
     this._collection = collection;
     this._cache = [];
+    this._cacheIndex = new Map();
     this.listener = undefined;
     this._kuery = new Kuery(this._query.query);
 
@@ -43,6 +45,7 @@ class Observer {
         self.listener.dispose();
       }
       self._cache = null;
+      self._cacheIndex = null;
       return Promise.resolve();
     };
     return {
@@ -61,6 +64,10 @@ class Observer {
         merge(null, result, _.defaults({ comparatorId: comparator }, self._options));
       }
       self._cache = _.map(result, '_id');
+      self._cacheIndex = new Map();
+      for (var i = 0; i < self._cache.length; i++) {
+        self._cacheIndex.set(self._cache[i], i);
+      }
       cb();
     });
   }
@@ -92,13 +99,14 @@ class Observer {
   }
 
   _onInsert(doc: any): void {
-    var index = this._cache!.indexOf(doc.o._id);
+    var index = this._cacheIndex!.get(doc.o._id);
     var match = this._checkKuery([doc.o]);
     if (match) {
-      if (index > -1) {
+      if (index !== undefined) {
         // already in cache - user has been notified by loadInitial method
       } else {
         var length = this._cache!.push(doc.o._id);
+        this._cacheIndex!.set(doc.o._id, length - 1);
         var document = doc.o;
         var project = this._queryOptions.project;
 
@@ -116,12 +124,13 @@ class Observer {
   _onUpdate(doc: any): void {
     var match = this._checkKuery([doc.o]);
     if (match) {
-      var index = this._cache!.indexOf(doc.o._id);
-      if (index !== -1) {
+      var index = this._cacheIndex!.get(doc.o._id);
+      if (index !== undefined) {
         this._cache![index] = doc.o._id;
       } else {
         var length = this._cache!.push(doc.o._id);
         index = length - 1;
+        this._cacheIndex!.set(doc.o._id, index);
       }
       if (this._options.changed) {
         this._options.changed(null as any, doc.o, index); // have no access to asis / old document
@@ -132,9 +141,16 @@ class Observer {
   }
 
   _onRemove(doc: any): void {
-    var index = this._cache!.indexOf(doc.o._id);
-    if (index > -1) {
+    var index = this._cacheIndex!.get(doc.o._id);
+    if (index !== undefined) {
       this._cache!.splice(index, 1);
+      this._cacheIndex!.delete(doc.o._id);
+
+      // Keep id->index map in sync for all shifted entries.
+      for (var i = index; i < this._cache!.length; i++) {
+        this._cacheIndex!.set(this._cache![i], i);
+      }
+
       if (this._options.removed) {
         this._options.removed(doc.o, index);
       }
