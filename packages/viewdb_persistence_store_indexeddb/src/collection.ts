@@ -170,7 +170,7 @@ class Collection extends EventEmitter {
         query.sort && q.sort(query.sort);
         query.skip && q.skip(query.skip);
         query.limit && q.limit(query.limit);
-        callback(null, q.find(result));
+        callback(null, Array.from(q.find(result)));
       }
     };
   }
