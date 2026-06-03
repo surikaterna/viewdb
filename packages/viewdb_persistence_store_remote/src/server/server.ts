@@ -18,8 +18,15 @@ interface ConsumerCallbacks {
 }
 
 interface SharedObserver {
-  handle: { stop: () => void; getStats?: () => { evalCount: number; matchCount: number; rawChangedCount: number; emittedChangedCount: number } };
+  handle: { stop: () => void; getStats?: () => { evalCount: number; matchCount: number; rawChangedCount: number; emittedChangedCount: number } } | null;
   consumers: Map<string, ConsumerCallbacks>;
+}
+
+interface ObserveRegistration {
+  i: number;
+  key: string | null;
+  consumerId: string | null;
+  token: number;
 }
 
 function observeKey(collection: string, query: any, sort?: any, limit?: any, skip?: any, project?: any): string {
@@ -97,19 +104,28 @@ function removeConsumer(registry: Map<string, SharedObserver>, key: string, cons
   if (!shared) return;
   shared.consumers.delete(consumerId);
   if (shared.consumers.size === 0) {
-    shared.handle.stop();
+    if (shared.handle) {
+      shared.handle.stop();
+    }
     registry.delete(key);
+  }
+}
+
+function stopRegisteredObserver(registry: Map<string, SharedObserver>, observer: ObserveRegistration): void {
+  if (observer.key && observer.consumerId) {
+    removeConsumer(registry, observer.key, observer.consumerId);
   }
 }
 
 class ViewDbSocketServer {
   constructor(viewdb: any, socket: VdbSocket, queryDecorator?: any, globalLimit?: number, readPreference?: any, batchMs?: number) {
-    var _observers: Record<string, { i: number; key: string; consumerId: string }> = {};
+    var _observers: Record<string, ObserveRegistration> = {};
     var _queryDecorator: any;
     var _socketId = Math.random().toString(36).slice(2) + Date.now().toString(36);
     var _batchMs = batchMs || 0;
     var _disconnected = false;
     var _cancelledObserves = new Set<string>();
+    var _observeRegistrationSeq = 0;
 
     if (!queryDecorator) {
       _queryDecorator = function (_col: any, q: any, cb: any) {
@@ -124,7 +140,7 @@ class ViewDbSocketServer {
     socket.on('disconnect', function () {
       _disconnected = true;
       _.forOwn(_observers, function (observer: any, observeId: string) {
-        removeConsumer(registry, observer.key, observer.consumerId);
+        stopRegisteredObserver(registry, observer);
         delete _observers[observeId];
       });
     });
@@ -191,9 +207,24 @@ class ViewDbSocketServer {
         });
       } else if (request.p.observe) {
         var observeId = request.p.id;
+        var existingObserver = _observers[observeId];
+        if (existingObserver) {
+          stopRegisteredObserver(registry, existingObserver);
+        }
+        var registrationToken = ++_observeRegistrationSeq;
+        _observers[observeId] = {
+          i: request.i,
+          key: null,
+          consumerId: null,
+          token: registrationToken
+        };
         _queryDecorator(request.p.collection, request.p.observe, function (decoratedQuery: any) {
-          if (_disconnected || _cancelledObserves.has(observeId)) {
+          var pendingObserver = _observers[observeId];
+          if (_disconnected || !pendingObserver || pendingObserver.token !== registrationToken || _cancelledObserves.has(observeId)) {
             _cancelledObserves.delete(observeId);
+            if (pendingObserver && pendingObserver.token === registrationToken) {
+              delete _observers[observeId];
+            }
             return;
           }
           var effectiveLimit = _.isNumber(request.p.limit) ? request.p.limit :
@@ -240,6 +271,11 @@ class ViewDbSocketServer {
                 initCursor.project(request.p.project);
               }
               initCursor.toArray(function (err: Error | null, result: any) {
+                var currentObserver = _observers[observeId];
+                if (!currentObserver || currentObserver.token !== registrationToken || !shared!.consumers.has(consumerId)) {
+                  initCursor.close(function (_err: Error | null) {});
+                  return;
+                }
                 if (!err && result) {
                   sendChange(socket, { i: { r: result } }, request);
                 }
@@ -252,7 +288,7 @@ class ViewDbSocketServer {
           } else {
             // Create new shared observer
             var newShared: SharedObserver = {
-              handle: null as any,
+              handle: null,
               consumers: new Map()
             };
             newShared.consumers.set(consumerId, consumer);
@@ -317,6 +353,12 @@ class ViewDbSocketServer {
             };
 
             var observeHandle = cursor.observe(observeOptions);
+            if (_disconnected || !_observers[observeId] || _observers[observeId].token !== registrationToken) {
+              observeHandle.stop();
+              registry.delete(key);
+              cursor.close(function (_err: Error | null) {});
+              return;
+            }
             newShared.handle = observeHandle;
             cursor.close(function (_err: Error | null) {});
             shared = newShared;
@@ -325,7 +367,8 @@ class ViewDbSocketServer {
           _observers[observeId] = {
             i: request.i,
             key: key,
-            consumerId: consumerId
+            consumerId: consumerId,
+            token: registrationToken
           };
           socket.emit('/vdb/response', {
             i: request.i,
@@ -339,7 +382,7 @@ class ViewDbSocketServer {
         if (handle) {
           if (_observers[handle]) {
             var obs = _observers[handle];
-            removeConsumer(registry, obs.key, obs.consumerId);
+            stopRegisteredObserver(registry, obs);
             delete _observers[handle];
           } else {
             _cancelledObserves.add(handle);

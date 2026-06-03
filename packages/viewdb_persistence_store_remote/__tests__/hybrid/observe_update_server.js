@@ -111,4 +111,132 @@ describe('Observe-Update Remote', function () {
         }
       });
     }));
+
+  it('#server duplicate observe id stops previous consumer', () => {
+    var stoppedHandles = [];
+    var socket = createSocket();
+    var viewdb = createObserveOnlyViewDb(stoppedHandles);
+    new ViewDbSocketServer(viewdb, socket);
+
+    socket.trigger('/vdb/request', observeRequest(1, 'same-id', { _id: 'old' }));
+    socket.trigger('/vdb/request', observeRequest(2, 'same-id', { _id: 'new' }));
+
+    stoppedHandles.should.deepEqual(['old']);
+    viewdb._getObserverStats().sharedObserverCount.should.equal(1);
+    viewdb._getObserverStats().totalConsumerCount.should.equal(1);
+  });
+
+  it('#server stop before async observe decorator registration prevents late observe', () => {
+    var decoratorCallback;
+    var stoppedHandles = [];
+    var socket = createSocket();
+    var viewdb = createObserveOnlyViewDb(stoppedHandles);
+    var decorator = function (collection, query, cb) {
+      decoratorCallback = cb;
+    };
+    new ViewDbSocketServer(viewdb, socket, decorator);
+
+    socket.trigger('/vdb/request', observeRequest(1, 'pending-id', { _id: 'pending' }));
+    socket.trigger('/vdb/request', { i: 2, p: { 'observe.stop': { h: 'pending-id' } } });
+    decoratorCallback({ _id: 'pending' });
+
+    viewdb.observeCalls.should.equal(0);
+    socket.emittedResponses.length.should.equal(0);
+    stoppedHandles.should.deepEqual([]);
+  });
+
+  it('#real client stop before async observe decorator registration cancels server observer', () =>
+    new Promise((resolve, reject) => {
+      var decoratorCallback;
+      var localSocketServer = new SocketMock();
+      var localClient = new Client(localSocketServer.socketClient);
+      var localClientStore = new Store(localClient);
+      var localRemote = new ViewDb();
+      var localClientVdb = new ViewDb(localClientStore);
+      var decorator = function (collection, query, cb) {
+        decoratorCallback = cb;
+      };
+      new ViewDbSocketServer(localRemote, localSocketServer, decorator);
+
+      var handle = localClientVdb.collection('dollhouse').find({ _id: 'pending' }).observe({
+        init: function () {
+          reject(new Error('stopped observer should not receive init'));
+        }
+      });
+      handle.stop();
+
+      setTimeout(function () {
+        if (!decoratorCallback) {
+          reject(new Error('observe decorator was not called'));
+          return;
+        }
+        decoratorCallback({ _id: 'pending' });
+
+        setTimeout(function () {
+          var stats = localRemote._getObserverStats();
+          stats.sharedObserverCount.should.equal(0);
+          stats.totalConsumerCount.should.equal(0);
+          resolve();
+        }, 10);
+      }, 0);
+    }));
 });
+
+function observeRequest(index, id, query) {
+  return {
+    i: index,
+    p: {
+      id: id,
+      collection: 'dollhouse',
+      observe: query
+    }
+  };
+}
+
+function createSocket() {
+  var handlers = {};
+  return {
+    emittedResponses: [],
+    on: function (event, callback) {
+      handlers[event] = callback;
+    },
+    emit: function (event, payload) {
+      if (event === '/vdb/response') {
+        this.emittedResponses.push(payload);
+      }
+    },
+    trigger: function (event, payload) {
+      handlers[event](payload);
+    }
+  };
+}
+
+function createObserveOnlyViewDb(stoppedHandles) {
+  var viewdb = {
+    observeCalls: 0,
+    collection: function () {
+      return {
+        find: function (query) {
+          return createObserveOnlyCursor(viewdb, query, stoppedHandles);
+        }
+      };
+    }
+  };
+  return viewdb;
+}
+
+function createObserveOnlyCursor(viewdb, query, stoppedHandles) {
+  return {
+    observe: function () {
+      viewdb.observeCalls++;
+      return {
+        stop: function () {
+          stoppedHandles.push(query._id);
+        }
+      };
+    },
+    close: function (callback) {
+      callback(null);
+    }
+  };
+}

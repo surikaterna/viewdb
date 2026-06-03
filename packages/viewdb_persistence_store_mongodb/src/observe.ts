@@ -27,6 +27,7 @@ class Observer {
   _matchCount: number = 0;
   _rawChangedCount: number = 0;
   _emittedChangedCount: number = 0;
+  _disposed: boolean = false;
 
   constructor(query: any, queryOptions: any, collection: any, options: any, oplogListener?: any) {
     var self = this;
@@ -52,10 +53,13 @@ class Observer {
     }
 
     self.loadInitial(function () {
+      if (self._disposed) return;
       self.listener = oplogListener.listen(namespace, self._onOperation, self);
     });
 
     var dispose = function () {
+      if (self._disposed) return Promise.resolve();
+      self._disposed = true;
       if (self._flushTimer) {
         clearTimeout(self._flushTimer);
         self._flushTimer = null;
@@ -80,6 +84,7 @@ class Observer {
     var self = this;
     var newQuery = _.merge(this._query, self._queryOptions);
     this._collection._getDocuments(newQuery, function (err: Error | null, result?: any[]) {
+      if (self._disposed) return;
       if (self._options.init) {
         self._options.init(result || []);
       } else {
@@ -104,6 +109,7 @@ class Observer {
   }
 
   _onOperation(doc: any): void {
+    if (this._disposed) return;
     this._evalCount++;
     if (!this._cache) {
       log.warn('Got oplog event for document but cache was already disposed');
@@ -219,6 +225,7 @@ class Observer {
     var self = this;
     this._flushTimer = setTimeout(function () {
       self._flushTimer = null;
+      if (self._disposed) return;
       self._flushPendingChanged();
       if (self._emittedInWindow) {
         self._emittedInWindow.clear();

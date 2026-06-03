@@ -36,6 +36,7 @@ class Observer {
     var remoteHandle: any = null;
     var self = this;
     var stopped = false;
+    var stopSent = false;
     self.handles = [];
     var events = {
       i: !_.isNil(options.init),
@@ -47,6 +48,12 @@ class Observer {
 
     var params = buildParams({ events: events }, query, collection);
     var currentHandle: { stop: () => void } | null = null;
+
+    var sendStopRequest = function (): void {
+      if (stopSent) return;
+      stopSent = true;
+      collection._client.request({ 'observe.stop': { h: params.id } });
+    };
 
     var startObserver = function (): void {
       currentHandle = collection._client.subscribe(params, function (err: Error | null, result: any) {
@@ -61,7 +68,7 @@ class Observer {
           remoteHandle = result.handle || remoteHandle;
 
           if (self.handles.indexOf(params.id) > -1) {
-            collection._client.request({ 'observe.stop': { h: params.id } });
+            sendStopRequest();
             currentHandle!.stop();
             _.remove(self.handles, params.id);
           } else {
@@ -92,13 +99,13 @@ class Observer {
 
     return {
       stop: function () {
+        if (stopped) return;
         stopped = true;
         if (!remoteHandle) {
           LOG.warn('WARN unsubscribing before receiving subscription handle from server');
           self.handles.push(params.id);
-        } else {
-          collection._client.request({ 'observe.stop': { h: params.id } });
         }
+        sendStopRequest();
         if (currentHandle) {
           currentHandle.stop();
           currentHandle = null;
