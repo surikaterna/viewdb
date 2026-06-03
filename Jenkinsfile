@@ -76,7 +76,7 @@ pipeline {
         stage('Test') {
             agent {
                 docker {
-                    image 'node:22-alpine'
+                    image 'node:22-bullseye'
                     label 'lynx'
                 }
             }
