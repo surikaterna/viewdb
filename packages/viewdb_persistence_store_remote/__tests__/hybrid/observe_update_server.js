@@ -114,16 +114,28 @@ describe('Observe-Update Remote', function () {
 
   it('#server duplicate observe id stops previous consumer', () => {
     var stoppedHandles = [];
+    var originalWarn = console.warn;
+    var warnings = [];
+    console.warn = function () {
+      warnings.push(Array.prototype.slice.call(arguments));
+    };
     var socket = createSocket();
     var viewdb = createObserveOnlyViewDb(stoppedHandles);
-    new ViewDbSocketServer(viewdb, socket);
+    try {
+      new ViewDbSocketServer(viewdb, socket);
 
-    socket.trigger('/vdb/request', observeRequest(1, 'same-id', { _id: 'old' }));
-    socket.trigger('/vdb/request', observeRequest(2, 'same-id', { _id: 'new' }));
+      socket.trigger('/vdb/request', observeRequest(1, 'same-id', { _id: 'old' }));
+      socket.trigger('/vdb/request', observeRequest(2, 'same-id', { _id: 'new' }));
 
-    stoppedHandles.should.deepEqual(['old']);
-    viewdb._getObserverStats().sharedObserverCount.should.equal(1);
-    viewdb._getObserverStats().totalConsumerCount.should.equal(1);
+      stoppedHandles.should.deepEqual(['old']);
+      warnings.length.should.equal(1);
+      warnings[0][0].should.equal('Duplicate observe id replaced');
+      warnings[0][1].should.containEql({ observeId: 'same-id', requestIndex: 2 });
+      viewdb._getObserverStats().sharedObserverCount.should.equal(1);
+      viewdb._getObserverStats().totalConsumerCount.should.equal(1);
+    } finally {
+      console.warn = originalWarn;
+    }
   });
 
   it('#server stop before async observe decorator registration prevents late observe', () => {

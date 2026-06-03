@@ -99,7 +99,7 @@ class Collection extends EventEmitter implements CollectionLike {
     }
     const documents = q.find(this._documents);
     process.nextTick(() => {
-      callback(null, _.cloneDeep(documents));
+      callback(null, _.cloneDeep(documents as VDocument[]));
     });
   }
 }

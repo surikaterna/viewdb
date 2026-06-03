@@ -209,6 +209,11 @@ class ViewDbSocketServer {
         var observeId = request.p.id;
         var existingObserver = _observers[observeId];
         if (existingObserver) {
+          console.warn('Duplicate observe id replaced', {
+            observeId: observeId,
+            requestIndex: request.i,
+            socketId: _socketId
+          });
           stopRegisteredObserver(registry, existingObserver);
         }
         var registrationToken = ++_observeRegistrationSeq;

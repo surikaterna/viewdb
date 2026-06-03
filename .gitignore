@@ -39,3 +39,6 @@ dist/
 
 # TypeScript build output
 *.tsbuildinfo
+
+# Worktrees
+trees/
