@@ -1,5 +1,8 @@
 import _ = require('lodash');
+import { Logger } from 'slf';
 import { VdbSocket } from '../types';
+
+var LOG = Logger.getLogger('viewdb:remote:server');
 
 function sendChange(socket: VdbSocket, change: any, request: any): void {
   socket.emit('/vdb/response', {
@@ -209,7 +212,7 @@ class ViewDbSocketServer {
         var observeId = request.p.id;
         var existingObserver = _observers[observeId];
         if (existingObserver) {
-          console.warn('Duplicate observe id replaced', {
+          LOG.warn('Duplicate observe id replaced %j', {
             observeId: observeId,
             query: request.p.observe,
             requestIndex: request.i,
