@@ -130,7 +130,7 @@ describe('Observe-Update Remote', function () {
       stoppedHandles.should.deepEqual(['old']);
       warnings.length.should.equal(1);
       warnings[0][0].should.equal('Duplicate observe id replaced');
-      warnings[0][1].should.containEql({ observeId: 'same-id', requestIndex: 2 });
+      warnings[0][1].should.containEql({ observeId: 'same-id', requestIndex: 2, query: { _id: 'new' } });
       viewdb._getObserverStats().sharedObserverCount.should.equal(1);
       viewdb._getObserverStats().totalConsumerCount.should.equal(1);
     } finally {

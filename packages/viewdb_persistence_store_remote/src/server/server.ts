@@ -211,6 +211,7 @@ class ViewDbSocketServer {
         if (existingObserver) {
           console.warn('Duplicate observe id replaced', {
             observeId: observeId,
+            query: request.p.observe,
             requestIndex: request.i,
             socketId: _socketId
           });
