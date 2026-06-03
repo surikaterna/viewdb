@@ -1,5 +1,8 @@
 import _ = require('lodash');
+import { Logger } from 'slf';
 import { VdbSocket } from '../types';
+
+var LOG = Logger.getLogger('viewdb:remote:server');
 
 function sendChange(socket: VdbSocket, change: any, request: any): void {
   socket.emit('/vdb/response', {
@@ -10,10 +13,123 @@ function sendChange(socket: VdbSocket, change: any, request: any): void {
   });
 }
 
+interface ConsumerCallbacks {
+  request: any;
+  socket: VdbSocket;
+  events: { i?: boolean; a?: boolean; r?: boolean; c?: boolean; m?: boolean };
+  ready: boolean;
+}
+
+interface SharedObserver {
+  handle: { stop: () => void; getStats?: () => { evalCount: number; matchCount: number; rawChangedCount: number; emittedChangedCount: number } } | null;
+  consumers: Map<string, ConsumerCallbacks>;
+}
+
+interface ObserveRegistration {
+  i: number;
+  key: string | null;
+  consumerId: string | null;
+  token: number;
+}
+
+function observeKey(collection: string, query: any, sort?: any, limit?: any, skip?: any, project?: any): string {
+  return JSON.stringify({ collection, query, sort, limit, skip, project });
+}
+
+function getSharedRegistry(viewdb: any): Map<string, SharedObserver> {
+  if (!viewdb._vdbSharedObservers) {
+    viewdb._vdbSharedObservers = new Map<string, SharedObserver>();
+    viewdb._getObserverStats = function() { return getObserverStats(viewdb); };
+  }
+  return viewdb._vdbSharedObservers;
+}
+
+interface ObserverStats {
+  sharedObserverCount: number;
+  totalConsumerCount: number;
+  perCollection: Record<string, {
+    sharedObservers: number;
+    consumers: number;
+    evalCount: number;
+    matchCount: number;
+    missCount: number;
+    rawChangedCount: number;
+    emittedChangedCount: number;
+  }>;
+}
+
+function getObserverStats(viewdb: any): ObserverStats {
+  var registry = getSharedRegistry(viewdb);
+  var stats: ObserverStats = {
+    sharedObserverCount: registry.size,
+    totalConsumerCount: 0,
+    perCollection: {}
+  };
+
+  registry.forEach(function (shared, key) {
+    var parsed = JSON.parse(key);
+    var collection = parsed.collection;
+    var consumerCount = shared.consumers.size;
+    stats.totalConsumerCount += consumerCount;
+
+    if (!stats.perCollection[collection]) {
+      stats.perCollection[collection] = {
+        sharedObservers: 0,
+        consumers: 0,
+        evalCount: 0,
+        matchCount: 0,
+        missCount: 0,
+        rawChangedCount: 0,
+        emittedChangedCount: 0
+      };
+    }
+
+    var colStats = stats.perCollection[collection];
+    colStats.sharedObservers++;
+    colStats.consumers += consumerCount;
+
+    // Access observer stats if available
+    if (shared.handle && shared.handle.getStats) {
+      var observerStats = shared.handle.getStats();
+      colStats.evalCount += observerStats.evalCount;
+      colStats.matchCount += observerStats.matchCount;
+      colStats.missCount += (observerStats.evalCount - observerStats.matchCount);
+      colStats.rawChangedCount += observerStats.rawChangedCount;
+      colStats.emittedChangedCount += observerStats.emittedChangedCount;
+    }
+  });
+
+  return stats;
+}
+
+function removeConsumer(registry: Map<string, SharedObserver>, key: string, consumerId: string): void {
+  var shared = registry.get(key);
+  if (!shared) return;
+  shared.consumers.delete(consumerId);
+  if (shared.consumers.size === 0) {
+    if (shared.handle) {
+      shared.handle.stop();
+    }
+    registry.delete(key);
+  }
+}
+
+function stopRegisteredObserver(registry: Map<string, SharedObserver>, observer: ObserveRegistration): void {
+  if (observer.key && observer.consumerId) {
+    removeConsumer(registry, observer.key, observer.consumerId);
+  }
+}
+
 class ViewDbSocketServer {
-  constructor(viewdb: any, socket: VdbSocket, queryDecorator?: any, globalLimit?: number, readPreference?: any) {
-    var _observers: Record<string, { i: number; handle: { stop: () => void } }> = {};
+  constructor(viewdb: any, socket: VdbSocket, queryDecorator?: any, globalLimit?: number, readPreference?: any, batchMs?: number) {
+    var _observers: Record<string, ObserveRegistration> = {};
     var _queryDecorator: any;
+    var _socketId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    var _batchMs = batchMs || 0;
+    var _disconnected = false;
+    var _cancelledObserves = new Set<string>();
+    var _observeRegistrationSeq = 0;
+
     if (!queryDecorator) {
       _queryDecorator = function (_col: any, q: any, cb: any) {
         cb(q);
@@ -21,12 +137,17 @@ class ViewDbSocketServer {
     } else {
       _queryDecorator = queryDecorator;
     }
+
+    var registry = getSharedRegistry(viewdb);
+
     socket.on('disconnect', function () {
-      _.forOwn(_observers, function (observer: any, handle: string) {
-        observer.handle.stop();
-        delete _observers[handle];
+      _disconnected = true;
+      _.forOwn(_observers, function (observer: any, observeId: string) {
+        stopRegisteredObserver(registry, observer);
+        delete _observers[observeId];
       });
     });
+
     socket.on('/vdb/request', function (request: any) {
       if (request.p.find) {
         _queryDecorator(request.p.collection, request.p.find, function (decoratedQuery: any) {
@@ -89,70 +210,174 @@ class ViewDbSocketServer {
         });
       } else if (request.p.observe) {
         var observeId = request.p.id;
+        var existingObserver = _observers[observeId];
+        if (existingObserver) {
+          LOG.warn('Duplicate observe id replaced %j', {
+            observeId: observeId,
+            query: request.p.observe,
+            requestIndex: request.i,
+            socketId: _socketId
+          });
+          stopRegisteredObserver(registry, existingObserver);
+        }
+        var registrationToken = ++_observeRegistrationSeq;
+        _observers[observeId] = {
+          i: request.i,
+          key: null,
+          consumerId: null,
+          token: registrationToken
+        };
         _queryDecorator(request.p.collection, request.p.observe, function (decoratedQuery: any) {
-          var cursor = viewdb.collection(request.p.collection).find(decoratedQuery);
-          if (readPreference && cursor.setReadPreference) {
-            cursor.setReadPreference(readPreference);
+          var pendingObserver = _observers[observeId];
+          if (_disconnected || !pendingObserver || pendingObserver.token !== registrationToken || _cancelledObserves.has(observeId)) {
+            _cancelledObserves.delete(observeId);
+            if (pendingObserver && pendingObserver.token === registrationToken) {
+              delete _observers[observeId];
+            }
+            return;
           }
-          if (request.p.sort) {
-            cursor.sort(request.p.sort);
-          }
-          if (_.isNumber(request.p.limit)) {
-            cursor.limit(request.p.limit);
-          } else if (globalLimit && _.isNumber(globalLimit)) {
-            cursor.limit(globalLimit);
-          }
-          if (_.isNumber(request.p.skip)) {
-            cursor.skip(request.p.skip);
-          }
-          if (request.p.project) {
-            cursor.project(request.p.project);
-          }
-          var observeOptions: any = {
-            init: function (result: any) {
-              sendChange(socket, { i: { r: result } }, request);
-            },
-            added: function (e: any, index: number) {
-              sendChange(socket, { a: { e: e, i: index } }, request);
-            },
-            removed: function (e: any, index: number) {
-              sendChange(socket, { r: { e: e, i: index } }, request);
-            },
-            changed: function (asis: any, tobe: any, index: number) {
-              sendChange(socket, { c: { o: asis, n: tobe, i: index } }, request);
-            },
-            moved: function (e: any, oldIndex: number, newIndex: number) {
-              sendChange(socket, { m: { e: e, o: oldIndex, n: newIndex } }, request);
-            },
-            oplog: true
+          var effectiveLimit = _.isNumber(request.p.limit) ? request.p.limit :
+            (globalLimit && _.isNumber(globalLimit) ? globalLimit : undefined);
+
+          var key = observeKey(
+            request.p.collection,
+            decoratedQuery,
+            request.p.sort,
+            effectiveLimit,
+            request.p.skip,
+            request.p.project
+          );
+
+          var consumerId = _socketId + ':' + observeId;
+          var events = request.p.events || { i: true, a: true, r: true, c: true, m: true };
+
+          var consumer: ConsumerCallbacks = {
+            request: request,
+            socket: socket,
+            events: events,
+            ready: false
           };
 
-          if (request.p.events) {
-            if (!request.p.events.i) {
-              delete observeOptions.init;
+          var shared = registry.get(key);
+          if (shared) {
+            // Join existing shared observer - send fresh init to this consumer
+            shared.consumers.set(consumerId, consumer);
+            if (events.i) {
+              var initCursor = viewdb.collection(request.p.collection).find(decoratedQuery);
+              if (readPreference && initCursor.setReadPreference) {
+                initCursor.setReadPreference(readPreference);
+              }
+              if (request.p.sort) {
+                initCursor.sort(request.p.sort);
+              }
+              if (effectiveLimit !== undefined) {
+                initCursor.limit(effectiveLimit);
+              }
+              if (_.isNumber(request.p.skip)) {
+                initCursor.skip(request.p.skip);
+              }
+              if (request.p.project && initCursor.project) {
+                initCursor.project(request.p.project);
+              }
+              initCursor.toArray(function (err: Error | null, result: any) {
+                var currentObserver = _observers[observeId];
+                if (!currentObserver || currentObserver.token !== registrationToken || !shared!.consumers.has(consumerId)) {
+                  initCursor.close(function (_err: Error | null) {});
+                  return;
+                }
+                if (!err && result) {
+                  sendChange(socket, { i: { r: result } }, request);
+                }
+                consumer.ready = true;
+                initCursor.close(function (_err: Error | null) {});
+              });
+            } else {
+              consumer.ready = true;
+            }
+          } else {
+            // Create new shared observer
+            var newShared: SharedObserver = {
+              handle: null,
+              consumers: new Map()
+            };
+            newShared.consumers.set(consumerId, consumer);
+            registry.set(key, newShared);
+
+            var cursor = viewdb.collection(request.p.collection).find(decoratedQuery);
+            if (readPreference && cursor.setReadPreference) {
+              cursor.setReadPreference(readPreference);
+            }
+            if (request.p.sort) {
+              cursor.sort(request.p.sort);
+            }
+            if (effectiveLimit !== undefined) {
+              cursor.limit(effectiveLimit);
+            }
+            if (_.isNumber(request.p.skip)) {
+              cursor.skip(request.p.skip);
+            }
+            if (request.p.project) {
+              cursor.project(request.p.project);
             }
 
-            if (!request.p.events.a) {
-              delete observeOptions.added;
-            }
+            var observeOptions: any = {
+              init: function (result: any) {
+                newShared.consumers.forEach(function (entry) {
+                  if (entry.events.i) {
+                    sendChange(entry.socket, { i: { r: result } }, entry.request);
+                  }
+                  entry.ready = true;
+                });
+              },
+              added: function (e: any, index: number) {
+                newShared.consumers.forEach(function (entry) {
+                  if (entry.ready && entry.events.a) {
+                    sendChange(entry.socket, { a: { e: e, i: index } }, entry.request);
+                  }
+                });
+              },
+              removed: function (e: any, index: number) {
+                newShared.consumers.forEach(function (entry) {
+                  if (entry.ready && entry.events.r) {
+                    sendChange(entry.socket, { r: { e: e, i: index } }, entry.request);
+                  }
+                });
+              },
+              changed: function (asis: any, tobe: any, index: number) {
+                newShared.consumers.forEach(function (entry) {
+                  if (entry.ready && entry.events.c) {
+                    sendChange(entry.socket, { c: { o: asis, n: tobe, i: index } }, entry.request);
+                  }
+                });
+              },
+              moved: function (e: any, oldIndex: number, newIndex: number) {
+                newShared.consumers.forEach(function (entry) {
+                  if (entry.ready && entry.events.m) {
+                    sendChange(entry.socket, { m: { e: e, o: oldIndex, n: newIndex } }, entry.request);
+                  }
+                });
+              },
+              oplog: true,
+              batchMs: _batchMs
+            };
 
-            if (!request.p.events.r) {
-              delete observeOptions.removed;
+            var observeHandle = cursor.observe(observeOptions);
+            if (_disconnected || !_observers[observeId] || _observers[observeId].token !== registrationToken) {
+              observeHandle.stop();
+              registry.delete(key);
+              cursor.close(function (_err: Error | null) {});
+              return;
             }
-
-            if (!request.p.events.c) {
-              delete observeOptions.changed;
-            }
-
-            if (!request.p.events.m) {
-              delete observeOptions.moved;
-            }
+            newShared.handle = observeHandle;
+            cursor.close(function (_err: Error | null) {});
+            shared = newShared;
           }
 
-          var observeHandle = cursor.observe(observeOptions);
           _observers[observeId] = {
             i: request.i,
-            handle: observeHandle
+            key: key,
+            consumerId: consumerId,
+            token: registrationToken
           };
           socket.emit('/vdb/response', {
             i: request.i,
@@ -160,16 +385,16 @@ class ViewDbSocketServer {
               handle: observeId
             }
           });
-          cursor.close(function (_err: Error | null) {});
         });
       } else if (request.p['observe.stop']) {
         var handle = request.p['observe.stop'].h;
         if (handle) {
           if (_observers[handle]) {
-            _observers[handle].handle.stop();
+            var obs = _observers[handle];
+            stopRegisteredObserver(registry, obs);
             delete _observers[handle];
           } else {
-            console.error('Observer not registered on this server: ' + handle);
+            _cancelledObserves.add(handle);
           }
         } else {
           console.log('Observe stopped failed: ' + request.p['observe.stop'].h);

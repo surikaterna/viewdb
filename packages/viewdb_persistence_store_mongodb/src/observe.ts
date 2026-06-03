@@ -19,6 +19,15 @@ class Observer {
   _cacheIndex: Map<string, number> | null = new Map();
   listener: any = undefined;
   _kuery: any;
+  _batchMs: number = 0;
+  _pendingChanged: Map<string, { doc: any; index: number }> | null = null;
+  _emittedInWindow: Map<string, boolean> | null = null;
+  _flushTimer: ReturnType<typeof setTimeout> | null = null;
+  _evalCount: number = 0;
+  _matchCount: number = 0;
+  _rawChangedCount: number = 0;
+  _emittedChangedCount: number = 0;
+  _disposed: boolean = false;
 
   constructor(query: any, queryOptions: any, collection: any, options: any, oplogListener?: any) {
     var self = this;
@@ -36,11 +45,28 @@ class Observer {
     this.listener = undefined;
     this._kuery = new Kuery(this._query.query);
 
+    var batchMs = options.batchMs != null ? options.batchMs : 0;
+    if (batchMs > 0) {
+      this._batchMs = batchMs;
+      this._pendingChanged = new Map();
+      this._emittedInWindow = new Map();
+    }
+
     self.loadInitial(function () {
+      if (self._disposed) return;
       self.listener = oplogListener.listen(namespace, self._onOperation, self);
     });
 
     var dispose = function () {
+      if (self._disposed) return Promise.resolve();
+      self._disposed = true;
+      if (self._flushTimer) {
+        clearTimeout(self._flushTimer);
+        self._flushTimer = null;
+      }
+      self._flushPendingChanged();
+      self._pendingChanged = null;
+      self._emittedInWindow = null;
       if (self.listener) {
         self.listener.dispose();
       }
@@ -58,6 +84,7 @@ class Observer {
     var self = this;
     var newQuery = _.merge(this._query, self._queryOptions);
     this._collection._getDocuments(newQuery, function (err: Error | null, result?: any[]) {
+      if (self._disposed) return;
       if (self._options.init) {
         self._options.init(result || []);
       } else {
@@ -72,7 +99,18 @@ class Observer {
     });
   }
 
+  getStats(): { evalCount: number; matchCount: number; rawChangedCount: number; emittedChangedCount: number } {
+    return {
+      evalCount: this._evalCount,
+      matchCount: this._matchCount,
+      rawChangedCount: this._rawChangedCount,
+      emittedChangedCount: this._emittedChangedCount
+    };
+  }
+
   _onOperation(doc: any): void {
+    if (this._disposed) return;
+    this._evalCount++;
     if (!this._cache) {
       log.warn('Got oplog event for document but cache was already disposed');
       return;
@@ -94,7 +132,9 @@ class Observer {
   }
 
   _checkKuery(doc: any): boolean {
-    return this._kuery.test(doc);
+    var matched = this._kuery.test(doc);
+    if (matched) this._matchCount++;
+    return matched;
   }
 
   _onInsert(doc: any): void {
@@ -132,7 +172,22 @@ class Observer {
         this._cacheIndex!.set(doc.o._id, index);
       }
       if (this._options.changed) {
-        this._options.changed(null as any, doc.o, index); // have no access to asis / old document
+        this._rawChangedCount++;
+        if (this._batchMs > 0) {
+          if (!this._emittedInWindow!.has(doc.o._id)) {
+            // Leading edge: first change for this doc in this window - emit immediately
+            this._emittedChangedCount++;
+            this._options.changed(null as any, doc.o, index);
+            this._emittedInWindow!.set(doc.o._id, true);
+            this._startBatchWindowIfNeeded();
+          } else {
+            // Already emitted for this doc - buffer latest for trailing edge
+            this._pendingChanged!.set(doc.o._id, { doc: doc.o, index: index });
+          }
+        } else {
+          this._emittedChangedCount++;
+          this._options.changed(null as any, doc.o, index);
+        }
       }
     } else {
       this._onRemove(doc);
@@ -145,6 +200,14 @@ class Observer {
       this._cache!.splice(index, 1);
       this._cacheIndex!.delete(doc.o._id);
 
+    // Cancel any pending batched changed for this document
+    if (this._pendingChanged) {
+      this._pendingChanged.delete(doc.o._id);
+    }
+    if (this._emittedInWindow) {
+      this._emittedInWindow.delete(doc.o._id);
+    }
+
       // Keep id->index map in sync for all shifted entries.
       for (var i = index; i < this._cache!.length; i++) {
         this._cacheIndex!.set(this._cache![i], i);
@@ -154,6 +217,34 @@ class Observer {
         this._options.removed(doc.o, index);
       }
     }
+  }
+
+  _startBatchWindowIfNeeded(): void {
+    if (this._flushTimer !== null) return;
+    var self = this;
+    this._flushTimer = setTimeout(function () {
+      self._flushTimer = null;
+      if (self._disposed) return;
+      self._flushPendingChanged();
+      if (self._emittedInWindow) {
+        self._emittedInWindow.clear();
+      }
+    }, this._batchMs);
+  }
+
+  _flushPendingChanged(): void {
+    if (!this._pendingChanged || this._pendingChanged.size === 0) return;
+    var self = this;
+    this._pendingChanged.forEach(function (entry, docId) {
+      if (self._options.changed && self._cache && self._cacheIndex) {
+        var currentIndex = self._cacheIndex.get(docId);
+        if (currentIndex !== undefined) {
+          self._emittedChangedCount++;
+          self._options.changed(null as any, entry.doc, currentIndex);
+        }
+      }
+    });
+    this._pendingChanged.clear();
   }
 }
 

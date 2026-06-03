@@ -242,4 +242,42 @@ describe('Observe', function () {
     expect(changedCalls[0][1]).toEqual(docB);
     expect(changedCalls[0][2]).toBe(0);
   });
+
+  it('#oplog observe stop before initial load prevents listener registration', async () => {
+    var loadInitialCallback;
+    var listenCalls = 0;
+    var initCalls = 0;
+    var collection = {
+      _collection: {
+        s: {
+          namespace: {
+            db: 'db_test_suite',
+            collection: COLLECTION_NAME
+          }
+        }
+      },
+      _getDocuments: function (query, cb) {
+        loadInitialCallback = cb;
+      }
+    };
+    var oplogListener = {
+      listen: function () {
+        listenCalls++;
+        return {
+          dispose: function () {}
+        };
+      }
+    };
+    var handle = new Observer({ query: {} }, {}, collection, {
+      init: function () {
+        initCalls++;
+      }
+    }, oplogListener);
+
+    await handle.stop();
+    loadInitialCallback(null, [{ _id: 'late' }]);
+
+    expect(listenCalls).toBe(0);
+    expect(initCalls).toBe(0);
+  });
 });
