@@ -1,6 +1,6 @@
 {
   "name": "viewdb_persistence_store_mongodb",
-  "version": "4.5.0",
+  "version": "4.5.1",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,6 +12,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test.watch": "vitest",
     "coverage": "vitest run --coverage",

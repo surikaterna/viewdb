@@ -1,6 +1,6 @@
 {
   "name": "viewdb",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,6 +12,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test.watch": "vitest",
     "coverage": "vitest run --coverage",
