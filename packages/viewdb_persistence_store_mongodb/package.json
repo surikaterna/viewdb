@@ -28,7 +28,7 @@
   "author": "Andreas Karlsson",
   "devDependencies": {
     "mongodb-memory-server": "^10.0.0",
-    "vitest": "2.1.9",
+    "vitest": "4.1.9",
     "@types/bluebird": "3.5.42",
     "jshint": "^2.13.6",
     "prettier": "^2.8.8",
