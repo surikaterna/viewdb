@@ -8,6 +8,8 @@
   ],
   "scripts": {
     "build": "turbo run build",
+    "clean": "turbo run clean",
+    "clean:all": "turbo run clean && rimraf .turbo",
     "test": "turbo run test",
     "lint": "turbo run lint",
     "format": "turbo run format",
@@ -17,6 +19,7 @@
   },
   "devDependencies": {
     "@changesets/cli": "2.30.0",
+    "rimraf": "^6.1.2",
     "turbo": "^2",
     "typescript": "6.0.2"
   }
