@@ -36,7 +36,7 @@
     "jshint": "^2.13.6",
     "prettier": "^2.8.7",
     "prettier-config-surikaterna": "^1.0.1",
-    "vitest": "2.1.9"
+    "vitest": "3.2.6"
   },
   "dependencies": {
     "kuery": "^0.6.0",
