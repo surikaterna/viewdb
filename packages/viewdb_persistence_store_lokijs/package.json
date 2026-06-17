@@ -29,7 +29,7 @@
     "typescript": "^5.0.0",
     "viewdb": "*",
     "viewdb-store-tests": "*",
-    "vitest": "2.1.9"
+    "vitest": "3.2.6"
   },
   "dependencies": {
     "bluebird": "^3.7.2",
