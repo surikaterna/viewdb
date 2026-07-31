@@ -6,7 +6,10 @@ interface VersionedDoc {
   [key: string]: any;
 }
 
-function reconcile<T extends VersionedDoc = VersionedDoc>(local: T[], remote: T[]): T[] {
+function reconcile<T extends VersionedDoc = VersionedDoc>(
+  local: T[],
+  remote: T[],
+): T[] {
   // Stupid merge logic
   // 0. Add the new docs to the result
   // 1. If has .version take one with highest version
@@ -41,17 +44,26 @@ function reconcile<T extends VersionedDoc = VersionedDoc>(local: T[], remote: T[
   _.forEach(localSame, function (localDoc: T, n: number) {
     var remoteDoc = remoteSame[n];
 
-    if (!_.isUndefined(localDoc?.version) && !_.isUndefined(remoteDoc?.version)) {
+    if (
+      !_.isUndefined(localDoc?.version) &&
+      !_.isUndefined(remoteDoc?.version)
+    ) {
       result.push(localDoc.version > remoteDoc.version ? localDoc : remoteDoc);
     } else if (remoteDoc) {
       result.push(remoteDoc);
     } else {
       //we found a duplicate in localDoc
       if (!_.isUndefined(localDoc?.version)) {
-        const duplicateIndex = _.findIndex(result, (resultDoc: T) => resultDoc._id === localDoc?._id);
+        const duplicateIndex = _.findIndex(
+          result,
+          (resultDoc: T) => resultDoc._id === localDoc?._id,
+        );
 
         // if localDoc is a later version, save it instead of old version (and always prefer objects with version property)
-        if (!result[duplicateIndex].version || result[duplicateIndex].version < localDoc?.version) {
+        if (
+          !result[duplicateIndex].version ||
+          result[duplicateIndex].version < localDoc?.version
+        ) {
           result[duplicateIndex] = localDoc;
         }
       }

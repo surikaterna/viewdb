@@ -4,12 +4,24 @@ import type { FindCursor, Document as MongoDocument } from 'mongodb';
 
 class Cursor {
   _query: any;
-  _queryOptions: { query?: any; skip?: number; limit?: number; sort?: Record<string, 1 | -1>; project?: Record<string, 0 | 1> };
+  _queryOptions: {
+    query?: any;
+    skip?: number;
+    limit?: number;
+    sort?: Record<string, 1 | -1>;
+    project?: Record<string, 0 | 1>;
+  };
   _cursor: FindCursor<MongoDocument>;
   _oplogListener: any;
   _collection: any;
 
-  constructor(collection: any, query: any, options: any, cursor: FindCursor<MongoDocument>, oplogListener?: any) {
+  constructor(
+    collection: any,
+    query: any,
+    options: any,
+    cursor: FindCursor<MongoDocument>,
+    oplogListener?: any,
+  ) {
     this._query = query;
     this._queryOptions = options || {};
     this._cursor = cursor;
@@ -27,7 +39,10 @@ class Cursor {
   }
 
   count(callback?: (err: Error | null, count?: number) => void): any {
-    return nodeify((this._cursor as any).count.apply(this._cursor, arguments), callback);
+    return nodeify(
+      (this._cursor as any).count.apply(this._cursor, arguments),
+      callback,
+    );
   }
 
   project(project: Record<string, 0 | 1>): this {
@@ -37,11 +52,20 @@ class Cursor {
   }
 
   toArray(callback?: (err: Error | null, result?: any[]) => void): any {
-    return nodeify((this._cursor as any).toArray.apply(this._cursor, arguments), callback);
+    return nodeify(
+      (this._cursor as any).toArray.apply(this._cursor, arguments),
+      callback,
+    );
   }
 
   observe(options: any): any {
-    return new Observer(this._query, this._queryOptions, this._collection, options, this._oplogListener);
+    return new Observer(
+      this._query,
+      this._queryOptions,
+      this._collection,
+      options,
+      this._oplogListener,
+    );
   }
 
   skip(skip: number): this {
@@ -74,7 +98,10 @@ class Cursor {
   }
 
   close(callback?: (err: Error | null) => void): any {
-    return nodeify((this._cursor as any).close.apply(this._cursor, arguments), callback);
+    return nodeify(
+      (this._cursor as any).close.apply(this._cursor, arguments),
+      callback,
+    );
   }
 }
 

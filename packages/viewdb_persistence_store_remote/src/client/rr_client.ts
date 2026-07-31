@@ -44,7 +44,7 @@ class Client {
   request(payload: any, callback?: any, persistent?: boolean): number {
     var req: any = {
       i: this._requestId++,
-      p: payload
+      p: payload,
     };
     this._requests[req.i] = { cb: callback, k: persistent || false };
     this._socket!.emit('/vdb/request', req);
@@ -57,7 +57,7 @@ class Client {
     return {
       stop: function () {
         delete self._requests[i];
-      }
+      },
     };
   }
 

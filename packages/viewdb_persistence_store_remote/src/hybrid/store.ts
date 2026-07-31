@@ -25,7 +25,7 @@ var defaultOptions: HybridStoreOptions = {
   cacheQueries: false,
   localOnlyCollections: new Set<string>(),
   cacheCollectionName: '_cache',
-  projectedDocumentsCollection: '_projected_cache'
+  projectedDocumentsCollection: '_projected_cache',
 };
 
 class HybridStore {
@@ -41,8 +41,11 @@ class HybridStore {
     this._collections = {};
 
     if (this._options.cacheQueries) {
-      this._collections[this._options.cacheCollectionName] = local.collection(this._options.cacheCollectionName);
-      this._collections[this._options.projectedDocumentsCollection] = local.collection(this._options.projectedDocumentsCollection);
+      this._collections[this._options.cacheCollectionName] = local.collection(
+        this._options.cacheCollectionName,
+      );
+      this._collections[this._options.projectedDocumentsCollection] =
+        local.collection(this._options.projectedDocumentsCollection);
       setInterval(this._cleanCachedData.bind(this), 1000 * 60 * 30); // Clean every 30 minutes
     }
   }
@@ -77,7 +80,7 @@ class HybridStore {
           name,
           this._options,
           this._collections[this._options.cacheCollectionName],
-          this._collections[this._options.projectedDocumentsCollection]
+          this._collections[this._options.projectedDocumentsCollection],
         );
       }
 
@@ -92,24 +95,41 @@ class HybridStore {
   _cleanCachedData(): void {
     var self = this;
     var minimumChangeDateTime = new Date();
-    minimumChangeDateTime.setMinutes(minimumChangeDateTime.getMinutes() - this._options.cacheLifeTime);
+    minimumChangeDateTime.setMinutes(
+      minimumChangeDateTime.getMinutes() - this._options.cacheLifeTime,
+    );
     var maxTimeEpoch = minimumChangeDateTime.getTime();
 
     // Clean cached query first to prevent query not pointing at anything
-    this._cleanCollection(this._collections[this._options.cacheCollectionName], maxTimeEpoch, 'createDateTime');
+    this._cleanCollection(
+      this._collections[this._options.cacheCollectionName],
+      maxTimeEpoch,
+      'createDateTime',
+    );
 
-    _.forEach(this._collections, function (collection: any, collectionName: string) {
-      if (collectionName === self._options.cacheCollectionName) {
-        return;
-      }
+    _.forEach(
+      this._collections,
+      function (collection: any, collectionName: string) {
+        if (collectionName === self._options.cacheCollectionName) {
+          return;
+        }
 
-      self._cleanCollection(collection._local || collection, maxTimeEpoch);
-    });
+        self._cleanCollection(collection._local || collection, maxTimeEpoch);
+      },
+    );
   }
 
-  _cleanCollection(collection: any, maxEpoch: number, propertyName?: string): void {
+  _cleanCollection(
+    collection: any,
+    maxEpoch: number,
+    propertyName?: string,
+  ): void {
     var comparisonPropertyName = propertyName || '_insertedAt';
-    collection.remove({ [comparisonPropertyName]: { $lt: maxEpoch } }, null, function () {});
+    collection.remove(
+      { [comparisonPropertyName]: { $lt: maxEpoch } },
+      null,
+      function () {},
+    );
   }
 }
 

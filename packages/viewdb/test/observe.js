@@ -12,7 +12,7 @@ describe('Observe', () => {
             expect(x._id).toBe('echo');
             handle.stop();
             resolve();
-          }
+          },
         });
         store.collection('dollhouse').insert({ _id: 'echo' });
       });
@@ -27,7 +27,7 @@ describe('Observe', () => {
           added: function (x) {
             expect(x._id).toBe('echo2');
             resolve();
-          }
+          },
         });
         store.collection('dollhouse').insert({ _id: 'echo2' });
       });
@@ -47,12 +47,14 @@ describe('Observe', () => {
             expect(n.age).toBe(100);
             handle.stop();
             resolve();
-          }
+          },
         });
 
-        store.collection('dollhouse').insert({ _id: 'echo', age: 10 }, function () {
-          store.collection('dollhouse').save({ _id: 'echo', age: 100 });
-        });
+        store
+          .collection('dollhouse')
+          .insert({ _id: 'echo', age: 10 }, function () {
+            store.collection('dollhouse').save({ _id: 'echo', age: 100 });
+          });
       });
     }));
   it('#observe with query and skip', () =>
@@ -76,7 +78,7 @@ describe('Observe', () => {
           added: function () {
             cursor.skip(++skip);
             realDone();
-          }
+          },
         });
       });
     }));
@@ -90,7 +92,7 @@ describe('Observe', () => {
             expect(coll.length).toBe(0);
             handle.stop();
             resolve();
-          }
+          },
         });
       });
     }));
@@ -105,7 +107,7 @@ describe('Observe', () => {
               expect(coll.length).toBe(1);
               handle.stop();
               resolve();
-            }
+            },
           });
         });
       });
@@ -123,7 +125,7 @@ describe('Observe', () => {
             expect(a._id).toBe('echo');
             handle.stop();
             resolve();
-          }
+          },
         });
       });
       setTimeout(function () {
@@ -152,21 +154,25 @@ describe('Observe', () => {
           removed: (doc) => {
             expect(doc).toEqual({ _id: 'echo3', name: 'polo' });
 
-            store.collection('dollhouse').save([{ _id: 'echo3', name: 'polo', data: 'changed' }], () => {
-              store.collection('dollhouse').save([{ _id: 'echo1', name: 'marco', data: 'changed' }]);
-            });
-          }
+            store
+              .collection('dollhouse')
+              .save([{ _id: 'echo3', name: 'polo', data: 'changed' }], () => {
+                store
+                  .collection('dollhouse')
+                  .save([{ _id: 'echo1', name: 'marco', data: 'changed' }]);
+              });
+          },
         });
 
         store.collection('dollhouse').insert(
           [
             { _id: 'echo1', name: 'marco' },
             { _id: 'echo2', name: 'marco' },
-            { _id: 'echo3', name: 'polo' }
+            { _id: 'echo3', name: 'polo' },
           ],
           () => {
             cursor.updateQuery({ name: 'marco' });
-          }
+          },
         );
       });
     }));

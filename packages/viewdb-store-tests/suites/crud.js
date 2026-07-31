@@ -68,16 +68,18 @@ module.exports = function (config) {
 
     it('insert bulk inserts multiple documents', function () {
       return new Promise(function (resolve, reject) {
-        store.collection(COLL).insert([{ _id: 'echo' }, { _id: 'sierra' }], function () {
-          store
-            .collection(COLL)
-            .find({})
-            .toArray(function (err, results) {
-              if (err) return reject(err);
-              assert.strictEqual(results.length, 2);
-              resolve();
-            });
-        });
+        store
+          .collection(COLL)
+          .insert([{ _id: 'echo' }, { _id: 'sierra' }], function () {
+            store
+              .collection(COLL)
+              .find({})
+              .toArray(function (err, results) {
+                if (err) return reject(err);
+                assert.strictEqual(results.length, 2);
+                resolve();
+              });
+          });
       });
     });
 

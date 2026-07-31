@@ -1,5 +1,22 @@
 import { EventEmitter } from 'events';
-import { findIndex, first, forEach, get, isArray, isFunction, isNaN, isNumber, pick, range, remove, some, throttle, uniq, unset, values } from 'lodash';
+import {
+  findIndex,
+  first,
+  forEach,
+  get,
+  isArray,
+  isFunction,
+  isNaN,
+  isNumber,
+  pick,
+  range,
+  remove,
+  some,
+  throttle,
+  uniq,
+  unset,
+  values,
+} from 'lodash';
 import { LoggerFactory } from 'slf';
 import parseSort = require('./parseSort');
 
@@ -11,7 +28,8 @@ const fixCorruptedLoki = (collection: any) => {
   if (!collection.idIndex) {
     return;
   }
-  const isCorrupted = uniq(collection.idIndex).length !== collection.idIndex.length;
+  const isCorrupted =
+    uniq(collection.idIndex).length !== collection.idIndex.length;
   if (isCorrupted) {
     const newIdIndex = range(collection.idIndex.length);
     forEach(collection.data, (item, index: number) => {
@@ -25,7 +43,10 @@ class Collection extends EventEmitter {
   private db: any;
   private collection: any;
   private name: any;
-  private emitThrottled: (eventName: string | symbol, ...args: any[]) => boolean;
+  private emitThrottled: (
+    eventName: string | symbol,
+    ...args: any[]
+  ) => boolean;
   private ttl: { daemonInterval: number; fields: any; daemon: any };
 
   constructor(name: any, db: any, options: any) {
@@ -51,12 +72,17 @@ class Collection extends EventEmitter {
     this.ttl = {
       fields: {},
       daemonInterval: 1000 * 60,
-      daemon: undefined
+      daemon: undefined,
     };
   }
 
   find(query: Record<string, any>, options?: any) {
-    return new Cursor(this, { query: query }, options, this._getDocuments.bind(this));
+    return new Cursor(
+      this,
+      { query: query },
+      options,
+      this._getDocuments.bind(this),
+    );
   }
 
   insert(documents: any, options?: any, callback?: any) {
@@ -75,7 +101,11 @@ class Collection extends EventEmitter {
       if (isFunction(callback)) {
         callback(e);
       } else {
-        LOG.warn('insert failed without callback, docments: %j. Error:', documents, e);
+        LOG.warn(
+          'insert failed without callback, docments: %j. Error:',
+          documents,
+          e,
+        );
       }
     }
   }
@@ -87,7 +117,10 @@ class Collection extends EventEmitter {
         if (doc.commitId) {
           doc._id = doc.commitId;
         } else {
-          LOG.warn('Failed to insert/update doc to collection. Missing id %j', doc);
+          LOG.warn(
+            'Failed to insert/update doc to collection. Missing id %j',
+            doc,
+          );
           return;
         }
       } else {
@@ -105,9 +138,16 @@ class Collection extends EventEmitter {
         const prevVersion = get(toUpdate, 'version');
         const nextVersion = get(doc, 'version');
         if (isNumber(prevVersion) && isNumber(nextVersion)) {
-          const skipUpdate = get(options, 'acceptSameVersion', false) ? prevVersion > nextVersion : prevVersion >= nextVersion;
+          const skipUpdate = get(options, 'acceptSameVersion', false)
+            ? prevVersion > nextVersion
+            : prevVersion >= nextVersion;
           if (skipUpdate) {
-            LOG.debug('Skipping update of document id %s . prev version: %s next version: %s', doc._id, prevVersion, nextVersion);
+            LOG.debug(
+              'Skipping update of document id %s . prev version: %s next version: %s',
+              doc._id,
+              prevVersion,
+              nextVersion,
+            );
             return;
           }
         }
@@ -121,7 +161,8 @@ class Collection extends EventEmitter {
           if (
             collectionIdIndex &&
             get(collectionIdIndex, `[${index}]`) === undefined &&
-            (!get(collectionData, `[${index}].$loki`) || !get(collectionData, `[${index}].meta`))
+            (!get(collectionData, `[${index}].$loki`) ||
+              !get(collectionData, `[${index}].meta`))
           ) {
             LOG.debug('Remove bad data from collection and insert. %j', doc);
             collectionData.splice(index, 1);
@@ -137,7 +178,10 @@ class Collection extends EventEmitter {
         try {
           this.collection.update(updated);
         } catch (e: any) {
-          LOG.warn('Update error in _updateSingle. %s .. try to fix corrupted $loki data', e?.message);
+          LOG.warn(
+            'Update error in _updateSingle. %s .. try to fix corrupted $loki data',
+            e?.message,
+          );
           // try fix corrupt and update again
           fixCorruptedLoki(this.collection);
           const toUpdates = this.collection.find(query);
@@ -147,7 +191,11 @@ class Collection extends EventEmitter {
             try {
               this.collection.remove(duplicates.$loki);
             } catch (e: any) {
-              LOG.error('Failed to remove duplicates with _id: %s. Error: %s', duplicate._id, e?.message);
+              LOG.error(
+                'Failed to remove duplicates with _id: %s. Error: %s',
+                duplicate._id,
+                e?.message,
+              );
             }
           });
           const meta = pick(toUpdate, ['meta', '$loki']);
@@ -155,7 +203,10 @@ class Collection extends EventEmitter {
           try {
             this.collection.update(updated);
           } catch (e: any) {
-            LOG.warn('Update error in _updateSingle after fix corrupted $loki. Error: %s', e?.message);
+            LOG.warn(
+              'Update error in _updateSingle after fix corrupted $loki. Error: %s',
+              e?.message,
+            );
           }
         }
       }
@@ -253,7 +304,10 @@ class Collection extends EventEmitter {
         return shouldRemove;
       });
       if (removedIds.length > 0) {
-        LOG.info('[ttl-daemon] - removed expired documents for ids %j', removedIds);
+        LOG.info(
+          '[ttl-daemon] - removed expired documents for ids %j',
+          removedIds,
+        );
       }
       toRemove.remove();
       this.emitThrottled('change', { remove: { _id: { $in: removedIds } } });
@@ -277,7 +331,10 @@ class Collection extends EventEmitter {
     // if no value is a number, no daemon is necessary.
     const activeTtl = some(values(this.ttl.fields), isNumber);
     if (activeTtl) {
-      this.ttl.daemon = setInterval(this._ttlDaemonFuncGen(), this.ttl.daemonInterval);
+      this.ttl.daemon = setInterval(
+        this._ttlDaemonFuncGen(),
+        this.ttl.daemonInterval,
+      );
     }
   }
 }

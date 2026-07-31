@@ -1,6 +1,16 @@
 import _ = require('lodash');
 import Observer = require('./observe');
-import { QueryObject, SortSpec, ProjectionSpec, Callback, VDocument, ObserveOptions, ObserveHandle, CollectionLike, GetDocumentsFn } from './types';
+import {
+  QueryObject,
+  SortSpec,
+  ProjectionSpec,
+  Callback,
+  VDocument,
+  ObserveOptions,
+  ObserveHandle,
+  CollectionLike,
+  GetDocumentsFn,
+} from './types';
 
 class Cursor {
   _collection: CollectionLike;
@@ -9,7 +19,12 @@ class Cursor {
   _getDocuments: GetDocumentsFn;
   _isObserving: boolean;
 
-  constructor(collection: CollectionLike, query: QueryObject, options: QueryObject, getDocuments: GetDocumentsFn) {
+  constructor(
+    collection: CollectionLike,
+    query: QueryObject,
+    options: QueryObject,
+    getDocuments: GetDocumentsFn,
+  ) {
     this._collection = collection;
     this._query = query;
     this._options = options;
@@ -32,7 +47,12 @@ class Cursor {
   observe(options: ObserveOptions): ObserveHandle {
     this._isObserving = true;
     // Observer constructor returns { stop } object, not the Observer instance
-    return new Observer(this._query, this._options, this._collection, options) as any;
+    return new Observer(
+      this._query,
+      this._options,
+      this._collection,
+      options,
+    ) as any;
   }
 
   updateQuery(query: Record<string, any>): void {

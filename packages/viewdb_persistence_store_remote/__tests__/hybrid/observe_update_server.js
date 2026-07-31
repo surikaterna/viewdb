@@ -8,7 +8,14 @@ var SocketMock = require('socket.io-mock');
 var HybridStore = require('../..').Hybrid;
 
 describe('Observe-Update Remote', function () {
-  var clientRemote, serverViewdb, socketServer, socketClient, clientStore, client, clientLocal, hybrid;
+  var clientRemote,
+    serverViewdb,
+    socketServer,
+    socketClient,
+    clientStore,
+    client,
+    clientLocal,
+    hybrid;
   beforeEach(
     () =>
       new Promise((resolve, reject) => {
@@ -16,15 +23,22 @@ describe('Observe-Update Remote', function () {
         socketClient = socketServer.socketClient;
         client = new Client(socketClient);
         serverViewdb = new ViewDb();
-        var vdbSocketServer = new ViewDbSocketServer(serverViewdb, socketServer);
+        var vdbSocketServer = new ViewDbSocketServer(
+          serverViewdb,
+          socketServer,
+        );
 
         clientLocal = new ViewDb(); // client local viewdb (typically IndexedDb)
         clientStore = new Store(client);
         clientRemote = new ViewDb(clientStore); // client remote viewdb
-        hybrid = new ViewDb(new HybridStore(clientLocal, clientRemote, { throttleObserveRefresh: 0 }));
+        hybrid = new ViewDb(
+          new HybridStore(clientLocal, clientRemote, {
+            throttleObserveRefresh: 0,
+          }),
+        );
 
         resolve();
-      })
+      }),
   );
   it('#viewdb server+hybrid setup should work', () =>
     new Promise((resolve, reject) => {
@@ -65,7 +79,7 @@ describe('Observe-Update Remote', function () {
         },
         removed: function (x) {
           realDone(); // 2 calls
-        }
+        },
       });
       serverViewdb.collection('dollhouse').insert({ _id: 'echo2' });
     }));
@@ -85,7 +99,7 @@ describe('Observe-Update Remote', function () {
             hybridCursor.updateQuery({ _id: ++id });
             serverViewdb.collection('dollhouse').insert({ _id: id });
           }
-        }
+        },
       });
       serverViewdb.collection('dollhouse').insert({ _id: 'echo2' });
     }));
@@ -93,7 +107,9 @@ describe('Observe-Update Remote', function () {
     new Promise((resolve, reject) => {
       serverViewdb.collection('dollhouse').insert({ _id: 1 });
       var realDone = _.after(2, resolve);
-      var hybridCursor = hybrid.collection('dollhouse').find({ _id: { $in: [1, 2] } });
+      var hybridCursor = hybrid
+        .collection('dollhouse')
+        .find({ _id: { $in: [1, 2] } });
 
       var handle = hybridCursor.observe({
         added: function (x) {
@@ -108,7 +124,7 @@ describe('Observe-Update Remote', function () {
         removed: function (x) {
           x._id.should.equal(1);
           realDone();
-        }
+        },
       });
     }));
 
@@ -118,8 +134,14 @@ describe('Observe-Update Remote', function () {
     var viewdb = createObserveOnlyViewDb(stoppedHandles);
     new ViewDbSocketServer(viewdb, socket);
 
-    socket.trigger('/vdb/request', observeRequest(1, 'same-id', { _id: 'old' }));
-    socket.trigger('/vdb/request', observeRequest(2, 'same-id', { _id: 'new' }));
+    socket.trigger(
+      '/vdb/request',
+      observeRequest(1, 'same-id', { _id: 'old' }),
+    );
+    socket.trigger(
+      '/vdb/request',
+      observeRequest(2, 'same-id', { _id: 'new' }),
+    );
 
     stoppedHandles.should.deepEqual(['old']);
     viewdb._getObserverStats().sharedObserverCount.should.equal(1);
@@ -136,8 +158,14 @@ describe('Observe-Update Remote', function () {
     };
     new ViewDbSocketServer(viewdb, socket, decorator);
 
-    socket.trigger('/vdb/request', observeRequest(1, 'pending-id', { _id: 'pending' }));
-    socket.trigger('/vdb/request', { i: 2, p: { 'observe.stop': { h: 'pending-id' } } });
+    socket.trigger(
+      '/vdb/request',
+      observeRequest(1, 'pending-id', { _id: 'pending' }),
+    );
+    socket.trigger('/vdb/request', {
+      i: 2,
+      p: { 'observe.stop': { h: 'pending-id' } },
+    });
     decoratorCallback({ _id: 'pending' });
 
     viewdb.observeCalls.should.equal(0);
@@ -158,11 +186,14 @@ describe('Observe-Update Remote', function () {
       };
       new ViewDbSocketServer(localRemote, localSocketServer, decorator);
 
-      var handle = localClientVdb.collection('dollhouse').find({ _id: 'pending' }).observe({
-        init: function () {
-          reject(new Error('stopped observer should not receive init'));
-        }
-      });
+      var handle = localClientVdb
+        .collection('dollhouse')
+        .find({ _id: 'pending' })
+        .observe({
+          init: function () {
+            reject(new Error('stopped observer should not receive init'));
+          },
+        });
       handle.stop();
 
       setTimeout(function () {
@@ -188,8 +219,8 @@ function observeRequest(index, id, query) {
     p: {
       id: id,
       collection: 'dollhouse',
-      observe: query
-    }
+      observe: query,
+    },
   };
 }
 
@@ -207,7 +238,7 @@ function createSocket() {
     },
     trigger: function (event, payload) {
       handlers[event](payload);
-    }
+    },
   };
 }
 
@@ -218,9 +249,9 @@ function createObserveOnlyViewDb(stoppedHandles) {
       return {
         find: function (query) {
           return createObserveOnlyCursor(viewdb, query, stoppedHandles);
-        }
+        },
       };
-    }
+    },
   };
   return viewdb;
 }
@@ -232,11 +263,11 @@ function createObserveOnlyCursor(viewdb, query, stoppedHandles) {
       return {
         stop: function () {
           stoppedHandles.push(query._id);
-        }
+        },
       };
     },
     close: function (callback) {
       callback(null);
-    }
+    },
   };
 }

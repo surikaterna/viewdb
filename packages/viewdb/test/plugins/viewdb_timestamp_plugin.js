@@ -46,7 +46,8 @@ describe('Viewdb timestamp plugin', () => {
                 hasError = true;
               }
             });
-            (hasError && reject(new Error('Timestamp was not renewed'))) || resolve();
+            (hasError && reject(new Error('Timestamp was not renewed'))) ||
+              resolve();
           });
         });
       });
@@ -67,8 +68,18 @@ describe('Viewdb timestamp plugin', () => {
         setTimeout(function () {
           collection.save(
             [
-              { _id: '123', name: 'Pelle', createDateTime: insertTime, changeDateTime: insertTime },
-              { _id: '999', name: 'Kalle', createDateTime: insertTime, changeDateTime: insertTime }
+              {
+                _id: '123',
+                name: 'Pelle',
+                createDateTime: insertTime,
+                changeDateTime: insertTime,
+              },
+              {
+                _id: '999',
+                name: 'Kalle',
+                createDateTime: insertTime,
+                changeDateTime: insertTime,
+              },
             ],
             function () {
               collection.find({}).toArray(function (err, objects) {
@@ -78,7 +89,7 @@ describe('Viewdb timestamp plugin', () => {
                 });
                 resolve();
               });
-            }
+            },
           );
         }, 100);
       });

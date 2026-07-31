@@ -15,5 +15,5 @@ export = Object.assign(ViewDB, {
   Cursor,
   Observer,
   merge,
-  plugins
+  plugins,
 });

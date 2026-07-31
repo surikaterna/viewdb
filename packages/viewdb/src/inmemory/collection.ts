@@ -1,5 +1,4 @@
 import _ = require('lodash');
-import { v4 as uuid } from 'uuid';
 import { EventEmitter } from 'events';
 import Kuery = require('kuery');
 import Cursor = require('../cursor');
@@ -19,7 +18,12 @@ class Collection extends EventEmitter implements CollectionLike {
     callback(null, this._documents.length);
   }
 
-  _write(op: string, documents: VDocument | VDocument[], options: Record<string, any> | Callback<VDocument[]>, callback?: Callback<VDocument[]>): void {
+  _write(
+    op: string,
+    documents: VDocument | VDocument[],
+    options: Record<string, any> | Callback<VDocument[]>,
+    callback?: Callback<VDocument[]>,
+  ): void {
     if (_.isFunction(options)) {
       callback = options as Callback<VDocument[]>;
     }
@@ -30,7 +34,7 @@ class Collection extends EventEmitter implements CollectionLike {
         return callback!(new Error('Document must be object'));
       }
       if (!_.has(document, '_id')) {
-        document._id = document.id || uuid();
+        document._id = document.id || crypto.randomUUID();
       }
       const idx = _.findIndex(this._documents, { _id: document._id });
       if (op === 'insert' && idx >= 0) {
@@ -48,11 +52,19 @@ class Collection extends EventEmitter implements CollectionLike {
     }
   }
 
-  insert(documents: VDocument | VDocument[], options?: Record<string, any> | Callback<VDocument[]>, callback?: Callback<VDocument[]>): void {
+  insert(
+    documents: VDocument | VDocument[],
+    options?: Record<string, any> | Callback<VDocument[]>,
+    callback?: Callback<VDocument[]>,
+  ): void {
     return this._write('insert', documents, options!, callback);
   }
 
-  save(documents: VDocument | VDocument[], options?: Record<string, any> | Callback<VDocument[]>, callback?: Callback<VDocument[]>): void {
+  save(
+    documents: VDocument | VDocument[],
+    options?: Record<string, any> | Callback<VDocument[]>,
+    callback?: Callback<VDocument[]>,
+  ): void {
     return this._write('save', documents, options!, callback);
   }
 
@@ -64,10 +76,19 @@ class Collection extends EventEmitter implements CollectionLike {
   }
 
   find(query: Record<string, any>, options?: Record<string, any>): Cursor {
-    return new Cursor(this, { query: query }, options || {}, this._getDocuments.bind(this));
+    return new Cursor(
+      this,
+      { query: query },
+      options || {},
+      this._getDocuments.bind(this),
+    );
   }
 
-  remove(query: Record<string, any>, options?: Record<string, any>, callback?: Callback): void {
+  remove(
+    query: Record<string, any>,
+    options?: Record<string, any>,
+    callback?: Callback,
+  ): void {
     const q = new Kuery(query);
     const documents = q.find(this._documents);
     this._documents = _.pullAll(this._documents, documents);
@@ -85,7 +106,10 @@ class Collection extends EventEmitter implements CollectionLike {
     throw new Error('createIndex not supported!');
   }
 
-  _getDocuments(queryObject: QueryObject, callback: Callback<VDocument[]>): void {
+  _getDocuments(
+    queryObject: QueryObject,
+    callback: Callback<VDocument[]>,
+  ): void {
     const query = queryObject.query || queryObject;
     const q = new Kuery(query);
     if (queryObject.sort) {

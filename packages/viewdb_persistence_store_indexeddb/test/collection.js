@@ -12,7 +12,7 @@ describe('Collection', function () {
         var idb = getDb();
         store = new Store(idb);
         resolve();
-      })
+      }),
   );
   afterEach(
     () =>
@@ -25,7 +25,7 @@ describe('Collection', function () {
             resolve();
           });
         }
-      })
+      }),
   );
   //store.delete() }).then(function () {
   // console.log('deleted 2');
@@ -46,27 +46,31 @@ describe('Collection', function () {
     new Promise((resolve, reject) => {
       store.open().then(function () {
         store.collection('dollhouse').insert({ _id: 'echo' });
-        store.collection('dollhouse').insert({ _id: 'echo' }, function (err, result) {
-          if (err) {
-            resolve();
-          } else {
-            reject(new Error('should have thrown unique constraint'));
-          }
-        });
+        store
+          .collection('dollhouse')
+          .insert({ _id: 'echo' }, function (err, result) {
+            if (err) {
+              resolve();
+            } else {
+              reject(new Error('should have thrown unique constraint'));
+            }
+          });
       });
     }));
   it('#insert two documents with same key but in different collections should work', () =>
     new Promise((resolve, reject) => {
       store.open().then(function () {
         store.collection('dollhouse').insert({ _id: 'echo' });
-        store.collection('dollhouse2').insert({ _id: 'echo' }, function (err, result) {
-          if (err) {
-            console.log(err);
-            reject(new Error('should not have thrown unique constraint'));
-          } else {
-            resolve();
-          }
-        });
+        store
+          .collection('dollhouse2')
+          .insert({ _id: 'echo' }, function (err, result) {
+            if (err) {
+              console.log(err);
+              reject(new Error('should not have thrown unique constraint'));
+            } else {
+              resolve();
+            }
+          });
       });
     }));
 
@@ -131,8 +135,12 @@ describe('Collection', function () {
     new Promise((resolve, reject) => {
       store.open().then(function () {
         var promises = [
-          store.collection('dollhouse').insert({ _id: 'echo', name: { first: 'ECHO', last: 'TV' } }),
-          store.collection('dollhouse').insert({ _id: 'sierra', name: { first: 'SIERRA', last: 'TV' } })
+          store
+            .collection('dollhouse')
+            .insert({ _id: 'echo', name: { first: 'ECHO', last: 'TV' } }),
+          store
+            .collection('dollhouse')
+            .insert({ _id: 'sierra', name: { first: 'SIERRA', last: 'TV' } }),
         ];
         Promise.all(promises)
           .then(function () {
@@ -204,7 +212,9 @@ describe('Collection', function () {
   it('#insert documents via bulk', () =>
     new Promise((resolve, reject) => {
       store.open().then(function () {
-        store.collection('dollhouse').insert([{ _id: 'echo' }, { _id: 'sierra' }]);
+        store
+          .collection('dollhouse')
+          .insert([{ _id: 'echo' }, { _id: 'sierra' }]);
         store
           .collection('dollhouse')
           .find({})
@@ -217,10 +227,12 @@ describe('Collection', function () {
   it('#update documents via bulk', () =>
     new Promise((resolve, reject) => {
       store.open().then(function () {
-        store.collection('dollhouse').insert([{ _id: 'echo' }, { _id: 'sierra' }]);
+        store
+          .collection('dollhouse')
+          .insert([{ _id: 'echo' }, { _id: 'sierra' }]);
         store.collection('dollhouse').save([
           { _id: 'echo', version: 2 },
-          { _id: 'sierra', version: 22 }
+          { _id: 'sierra', version: 22 },
         ]);
         store
           .collection('dollhouse')
@@ -283,28 +295,40 @@ describe('Collection', function () {
   it('#find {_id:"echo"} should use primary key index', () =>
     new Promise((resolve, reject) => {
       store.open().then(function () {
-        store.collection('dollhouse')._isIdentityQuery({ _id: 'echo' }).should.equal(true);
+        store
+          .collection('dollhouse')
+          ._isIdentityQuery({ _id: 'echo' })
+          .should.equal(true);
         resolve();
       });
     }));
   it('#find {id:"echo"} should use primary key index', () =>
     new Promise((resolve, reject) => {
       store.open().then(function () {
-        store.collection('dollhouse')._isIdentityQuery({ id: 'echo' }).should.equal(true);
+        store
+          .collection('dollhouse')
+          ._isIdentityQuery({ id: 'echo' })
+          .should.equal(true);
         resolve();
       });
     }));
   it('#find {xid:"echo"} should not use primary key index', () =>
     new Promise((resolve, reject) => {
       store.open().then(function () {
-        store.collection('dollhouse')._isIdentityQuery({ xid: 'echo' }).should.equal(false);
+        store
+          .collection('dollhouse')
+          ._isIdentityQuery({ xid: 'echo' })
+          .should.equal(false);
         resolve();
       });
     }));
   it('#find {id:"echo", age:12} should not use primary key index', () =>
     new Promise((resolve, reject) => {
       store.open().then(function () {
-        store.collection('dollhouse')._isIdentityQuery({ id: 'echo', age: 12 }).should.equal(false);
+        store
+          .collection('dollhouse')
+          ._isIdentityQuery({ id: 'echo', age: 12 })
+          .should.equal(false);
         resolve();
       });
     }));
@@ -328,11 +352,13 @@ describe('Collection', function () {
       store.open().then(function () {
         store.collection('dollhouse').insert({ _id: 'echo' });
         store.collection('dollhouse').insert({ _id: 'sierra' });
-        store.collection('dollhouse')._getByKey({ query: { _id: 'echo' } }, function (err, res) {
-          res.length.should.equal(1);
-          res[0]._id.should.equal('echo');
-          resolve();
-        });
+        store
+          .collection('dollhouse')
+          ._getByKey({ query: { _id: 'echo' } }, function (err, res) {
+            res.length.should.equal(1);
+            res[0]._id.should.equal('echo');
+            resolve();
+          });
       });
     }));
   it('#_getByKey {id:"echo-no-match"} should return 0 value', () =>
@@ -340,10 +366,12 @@ describe('Collection', function () {
       store.open().then(function () {
         store.collection('dollhouse').insert({ _id: 'echo' });
         store.collection('dollhouse').insert({ _id: 'sierra' });
-        store.collection('dollhouse')._getByKey({ query: { _id: 'echo-no-match' } }, function (err, res) {
-          res.length.should.equal(0);
-          resolve();
-        });
+        store
+          .collection('dollhouse')
+          ._getByKey({ query: { _id: 'echo-no-match' } }, function (err, res) {
+            res.length.should.equal(0);
+            resolve();
+          });
       });
     }));
 });

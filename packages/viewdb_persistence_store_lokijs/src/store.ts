@@ -21,7 +21,7 @@ class Store {
   constructor(name?: any, options?: any, registerCleanUpHandler?: any) {
     this._name = name ? 'vdb_' + name : 'vdb';
     this._lokiOptions = {
-      autosave: false
+      autosave: false,
     };
     if (options && options.inMemoryOnly) {
       this._lokiOptions = {};
@@ -49,7 +49,10 @@ class Store {
       try {
         this._fixLokiCollections();
       } catch (e: any) {
-        LOG.error('Error while trying to fix lokijs collections: %s', e?.message);
+        LOG.error(
+          'Error while trying to fix lokijs collections: %s',
+          e?.message,
+        );
       }
     }, 10 * 1000);
 
@@ -70,9 +73,14 @@ class Store {
     Object.keys(this._collections).forEach((collectionName) => {
       const lokiCollection = find(collections, { name: collectionName });
       if (!lokiCollection) {
-        LOG.info('failed to find collection in loki, but existed in store ', collectionName);
+        LOG.info(
+          'failed to find collection in loki, but existed in store ',
+          collectionName,
+        );
         if (this._collections[collectionName]._collection) {
-          this._lokiJs.loadCollection(this._collections[collectionName]._collection);
+          this._lokiJs.loadCollection(
+            this._collections[collectionName]._collection,
+          );
         }
       }
     });
@@ -113,7 +121,11 @@ class Store {
         }
         if (seen[item._id]) {
           coll.remove(item);
-          LOG.info('removed duplicate unique document from collection %s - id: %s', coll.name, item._id);
+          LOG.info(
+            'removed duplicate unique document from collection %s - id: %s',
+            coll.name,
+            item._id,
+          );
           this._lokiJs.throttledSavePending = false;
           this._lokiJs.throttledCallbacks = [];
         } else {
@@ -198,7 +210,11 @@ class Store {
   collection(name: any, callback?: any) {
     let collection = this._collections[name];
     if (!collection) {
-      collection = this._collections[name] = new Collection(name, this._lokiJs, this._options);
+      collection = this._collections[name] = new Collection(
+        name,
+        this._lokiJs,
+        this._options,
+      );
     }
     if (callback) {
       callback(collection);

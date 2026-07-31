@@ -16,14 +16,16 @@ describe('Observe-Update', function () {
         local = new ViewDb();
         var socketIoMock = {
           emit: function () {},
-          on: function () {}
+          on: function () {},
         };
         remote = new ViewDbRemoteClient(new SocketClient(socketIoMock));
-        hybrid = new ViewDb(new HybridStore(local, remote, { throttleObserveRefresh: 0 }));
+        hybrid = new ViewDb(
+          new HybridStore(local, remote, { throttleObserveRefresh: 0 }),
+        );
         hybrid.open().then(function () {
           resolve();
         });
-      })
+      }),
   );
 
   it('#observe-update with update query', () =>
@@ -42,7 +44,7 @@ describe('Observe-Update', function () {
             cursor.updateQuery({ _id: ++id });
             local.collection('dollhouse').insert({ _id: id });
           }
-        }
+        },
       });
       local.collection('dollhouse').insert({ _id: 'echo2' });
     }));
@@ -50,7 +52,9 @@ describe('Observe-Update', function () {
     new Promise((resolve, reject) => {
       local.collection('dollhouse').insert({ _id: 1 });
       var realDone = _.after(2, resolve);
-      var cursor = hybrid.collection('dollhouse').find({ _id: { $in: [1, 2] } });
+      var cursor = hybrid
+        .collection('dollhouse')
+        .find({ _id: { $in: [1, 2] } });
 
       var handle = cursor.observe({
         added: function (x) {
@@ -65,7 +69,7 @@ describe('Observe-Update', function () {
         removed: function (x) {
           x._id.should.equal(1);
           realDone();
-        }
+        },
       });
     }));
 });

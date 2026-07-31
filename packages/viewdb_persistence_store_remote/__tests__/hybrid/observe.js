@@ -12,11 +12,13 @@ describe('Observe', function () {
       new Promise((resolve, reject) => {
         local = new ViewDb();
         remote = new ViewDb();
-        hybrid = new ViewDb(new HybridStore(local, remote, { throttleObserveRefresh: 0 }));
+        hybrid = new ViewDb(
+          new HybridStore(local, remote, { throttleObserveRefresh: 0 }),
+        );
         hybrid.open().then(function () {
           resolve();
         });
-      })
+      }),
   );
 
   it('#observe with local insert', () =>
@@ -27,7 +29,7 @@ describe('Observe', function () {
           x._id.should.equal('echo');
           handle.stop();
           resolve();
-        }
+        },
       });
       local.collection('dollhouse').insert({ _id: 'echo' });
     }));
@@ -40,7 +42,7 @@ describe('Observe', function () {
           x._id.should.equal('echo2');
           handle.stop();
           resolve();
-        }
+        },
       });
       local.collection('dollhouse').insert({ _id: 'echo2' });
     }));
@@ -60,7 +62,7 @@ describe('Observe', function () {
             handle.stop();
             resolve();
           }
-        }
+        },
       });
       local.collection('dollhouse').insert({ _id: 'echo2' });
       remote.collection('dollhouse').insert({ _id: 'echo2', remote: true });
@@ -80,12 +82,14 @@ describe('Observe', function () {
             n.age.should.equal(100);
             handle.stop();
             resolve();
-          }
+          },
         });
 
-        store.collection('dollhouse').insert({ _id: 'echo', age: 10 }, function () {
-          store.collection('dollhouse').save({ _id: 'echo', age: 100 });
-        });
+        store
+          .collection('dollhouse')
+          .insert({ _id: 'echo', age: 10 }, function () {
+            store.collection('dollhouse').save({ _id: 'echo', age: 100 });
+          });
       });
     }));
   it('#observe with both empty local and remote result', () =>
@@ -100,25 +104,40 @@ describe('Observe', function () {
         added: function (x) {
           console.log(x);
           reject(new Error('uh oh'));
-        }
+        },
       });
     }));
   it('#should cache query if setting is enabled', () =>
     new Promise((resolve, reject) => {
-      hybrid = new ViewDb(new HybridStore(local, remote, { throttleObserveRefresh: 0, cacheQueries: true, queryMaxTime: 2 }));
+      hybrid = new ViewDb(
+        new HybridStore(local, remote, {
+          throttleObserveRefresh: 0,
+          cacheQueries: true,
+          queryMaxTime: 2,
+        }),
+      );
       hybrid.open().then(function () {
         var cursor = hybrid.collection('dollhouse').find({});
         cursor.observe({
           added: function () {
             setTimeout(function () {
-              hybrid.collection('dollhouse')._getCachedData({}, 0, 0, undefined, undefined, function (err, cachedDocuments) {
-                cachedDocuments.length.should.equal(1);
-                cachedDocuments[0]._id.should.equal('alfa');
-                cachedDocuments[0].age.should.equal(100);
-                resolve();
-              });
+              hybrid
+                .collection('dollhouse')
+                ._getCachedData(
+                  {},
+                  0,
+                  0,
+                  undefined,
+                  undefined,
+                  function (err, cachedDocuments) {
+                    cachedDocuments.length.should.equal(1);
+                    cachedDocuments[0]._id.should.equal('alfa');
+                    cachedDocuments[0].age.should.equal(100);
+                    resolve();
+                  },
+                );
             });
-          }
+          },
         });
 
         remote.collection('dollhouse').insert({ _id: 'alfa', age: 100 });

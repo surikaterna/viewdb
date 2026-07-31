@@ -32,11 +32,20 @@ class Store {
         if (dbName) {
           namespaceFilter = dbName + '.' + collectionName;
         }
-        this._oplogListeners[collectionName] = new this._oplogListener(this._mongodb, namespaceFilter, collectionName);
+        this._oplogListeners[collectionName] = new this._oplogListener(
+          this._mongodb,
+          namespaceFilter,
+          collectionName,
+        );
       } else if (this._oplogEnabled) {
-        console.warn('oplog listener must be provided to enable listening for updates');
+        console.warn(
+          'oplog listener must be provided to enable listening for updates',
+        );
       }
-      coll = new Collection(this._mongodb.collection(collectionName), this._oplogListeners[collectionName]);
+      coll = new Collection(
+        this._mongodb.collection(collectionName),
+        this._oplogListeners[collectionName],
+      );
       this._collections[collectionName] = coll;
     }
     if (callback) {

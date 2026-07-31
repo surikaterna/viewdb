@@ -11,7 +11,13 @@ var LegacyObserver = ViewDB.Observer;
 const log = LoggerFactory.getLogger('viewdb:mongodb:observer');
 
 class Observer {
-  _queryOptions!: { query?: any; skip?: number; limit?: number; sort?: Record<string, 1 | -1>; project?: Record<string, 0 | 1> };
+  _queryOptions!: {
+    query?: any;
+    skip?: number;
+    limit?: number;
+    sort?: Record<string, 1 | -1>;
+    project?: Record<string, 0 | 1>;
+  };
   _query: any;
   _options!: ObserveOptions;
   _collection: any;
@@ -29,12 +35,23 @@ class Observer {
   _emittedChangedCount: number = 0;
   _disposed: boolean = false;
 
-  constructor(query: any, queryOptions: any, collection: any, options: any, oplogListener?: any) {
+  constructor(
+    query: any,
+    queryOptions: any,
+    collection: any,
+    options: any,
+    oplogListener?: any,
+  ) {
     var self = this;
     self._queryOptions = queryOptions;
 
     if (!oplogListener) {
-      return new LegacyObserver(query, queryOptions, collection, options) as any;
+      return new LegacyObserver(
+        query,
+        queryOptions,
+        collection,
+        options,
+      ) as any;
     }
     var namespace = collection._collection.s.namespace;
     this._query = query;
@@ -76,35 +93,47 @@ class Observer {
     };
     return {
       stop: dispose,
-      dispose: dispose
+      dispose: dispose,
     } as any;
   }
 
   loadInitial(cb: () => void): void {
     var self = this;
     var newQuery = _.merge(this._query, self._queryOptions);
-    this._collection._getDocuments(newQuery, function (err: Error | null, result?: any[]) {
-      if (self._disposed) return;
-      if (self._options.init) {
-        self._options.init(result || []);
-      } else {
-        merge(null, result, _.defaults({ comparatorId: comparator }, self._options));
-      }
-      self._cache = _.map(result, '_id');
-      self._cacheIndex = new Map();
-      for (var i = 0; i < self._cache.length; i++) {
-        self._cacheIndex.set(self._cache[i], i);
-      }
-      cb();
-    });
+    this._collection._getDocuments(
+      newQuery,
+      function (err: Error | null, result?: any[]) {
+        if (self._disposed) return;
+        if (self._options.init) {
+          self._options.init(result || []);
+        } else {
+          merge(
+            null,
+            result,
+            _.defaults({ comparatorId: comparator }, self._options),
+          );
+        }
+        self._cache = _.map(result, '_id');
+        self._cacheIndex = new Map();
+        for (var i = 0; i < self._cache.length; i++) {
+          self._cacheIndex.set(self._cache[i], i);
+        }
+        cb();
+      },
+    );
   }
 
-  getStats(): { evalCount: number; matchCount: number; rawChangedCount: number; emittedChangedCount: number } {
+  getStats(): {
+    evalCount: number;
+    matchCount: number;
+    rawChangedCount: number;
+    emittedChangedCount: number;
+  } {
     return {
       evalCount: this._evalCount,
       matchCount: this._matchCount,
       rawChangedCount: this._rawChangedCount,
-      emittedChangedCount: this._emittedChangedCount
+      emittedChangedCount: this._emittedChangedCount,
     };
   }
 
@@ -200,13 +229,13 @@ class Observer {
       this._cache!.splice(index, 1);
       this._cacheIndex!.delete(doc.o._id);
 
-    // Cancel any pending batched changed for this document
-    if (this._pendingChanged) {
-      this._pendingChanged.delete(doc.o._id);
-    }
-    if (this._emittedInWindow) {
-      this._emittedInWindow.delete(doc.o._id);
-    }
+      // Cancel any pending batched changed for this document
+      if (this._pendingChanged) {
+        this._pendingChanged.delete(doc.o._id);
+      }
+      if (this._emittedInWindow) {
+        this._emittedInWindow.delete(doc.o._id);
+      }
 
       // Keep id->index map in sync for all shifted entries.
       for (var i = index; i < this._cache!.length; i++) {

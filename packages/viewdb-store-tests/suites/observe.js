@@ -42,7 +42,7 @@ module.exports = function (config) {
               handle.stop();
               resolve();
             }, delay);
-          }
+          },
         });
       });
     });
@@ -57,7 +57,7 @@ module.exports = function (config) {
               handle.stop();
               resolve();
             }, delay);
-          }
+          },
         });
         store.collection(COLL).insert({ _id: 'echo' });
       });
@@ -72,7 +72,7 @@ module.exports = function (config) {
               assert.strictEqual(x._id, 'echo');
               handle.stop();
               resolve();
-            }
+            },
           });
           store.collection(COLL).remove({ _id: 'echo' });
         });
@@ -90,7 +90,7 @@ module.exports = function (config) {
                 handle.stop();
                 resolve();
               }, delay);
-            }
+            },
           });
           store.collection(COLL).insert({ _id: 'echo2' });
         });
@@ -109,7 +109,7 @@ module.exports = function (config) {
             assert.strictEqual(n.age, 100);
             handle.stop();
             resolve();
-          }
+          },
         });
         store.collection(COLL).insert({ _id: 'echo', age: 10 }, function () {
           store.collection(COLL).save({ _id: 'echo', age: 100 });
@@ -138,7 +138,7 @@ module.exports = function (config) {
                 added: function () {
                   cursor.skip(++skip);
                   realDone();
-                }
+                },
               });
             });
           });

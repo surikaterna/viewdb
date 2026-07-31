@@ -13,11 +13,13 @@ describe('Sort / Limit / Skip', function () {
       new Promise((resolve, reject) => {
         local = new ViewDb();
         remote = new ViewDb();
-        hybrid = new ViewDb(new HybridStore(local, remote, { throttleObserveRefresh: 0 }));
+        hybrid = new ViewDb(
+          new HybridStore(local, remote, { throttleObserveRefresh: 0 }),
+        );
         hybrid.open().then(function () {
           resolve();
         });
-      })
+      }),
   );
 
   it('#toArray with sort / limit', () =>
@@ -38,7 +40,7 @@ describe('Sort / Limit / Skip', function () {
                 res[i].age.should.equal(i);
               }
               resolve();
-            })
+            }),
           );
         });
 

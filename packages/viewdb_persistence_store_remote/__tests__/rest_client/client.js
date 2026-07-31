@@ -6,7 +6,7 @@ var mockResponse = require('./mock-response.json');
 var _ = require('lodash');
 
 var testOptions = {
-  pollInterval: 15
+  pollInterval: 15,
 };
 
 describe('RestClient', function () {
@@ -16,12 +16,17 @@ describe('RestClient', function () {
   it('#request should work', () =>
     new Promise((resolve, reject) => {
       var restClient = new Client('http://www.example.com/', {}, testOptions);
-      nock('http://www.example.com').get('/party?q=%7B%22name%22%3A%22Firstname%22%7D').reply(200, mockResponse);
+      nock('http://www.example.com')
+        .get('/party?q=%7B%22name%22%3A%22Firstname%22%7D')
+        .reply(200, mockResponse);
 
-      restClient.request({ find: { name: 'Firstname' }, collection: 'party' }, function (err, result) {
-        should.deepEqual(result, mockResponse);
-        resolve();
-      });
+      restClient.request(
+        { find: { name: 'Firstname' }, collection: 'party' },
+        function (err, result) {
+          should.deepEqual(result, mockResponse);
+          resolve();
+        },
+      );
     }));
 
   it('#skiplimit url should be correct', () =>
@@ -59,7 +64,16 @@ describe('RestClient', function () {
         });
 
       // {observe:this._query, collection:this._collection._name, events:events}
-      handle = restClient.subscribe({ observe: { name: 'a' }, collection: 'shipment', events: {}, skip: 1, limit: 100 }, function () {});
+      handle = restClient.subscribe(
+        {
+          observe: { name: 'a' },
+          collection: 'shipment',
+          events: {},
+          skip: 1,
+          limit: 100,
+        },
+        function () {},
+      );
     }));
 
   it('#observe should stop when calling stop', () =>
@@ -77,7 +91,10 @@ describe('RestClient', function () {
           return [201, mockResponse, {}];
         });
 
-      const observer = restClient.subscribe({ observe: { name: 'a' }, collection: 'parcel', events: {} }, function () {});
+      const observer = restClient.subscribe(
+        { observe: { name: 'a' }, collection: 'parcel', events: {} },
+        function () {},
+      );
       stop = _.after(1, observer.stop);
 
       setTimeout(function () {
@@ -91,9 +108,13 @@ describe('RestClient', function () {
       const restClient = new Client('http://www.example.com', {}, testOptions);
 
       // mock returning response with data - dies after one hit
-      nock('http://www.example.com').get('/party?q=%7B%22name%22%3A%22a%22%7D').reply(201, mockResponse);
+      nock('http://www.example.com')
+        .get('/party?q=%7B%22name%22%3A%22a%22%7D')
+        .reply(201, mockResponse);
       // mock returning empty response
-      nock('http://www.example.com').get('/party?q=%7B%22name%22%3A%22a%22%7D').reply(201, {});
+      nock('http://www.example.com')
+        .get('/party?q=%7B%22name%22%3A%22a%22%7D')
+        .reply(201, {});
 
       let hits = 0;
       const verify = function (res) {
@@ -109,10 +130,13 @@ describe('RestClient', function () {
         }
       };
 
-      const handle = restClient.subscribe({ observe: { name: 'a' }, collection: 'party', events: {} }, function (err, res) {
-        if (res) {
-          verify(res);
-        }
-      });
+      const handle = restClient.subscribe(
+        { observe: { name: 'a' }, collection: 'party', events: {} },
+        function (err, res) {
+          if (res) {
+            verify(res);
+          }
+        },
+      );
     }));
 });

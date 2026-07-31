@@ -1,6 +1,5 @@
 import Promise = require('bluebird');
 import _ = require('lodash');
-import { v4 as uuid } from 'uuid';
 import Kuery = require('kuery');
 import { EventEmitter } from 'events';
 
@@ -18,9 +17,16 @@ class Collection extends EventEmitter {
     this._name = name;
   }
 
-  _isIdentityQuery(query: Record<string, any>, _options?: Record<string, any>): boolean {
+  _isIdentityQuery(
+    query: Record<string, any>,
+    _options?: Record<string, any>,
+  ): boolean {
     var keys = Object.keys(query);
-    if (keys.length === 1 && (keys[0] === 'id' || keys[0] === '_id') && (typeof query['id'] === 'string' || typeof query['_id'] === 'string')) {
+    if (
+      keys.length === 1 &&
+      (keys[0] === 'id' || keys[0] === '_id') &&
+      (typeof query['id'] === 'string' || typeof query['_id'] === 'string')
+    ) {
       return true;
     } else {
       return false;
@@ -29,9 +35,19 @@ class Collection extends EventEmitter {
 
   find(query: any, options?: any): any {
     if (this._isIdentityQuery(query)) {
-      return new Cursor(this, { query: query }, options, this._getByKey.bind(this));
+      return new Cursor(
+        this,
+        { query: query },
+        options,
+        this._getByKey.bind(this),
+      );
     } else {
-      return new Cursor(this, { query: query }, options, this._getDocuments.bind(this));
+      return new Cursor(
+        this,
+        { query: query },
+        options,
+        this._getDocuments.bind(this),
+      );
     }
   }
 
@@ -55,7 +71,10 @@ class Collection extends EventEmitter {
     }
 
     return new Promise(function (resolve, reject) {
-      var txn: IDBTransaction = self._db.transaction(['documents'], 'readwrite');
+      var txn: IDBTransaction = self._db.transaction(
+        ['documents'],
+        'readwrite',
+      );
       var docs: IDBObjectStore = txn.objectStore('documents');
 
       txn.oncomplete = (txn as any).onsuccess = function () {
@@ -73,7 +92,7 @@ class Collection extends EventEmitter {
       function addNext() {
         var document = documents[currentIndex++];
         if (!_.has(document, '_id')) {
-          document['_id'] = document['id'] || uuid();
+          document['_id'] = document['id'] || crypto.randomUUID();
         }
         document.$collection = self._name;
         document.$collectionKey = self._getKey(document);
@@ -151,7 +170,10 @@ class Collection extends EventEmitter {
     });
   }
 
-  _getDocuments(query: any, callback: (err: Error | null, result?: any[]) => void): void {
+  _getDocuments(
+    query: any,
+    callback: (err: Error | null, result?: any[]) => void,
+  ): void {
     var qry = query.query || query;
     var txn = this._db.transaction(['documents'], 'readonly');
     var docs = txn.objectStore('documents');
@@ -175,7 +197,10 @@ class Collection extends EventEmitter {
     };
   }
 
-  _getByKey(query: any, callback: (err: Error | null, result?: any[]) => void): void {
+  _getByKey(
+    query: any,
+    callback: (err: Error | null, result?: any[]) => void,
+  ): void {
     var qry = query.query || query;
     var txn = this._db.transaction(['documents'], 'readonly');
     var docs = txn.objectStore('documents');

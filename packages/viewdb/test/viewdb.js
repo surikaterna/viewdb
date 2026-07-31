@@ -80,13 +80,13 @@ describe('ViewDB', () => {
         collection.insert(
           [
             { _id: 1, a: 1 },
-            { _id: 2, b: 2 }
+            { _id: 2, b: 2 },
           ],
           function () {
             collection.save(
               [
                 { _id: 1, a: 10 },
-                { _id: 2, b: 20 }
+                { _id: 2, b: 20 },
               ],
               function () {
                 collection.find({}).toArray(function (err, res) {
@@ -95,9 +95,9 @@ describe('ViewDB', () => {
                   expect(res[1].b).toBe(20);
                   resolve();
                 });
-              }
+              },
             );
-          }
+          },
         );
       }));
     it('should add id on insert if missing', () =>

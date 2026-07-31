@@ -52,13 +52,13 @@ describe('Cursor', function () {
       var lcursor = new LocalCursor(null, {}, null, function (query, callback) {
         callback(null, [
           { _id: 1, version: 1, local: true },
-          { _id: 2, version: 2, local: true }
+          { _id: 2, version: 2, local: true },
         ]);
       });
       var rcursor = new LocalCursor(null, {}, null, function (query, callback) {
         callback(null, [
           { _id: 1, version: 2, local: false },
-          { _id: 2, version: 1, local: false }
+          { _id: 2, version: 1, local: false },
         ]);
       });
       var hcursor = new Cursor({}, lcursor, rcursor, {}, { localFirst: false });
@@ -76,14 +76,14 @@ describe('Cursor', function () {
         setTimeout(function () {
           callback(null, [
             { _id: 1, version: 1, local: true },
-            { _id: 2, version: 2, local: true }
+            { _id: 2, version: 2, local: true },
           ]);
         }, 10);
       });
       var rcursor = new LocalCursor(null, {}, null, function (query, callback) {
         callback(null, [
           { _id: 1, version: 2, local: false },
-          { _id: 2, version: 1, local: false }
+          { _id: 2, version: 1, local: false },
         ]);
       });
       var hcursor = new Cursor({}, lcursor, rcursor, {}, { localFirst: false });
@@ -102,7 +102,7 @@ describe('Cursor', function () {
       var rcursor = new LocalCursor(null, {}, null, function (query, callback) {
         callback(null, [
           { _id: 1, version: 2, local: false },
-          { _id: 2, version: 1, local: false }
+          { _id: 2, version: 1, local: false },
         ]);
       });
       var hcursor = new Cursor({}, lcursor, rcursor, {}, { localFirst: false });
@@ -117,13 +117,19 @@ describe('Cursor', function () {
       var lcursor = new LocalCursor(null, {}, null, function (query, callback) {
         callback(null, [
           { _id: 1, version: 2, local: false },
-          { _id: 2, version: 1, local: false }
+          { _id: 2, version: 1, local: false },
         ]);
       });
       var rcursor = new LocalCursor(null, {}, null, function (query, callback) {
         callback(new Error());
       });
-      var hcursor = new Cursor({}, lcursor, rcursor, {}, { localFirst: false, throwRemoteErr: true });
+      var hcursor = new Cursor(
+        {},
+        lcursor,
+        rcursor,
+        {},
+        { localFirst: false, throwRemoteErr: true },
+      );
       var calls = 0;
       hcursor.toArray(function (err, result) {
         should.exist(err);
@@ -135,13 +141,19 @@ describe('Cursor', function () {
       var lcursor = new LocalCursor(null, {}, null, function (query, callback) {
         callback(null, [
           { _id: 1, version: 2, local: false },
-          { _id: 2, version: 1, local: false }
+          { _id: 2, version: 1, local: false },
         ]);
       });
       var rcursor = new LocalCursor(null, {}, null, function (query, callback) {
         callback(new Error());
       });
-      var hcursor = new Cursor({}, lcursor, rcursor, {}, { localFirst: false, throwRemoteErr: false });
+      var hcursor = new Cursor(
+        {},
+        lcursor,
+        rcursor,
+        {},
+        { localFirst: false, throwRemoteErr: false },
+      );
       var calls = 0;
       hcursor.toArray(function (err, result) {
         should.not.exist(err);
@@ -151,35 +163,55 @@ describe('Cursor', function () {
     }));
   it('#toArray should not throw on using $elemMatch with $ne and $eq', () =>
     new Promise((resolve, reject) => {
-      var query = { things: { $elemMatch: { name: { $eq: 'banana' }, category: { $ne: 'toy' } } } };
-      var lcursor = new LocalCursor(null, query, null, function (query, callback) {
-        setTimeout(function () {
-          callback(null, [
-            {
-              _id: 1,
-              things: [
-                { name: 'banana', category: 'fruit' },
-                { name: 'orange', category: 'toy' }
-              ],
-              version: 1,
-              local: true
-            },
-            {
-              _id: 2,
-              things: [
-                { name: 'banana', category: 'toy' },
-                { name: 'orange', category: 'fruit' }
-              ],
-              version: 2,
-              local: true
-            }
-          ]);
-        }, 10);
-      });
-      var rcursor = new LocalCursor(null, query, null, function (query, callback) {
-        callback(new Error());
-      });
-      var hcursor = new Cursor(query, lcursor, rcursor, {}, { localFirst: false, throwRemoteErr: false });
+      var query = {
+        things: {
+          $elemMatch: { name: { $eq: 'banana' }, category: { $ne: 'toy' } },
+        },
+      };
+      var lcursor = new LocalCursor(
+        null,
+        query,
+        null,
+        function (query, callback) {
+          setTimeout(function () {
+            callback(null, [
+              {
+                _id: 1,
+                things: [
+                  { name: 'banana', category: 'fruit' },
+                  { name: 'orange', category: 'toy' },
+                ],
+                version: 1,
+                local: true,
+              },
+              {
+                _id: 2,
+                things: [
+                  { name: 'banana', category: 'toy' },
+                  { name: 'orange', category: 'fruit' },
+                ],
+                version: 2,
+                local: true,
+              },
+            ]);
+          }, 10);
+        },
+      );
+      var rcursor = new LocalCursor(
+        null,
+        query,
+        null,
+        function (query, callback) {
+          callback(new Error());
+        },
+      );
+      var hcursor = new Cursor(
+        query,
+        lcursor,
+        rcursor,
+        {},
+        { localFirst: false, throwRemoteErr: false },
+      );
       var calls = 0;
       hcursor.toArray(function (err, result) {
         should.not.exist(err);
@@ -195,14 +227,20 @@ describe('Cursor', function () {
         setTimeout(function () {
           callback(null, [
             { _id: 1, version: 1, local: true },
-            { _id: 2, version: 2, local: true }
+            { _id: 2, version: 2, local: true },
           ]);
         }, 10);
       });
       var rcursor = new LocalCursor(null, {}, null, function (query, callback) {
         callback(new Error());
       });
-      var hcursor = new Cursor({}, lcursor, rcursor, {}, { localFirst: false, throwRemoteErr: false });
+      var hcursor = new Cursor(
+        {},
+        lcursor,
+        rcursor,
+        {},
+        { localFirst: false, throwRemoteErr: false },
+      );
       var calls = 0;
       hcursor.toArray(function (err, result) {
         should.not.exist(err);
@@ -216,14 +254,20 @@ describe('Cursor', function () {
         setTimeout(function () {
           callback(null, [
             { _id: 1, version: 1, local: true },
-            { _id: 2, version: 2, local: true }
+            { _id: 2, version: 2, local: true },
           ]);
         }, 10);
       });
       var rcursor = new LocalCursor(null, {}, null, function (query, callback) {
         callback(new Error());
       });
-      var hcursor = new Cursor({}, lcursor, rcursor, {}, { localFirst: false, throwRemoteErr: true });
+      var hcursor = new Cursor(
+        {},
+        lcursor,
+        rcursor,
+        {},
+        { localFirst: false, throwRemoteErr: true },
+      );
       var calls = 0;
       hcursor.toArray(function (err, result) {
         should.exist(err);

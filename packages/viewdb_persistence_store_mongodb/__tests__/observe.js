@@ -48,11 +48,15 @@ describe('Observe', function () {
             expect(tobe.age).toBe(100);
             handle.stop();
             resolve();
-          }
+          },
         });
-        store.collection(COLLECTION_NAME).insert({ _id: 'echo', age: 10 }, function () {
-          store.collection(COLLECTION_NAME).save({ _id: 'echo', age: 100 }, function () {});
-        });
+        store
+          .collection(COLLECTION_NAME)
+          .insert({ _id: 'echo', age: 10 }, function () {
+            store
+              .collection(COLLECTION_NAME)
+              .save({ _id: 'echo', age: 100 }, function () {});
+          });
       });
     }));
   it('#observe with insert', () =>
@@ -67,7 +71,7 @@ describe('Observe', function () {
             expect(x._id).toBe('echo');
             handle.stop();
             resolve();
-          }
+          },
         });
         collection.insert({ _id: 'echo' });
       });
@@ -86,7 +90,7 @@ describe('Observe', function () {
           removed: function () {
             handle.stop();
             realDone();
-          }
+          },
         });
         var coll = store.collection(COLLECTION_NAME);
         coll.insert({ _id: 'echo' }, function () {
@@ -105,7 +109,7 @@ describe('Observe', function () {
               expect(x._id).toBe('echo2');
               resolve();
               handle.stop();
-            }
+            },
           });
         });
         store.collection(COLLECTION_NAME).insert({ _id: 'echo4' }, function () {
@@ -136,7 +140,7 @@ describe('Observe', function () {
           added: function () {
             cursor.skip(++skip);
             realDone();
-          }
+          },
         });
       });
     }));
@@ -146,7 +150,7 @@ describe('Observe', function () {
       return {
         _id: id,
         status: 'created',
-        shipTo: 'SE'
+        shipTo: 'SE',
       };
     };
 
@@ -160,9 +164,9 @@ describe('Observe', function () {
           capturedContext = context;
 
           return {
-            dispose: function () {}
+            dispose: function () {},
           };
-        }
+        },
       };
 
       var collection = {
@@ -170,13 +174,13 @@ describe('Observe', function () {
           s: {
             namespace: {
               db: 'db_test_suite',
-              collection: COLLECTION_NAME
-            }
-          }
+              collection: COLLECTION_NAME,
+            },
+          },
         },
         _getDocuments: function (query, cb) {
           cb(null, initialDocs);
-        }
+        },
       };
 
       new Observer({ query: {} }, {}, collection, options, oplogListener);
@@ -187,7 +191,7 @@ describe('Observe', function () {
         },
         emit: function (payload) {
           capturedHandler.call(capturedContext, payload);
-        }
+        },
       };
     };
 
@@ -208,7 +212,7 @@ describe('Observe', function () {
       },
       removed: function (doc, index) {
         removedCalls.push([doc, index]);
-      }
+      },
     });
 
     // Initial load may invoke callbacks through merge(); clear to validate oplog updates only.
@@ -252,27 +256,33 @@ describe('Observe', function () {
         s: {
           namespace: {
             db: 'db_test_suite',
-            collection: COLLECTION_NAME
-          }
-        }
+            collection: COLLECTION_NAME,
+          },
+        },
       },
       _getDocuments: function (query, cb) {
         loadInitialCallback = cb;
-      }
+      },
     };
     var oplogListener = {
       listen: function () {
         listenCalls++;
         return {
-          dispose: function () {}
+          dispose: function () {},
         };
-      }
+      },
     };
-    var handle = new Observer({ query: {} }, {}, collection, {
-      init: function () {
-        initCalls++;
-      }
-    }, oplogListener);
+    var handle = new Observer(
+      { query: {} },
+      {},
+      collection,
+      {
+        init: function () {
+          initCalls++;
+        },
+      },
+      oplogListener,
+    );
 
     await handle.stop();
     loadInitialCallback(null, [{ _id: 'late' }]);

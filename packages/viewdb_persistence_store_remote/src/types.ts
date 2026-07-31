@@ -6,6 +6,12 @@ export interface VdbSocket {
 
 /** Client interface for request/response and subscriptions (rr_client, rest_client) */
 export interface VdbClient {
-  request(payload: Record<string, any>, callback?: (err: Error | null, result?: any) => void): void;
-  subscribe(payload: Record<string, any>, callback: (err: Error | null, result?: any) => void): void;
+  request(
+    payload: Record<string, any>,
+    callback?: (err: Error | null, result?: any) => void,
+  ): void;
+  subscribe(
+    payload: Record<string, any>,
+    callback: (err: Error | null, result?: any) => void,
+  ): void;
 }
