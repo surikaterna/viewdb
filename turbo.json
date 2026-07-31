@@ -1,6 +1,10 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
+    "//#check-style": {
+      "cache": false
+    },
+    "//#check-style:ci": {},
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
@@ -8,8 +12,6 @@
     "test": {
       "dependsOn": ["^build"]
     },
-    "lint": {},
-    "format": {},
     "clean": {
       "cache": false
     }

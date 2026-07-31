@@ -13,7 +13,7 @@ describe('Merger', () => {
           resolve();
         },
         comparatorId: _.isEqual,
-        comparator: _.isEqual
+        comparator: _.isEqual,
       });
       expect(_.isEqual(l2, res)).toBe(true);
 
@@ -29,7 +29,7 @@ describe('Merger', () => {
           removed.push(e);
         },
         comparatorId: _.isEqual,
-        comparator: _.isEqual
+        comparator: _.isEqual,
       });
       expect(removed.length).toBe(2);
       expect(_.isEqual(l2, res)).toBe(true);
@@ -48,7 +48,7 @@ describe('Merger', () => {
           removed.push(e);
         },
         comparatorId: _.isEqual,
-        comparator: _.isEqual
+        comparator: _.isEqual,
       });
       expect(removed.length).toBe(2);
       expect(_.isEqual(l2, res)).toBe(true);
@@ -69,7 +69,7 @@ describe('Merger', () => {
         },
         removed: function () {
           reject(new Error('should not be called'));
-        }
+        },
       });
       expect(_.isEqual(l2, res)).toBe(true);
     }));
@@ -85,7 +85,7 @@ describe('Merger', () => {
         },
         removed: function () {
           reject(new Error('should not be called'));
-        }
+        },
       });
       expect(_.isEqual(l2, res)).toBe(true);
     }));
@@ -103,7 +103,7 @@ describe('Merger', () => {
         },
         moved: function (e, oldIndex, newIndex) {
           moved.push(arguments);
-        }
+        },
       });
       expect(moved.length).toBe(1);
 
@@ -128,7 +128,7 @@ describe('Merger', () => {
         changed: function (o, n, index) {},
         comparatorId: function (a, b) {
           return a._id === b._id;
-        }
+        },
       });
       expect(_.isEqual(l2, res)).toBe(true);
       resolve();
@@ -148,13 +148,13 @@ describe('Merger', () => {
         { _id: 1, a: 'Hello1' },
         { _id: 2, a: 'Hello2' },
         { _id: 3, a: 'Hello3' },
-        { _id: 4, a: 'Hello4' }
+        { _id: 4, a: 'Hello4' },
       ];
       var l2 = [
         { _id: 4, a: 'Hej4' },
         { _id: 3, a: 'Hej3' },
         { _id: 2, a: 'Hej2' },
-        { _id: 1, a: 'Hej1' }
+        { _id: 1, a: 'Hej1' },
       ];
 
       var res = merge(
@@ -164,10 +164,10 @@ describe('Merger', () => {
           {
             comparatorId: function (a, b) {
               return a._id === b._id;
-            }
+            },
           },
-          {}
-        )
+          {},
+        ),
       );
       expect(_.isEqual(l2, res)).toBe(true);
       resolve();
@@ -178,14 +178,14 @@ describe('Merger', () => {
         { _id: 1, a: 'Hello1' },
         { _id: 2, a: 'Hello2' },
         { _id: 3, a: 'Hello3' },
-        { _id: 4, a: 'Hello4' }
+        { _id: 4, a: 'Hello4' },
       ];
       var l2 = [
         { _id: 4, a: 'Hej4' },
         { _id: 99, a: 'Hej99' },
         { _id: 2, a: 'Hej2' },
         { _id: 1, a: 'Hej1' },
-        { _id: 100, a: 'Hej100' }
+        { _id: 100, a: 'Hej100' },
       ];
 
       var res = merge(
@@ -195,10 +195,10 @@ describe('Merger', () => {
           {
             comparatorId: function (a, b) {
               return a._id === b._id;
-            }
+            },
           },
-          {}
-        )
+          {},
+        ),
       );
       expect(_.isEqual(l2, res)).toBe(true);
       resolve();

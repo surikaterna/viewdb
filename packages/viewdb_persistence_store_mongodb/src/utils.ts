@@ -8,7 +8,10 @@ function _excludeKey(key: string | number | boolean): boolean {
   return key === '0' || key === false || key === 0;
 }
 
-function _projectLayer(document: Record<string, any>, projectObject: Record<string, any>): Record<string, any> {
+function _projectLayer(
+  document: Record<string, any>,
+  projectObject: Record<string, any>,
+): Record<string, any> {
   var projectedLayer: any = {};
   var deletionKeys: string[] = [];
 
@@ -69,7 +72,10 @@ function nodeify<T>(promise: Promise<T>, cb?: Function): Promise<T | void> {
  * @param projectObject MongoDb like project object
  * @returns projected version of the document
  */
-function projectDocument(document: Record<string, any>, projectObject: Record<string, any>): Record<string, any> {
+function projectDocument(
+  document: Record<string, any>,
+  projectObject: Record<string, any>,
+): Record<string, any> {
   return _projectLayer(document, projectObject);
 }
 

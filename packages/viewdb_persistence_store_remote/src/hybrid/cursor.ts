@@ -20,7 +20,13 @@ class HybridCursor {
   _getCachedData: any;
   _project: Record<string, 0 | 1> | undefined;
 
-  constructor(query: any, local: any, remote: any, findOptions: any, options: any) {
+  constructor(
+    query: any,
+    local: any,
+    remote: any,
+    findOptions: any,
+    options: any,
+  ) {
     this._query = query;
     this._sort = undefined;
     this._limit = undefined;
@@ -68,7 +74,14 @@ class HybridCursor {
         var combinedResult = kuery.find(reconcile(localData, remoteData!));
         callback(null, combinedResult);
         if (_.isFunction(self._onCacheUpdateCallback)) {
-          self._onCacheUpdateCallback(self._query, skip, limit, sort, project, combinedResult);
+          self._onCacheUpdateCallback(
+            self._query,
+            skip,
+            limit,
+            sort,
+            project,
+            combinedResult,
+          );
         }
       }
     }
@@ -82,10 +95,19 @@ class HybridCursor {
       localData = result;
       if (remoteData || remoteErr) {
         if (!(remoteErr && self._options.throwRemoteErr)) {
-          var combinedResult = kuery.find(reconcile(localData!, remoteData || []));
+          var combinedResult = kuery.find(
+            reconcile(localData!, remoteData || []),
+          );
           callback(null, combinedResult);
           if (_.isFunction(self._onCacheUpdateCallback)) {
-            self._onCacheUpdateCallback(self._query, skip, limit, sort, project, combinedResult);
+            self._onCacheUpdateCallback(
+              self._query,
+              skip,
+              limit,
+              sort,
+              project,
+              combinedResult,
+            );
           }
         }
       } else {
@@ -125,7 +147,11 @@ class HybridCursor {
         timeTracker.stop();
         var queryTime = timeTracker.getExecutionTime();
         if (queryTime > self._options.queryMaxTime) {
-          LOG.warn('Query %j, took longer than allowed max time of %s seconds.', self._query, self._options.queryMaxTime);
+          LOG.warn(
+            'Query %j, took longer than allowed max time of %s seconds.',
+            self._query,
+            self._options.queryMaxTime,
+          );
         }
 
         return callback.apply(self, arguments);
@@ -133,14 +159,21 @@ class HybridCursor {
     }
     timeTracker.start();
     if (this._options.cacheQueries && this._getCachedData) {
-      this._getCachedData(this._query, this._skip, this._limit, this._sort, this._project, function (err: Error | null, data: any) {
-        if (data) {
-          wrappedCallback(null, data);
-          return;
-        }
+      this._getCachedData(
+        this._query,
+        this._skip,
+        this._limit,
+        this._sort,
+        this._project,
+        function (err: Error | null, data: any) {
+          if (data) {
+            wrappedCallback(null, data);
+            return;
+          }
 
-        self._toArray(wrappedCallback);
-      });
+          self._toArray(wrappedCallback);
+        },
+      );
     } else {
       this._toArray(wrappedCallback);
     }
@@ -175,12 +208,26 @@ class HybridCursor {
 
   _onObserverCacheUpdate(result: any): void {
     if (_.isFunction(this._onCacheUpdateCallback)) {
-      this._onCacheUpdateCallback(this._query, this._skip, this._limit, this._sort, this._project, result);
+      this._onCacheUpdateCallback(
+        this._query,
+        this._skip,
+        this._limit,
+        this._sort,
+        this._project,
+        result,
+      );
     }
   }
 
   _getObserverData(callback: any): void {
-    this._getCachedData(this._query, this._skip, this._limit, this._sort, this._project, callback);
+    this._getCachedData(
+      this._query,
+      this._skip,
+      this._limit,
+      this._sort,
+      this._project,
+      callback,
+    );
   }
 
   _count(options: any, callback: any): void {
@@ -196,7 +243,11 @@ class HybridCursor {
         timeTracker.stop();
         var queryTime = timeTracker.getExecutionTime();
         if (queryTime > self._options.queryMaxTime) {
-          LOG.warn('Count query %j, took longer than allowed max time of %s seconds.', self._query, self._options.queryMaxTime);
+          LOG.warn(
+            'Count query %j, took longer than allowed max time of %s seconds.',
+            self._query,
+            self._options.queryMaxTime,
+          );
         }
 
         return callback.apply(self, arguments);
@@ -240,14 +291,21 @@ class HybridCursor {
     }
 
     if (this._getCachedData) {
-      this._getCachedData(this._query, this._skip, this._limit, this._sort, this._project, function (err: Error | null, data: any) {
-        if (data) {
-          callback(null, data.length);
-          return;
-        }
+      this._getCachedData(
+        this._query,
+        this._skip,
+        this._limit,
+        this._sort,
+        this._project,
+        function (err: Error | null, data: any) {
+          if (data) {
+            callback(null, data.length);
+            return;
+          }
 
-        self._count(options, callback);
-      });
+          self._count(options, callback);
+        },
+      );
     } else {
       this._count(options, callback);
     }
@@ -276,10 +334,18 @@ class HybridCursor {
 
     var modifiedOptions = options;
     if (this._options.cacheQueries) {
-      modifiedOptions = Object.assign({}, options, { cacheCallback: this._onObserverCacheUpdate.bind(this), getCache: this._getObserverData.bind(this) });
+      modifiedOptions = Object.assign({}, options, {
+        cacheCallback: this._onObserverCacheUpdate.bind(this),
+        getCache: this._getObserverData.bind(this),
+      });
     }
 
-    return new Observe(this._local, this._remote, this._options, modifiedOptions);
+    return new Observe(
+      this._local,
+      this._remote,
+      this._options,
+      modifiedOptions,
+    );
   }
 
   project(project: Record<string, 0 | 1>): this {

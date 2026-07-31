@@ -45,12 +45,16 @@ class LokiPartitioningAdapter {
     // verify user passed an appropriate adapter
     if (adapter) {
       if (adapter.mode === 'reference') {
-        throw new Error('LokiPartitioningAdapter cannot be instantiated with a reference mode adapter');
+        throw new Error(
+          'LokiPartitioningAdapter cannot be instantiated with a reference mode adapter',
+        );
       } else {
         this.adapter = adapter;
       }
     } else {
-      throw new Error('LokiPartitioningAdapter requires a (non-reference mode) adapter on construction');
+      throw new Error(
+        'LokiPartitioningAdapter requires a (non-reference mode) adapter on construction',
+      );
     }
 
     // set collection paging defaults
@@ -92,14 +96,17 @@ class LokiPartitioningAdapter {
       }
 
       if (typeof result !== 'string') {
-        callback(new Error('LokiPartitioningAdapter received an unexpected response from inner adapter loadDatabase()'));
+        callback(
+          new Error(
+            'LokiPartitioningAdapter received an unexpected response from inner adapter loadDatabase()',
+          ),
+        );
       }
 
       // I will want to use loki destructuring helper methods so i will inflate into typed instance
       let db = JSON.parse(result);
       self.dbref.loadJSONObject(db);
       db = null;
-      // eslint-disable-next-line
       let clen = self.dbref.collections.length;
 
       if (self.dbref.collections.length === 0) {
@@ -109,7 +116,7 @@ class LokiPartitioningAdapter {
 
       self.pageIterator = {
         collection: 0,
-        pageIndex: 0
+        pageIndex: 0,
       };
 
       self.loadNextPartition(0, function () {
@@ -135,7 +142,10 @@ class LokiPartitioningAdapter {
     }
 
     this.adapter.loadDatabase(keyname, function (result: any) {
-      var data = self.dbref.deserializeCollection(result, { delimited: true, collectionIndex: partition });
+      var data = self.dbref.deserializeCollection(result, {
+        delimited: true,
+        collectionIndex: partition,
+      });
       self.dbref.collections[partition].data = data;
 
       if (++partition < self.dbref.collections.length) {
@@ -153,7 +163,12 @@ class LokiPartitioningAdapter {
    */
   loadNextPage(callback: any) {
     // calculate name for next saved page in sequence
-    var keyname = this.dbname + '.' + this.pageIterator.collection + '.' + this.pageIterator.pageIndex;
+    var keyname =
+      this.dbname +
+      '.' +
+      this.pageIterator.collection +
+      '.' +
+      this.pageIterator.pageIndex;
     var self = this;
 
     // load whatever page is next in sequence
@@ -185,7 +200,9 @@ class LokiPartitioningAdapter {
 
       // convert stringified array elements to object instances and push to collection data
       for (idx = 0; idx < dlen; idx++) {
-        self.dbref.collections[self.pageIterator.collection].data.push(JSON.parse(data[idx]));
+        self.dbref.collections[self.pageIterator.collection].data.push(
+          JSON.parse(data[idx]),
+        );
         data[idx] = null;
       }
       data = [];
@@ -216,7 +233,6 @@ class LokiPartitioningAdapter {
    * @memberof LokiPartitioningAdapter
    */
   exportDatabase(dbname: any, dbref: any, callback: any) {
-    // eslint-disable-next-line
     var self = this;
     var idx,
       clen = dbref.collections.length;
@@ -252,7 +268,7 @@ class LokiPartitioningAdapter {
       this.pageIterator = {
         collection: partition,
         docIndex: 0,
-        pageIndex: 0
+        pageIndex: 0,
       };
 
       // since saveNextPage recursively calls itself until done, our callback means this whole paged partition is finished
@@ -270,7 +286,7 @@ class LokiPartitioningAdapter {
     var result = this.dbref.serializeDestructured({
       partitioned: true,
       delimited: true,
-      partition: partition
+      partition: partition,
     });
 
     this.adapter.saveDatabase(keyname, result, function (err: any) {
@@ -295,7 +311,12 @@ class LokiPartitioningAdapter {
   saveNextPage(callback: any) {
     var self = this;
     var coll = this.dbref.collections[this.pageIterator.collection];
-    var keyname = this.dbname + '.' + this.pageIterator.collection + '.' + this.pageIterator.pageIndex;
+    var keyname =
+      this.dbname +
+      '.' +
+      this.pageIterator.collection +
+      '.' +
+      this.pageIterator.pageIndex;
     var pageLen = 0,
       cdlen = coll.data.length,
       delimlen = this.options.delimiter.length;
@@ -327,7 +348,9 @@ class LokiPartitioningAdapter {
     while (true) {
       if (!doneWithPartition) {
         // serialize object
-        serializedObject = JSON.stringify(coll.data[this.pageIterator.docIndex]);
+        serializedObject = JSON.stringify(
+          coll.data[this.pageIterator.docIndex],
+        );
         pageBuilder += serializedObject;
         pageLen += serializedObject?.length ?? 0;
 

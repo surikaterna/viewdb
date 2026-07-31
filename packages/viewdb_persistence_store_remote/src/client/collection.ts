@@ -20,7 +20,12 @@ class Collection extends EventEmitter {
       var id = query.id;
       return [];
     }
-    return new Cursor(this, { query: query }, options, this._getDocuments.bind(this));
+    return new Cursor(
+      this,
+      { query: query },
+      options,
+      this._getDocuments.bind(this),
+    );
   }
 
   insert(_document: any, _options?: any, _callback?: any): void {
@@ -52,7 +57,7 @@ class Collection extends EventEmitter {
       skip: skip,
       limit: limit,
       find: q,
-      sort: sort
+      sort: sort,
     };
     if (method) {
       params.method = method;
@@ -64,7 +69,10 @@ class Collection extends EventEmitter {
     return params;
   }
 
-  _getDocuments(query: any, callback: (err: Error | null, result?: any) => void): void {
+  _getDocuments(
+    query: any,
+    callback: (err: Error | null, result?: any) => void,
+  ): void {
     var params = this._buildParams(query);
     this._client.request(params, function (err: Error | null, res: any) {
       if (err) {
@@ -88,7 +96,7 @@ class Collection extends EventEmitter {
     var params: any = {
       id: crypto.randomUUID(),
       count: query,
-      collection: this._name
+      collection: this._name,
     };
 
     if (options) {

@@ -7,7 +7,10 @@ class InMemoryStore {
     this._collections = {};
   }
 
-  collection(collectionName: string, callback?: (collection: Collection) => void): Collection {
+  collection(
+    collectionName: string,
+    callback?: (collection: Collection) => void,
+  ): Collection {
     let coll = this._collections[collectionName];
     if (coll === undefined) {
       coll = new Collection(collectionName);

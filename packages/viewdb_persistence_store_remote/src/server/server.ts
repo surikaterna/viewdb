@@ -8,8 +8,8 @@ function sendChange(socket: VdbSocket, change: any, request: any): void {
   socket.emit('/vdb/response', {
     i: request.i,
     p: {
-      changes: [change]
-    }
+      changes: [change],
+    },
   });
 }
 
@@ -21,7 +21,15 @@ interface ConsumerCallbacks {
 }
 
 interface SharedObserver {
-  handle: { stop: () => void; getStats?: () => { evalCount: number; matchCount: number; rawChangedCount: number; emittedChangedCount: number } } | null;
+  handle: {
+    stop: () => void;
+    getStats?: () => {
+      evalCount: number;
+      matchCount: number;
+      rawChangedCount: number;
+      emittedChangedCount: number;
+    };
+  } | null;
   consumers: Map<string, ConsumerCallbacks>;
 }
 
@@ -32,14 +40,23 @@ interface ObserveRegistration {
   token: number;
 }
 
-function observeKey(collection: string, query: any, sort?: any, limit?: any, skip?: any, project?: any): string {
+function observeKey(
+  collection: string,
+  query: any,
+  sort?: any,
+  limit?: any,
+  skip?: any,
+  project?: any,
+): string {
   return JSON.stringify({ collection, query, sort, limit, skip, project });
 }
 
 function getSharedRegistry(viewdb: any): Map<string, SharedObserver> {
   if (!viewdb._vdbSharedObservers) {
     viewdb._vdbSharedObservers = new Map<string, SharedObserver>();
-    viewdb._getObserverStats = function() { return getObserverStats(viewdb); };
+    viewdb._getObserverStats = function () {
+      return getObserverStats(viewdb);
+    };
   }
   return viewdb._vdbSharedObservers;
 }
@@ -47,15 +64,18 @@ function getSharedRegistry(viewdb: any): Map<string, SharedObserver> {
 interface ObserverStats {
   sharedObserverCount: number;
   totalConsumerCount: number;
-  perCollection: Record<string, {
-    sharedObservers: number;
-    consumers: number;
-    evalCount: number;
-    matchCount: number;
-    missCount: number;
-    rawChangedCount: number;
-    emittedChangedCount: number;
-  }>;
+  perCollection: Record<
+    string,
+    {
+      sharedObservers: number;
+      consumers: number;
+      evalCount: number;
+      matchCount: number;
+      missCount: number;
+      rawChangedCount: number;
+      emittedChangedCount: number;
+    }
+  >;
 }
 
 function getObserverStats(viewdb: any): ObserverStats {
@@ -63,7 +83,7 @@ function getObserverStats(viewdb: any): ObserverStats {
   var stats: ObserverStats = {
     sharedObserverCount: registry.size,
     totalConsumerCount: 0,
-    perCollection: {}
+    perCollection: {},
   };
 
   registry.forEach(function (shared, key) {
@@ -80,7 +100,7 @@ function getObserverStats(viewdb: any): ObserverStats {
         matchCount: 0,
         missCount: 0,
         rawChangedCount: 0,
-        emittedChangedCount: 0
+        emittedChangedCount: 0,
       };
     }
 
@@ -93,7 +113,7 @@ function getObserverStats(viewdb: any): ObserverStats {
       var observerStats = shared.handle.getStats();
       colStats.evalCount += observerStats.evalCount;
       colStats.matchCount += observerStats.matchCount;
-      colStats.missCount += (observerStats.evalCount - observerStats.matchCount);
+      colStats.missCount += observerStats.evalCount - observerStats.matchCount;
       colStats.rawChangedCount += observerStats.rawChangedCount;
       colStats.emittedChangedCount += observerStats.emittedChangedCount;
     }
@@ -102,7 +122,11 @@ function getObserverStats(viewdb: any): ObserverStats {
   return stats;
 }
 
-function removeConsumer(registry: Map<string, SharedObserver>, key: string, consumerId: string): void {
+function removeConsumer(
+  registry: Map<string, SharedObserver>,
+  key: string,
+  consumerId: string,
+): void {
   var shared = registry.get(key);
   if (!shared) return;
   shared.consumers.delete(consumerId);
@@ -114,17 +138,28 @@ function removeConsumer(registry: Map<string, SharedObserver>, key: string, cons
   }
 }
 
-function stopRegisteredObserver(registry: Map<string, SharedObserver>, observer: ObserveRegistration): void {
+function stopRegisteredObserver(
+  registry: Map<string, SharedObserver>,
+  observer: ObserveRegistration,
+): void {
   if (observer.key && observer.consumerId) {
     removeConsumer(registry, observer.key, observer.consumerId);
   }
 }
 
 class ViewDbSocketServer {
-  constructor(viewdb: any, socket: VdbSocket, queryDecorator?: any, globalLimit?: number, readPreference?: any, batchMs?: number) {
+  constructor(
+    viewdb: any,
+    socket: VdbSocket,
+    queryDecorator?: any,
+    globalLimit?: number,
+    readPreference?: any,
+    batchMs?: number,
+  ) {
     var _observers: Record<string, ObserveRegistration> = {};
     var _queryDecorator: any;
-    var _socketId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    var _socketId =
+      Math.random().toString(36).slice(2) + Date.now().toString(36);
     var _batchMs = batchMs || 0;
     var _disconnected = false;
     var _cancelledObserves = new Set<string>();
@@ -150,64 +185,76 @@ class ViewDbSocketServer {
 
     socket.on('/vdb/request', function (request: any) {
       if (request.p.find) {
-        _queryDecorator(request.p.collection, request.p.find, function (decoratedQuery: any) {
-          var cursor = viewdb.collection(request.p.collection).find(decoratedQuery);
-          if (readPreference && cursor.setReadPreference) {
-            cursor.setReadPreference(readPreference);
-          }
-          if (request.p.sort) {
-            cursor.sort(request.p.sort);
-          }
-          if (_.isNumber(request.p.limit)) {
-            cursor.limit(request.p.limit);
-          } else if (globalLimit && _.isNumber(globalLimit)) {
-            cursor.limit(globalLimit);
-          }
-          if (_.isNumber(request.p.skip)) {
-            cursor.skip(request.p.skip);
-          }
-          if (request.p.project) {
-            if (cursor.project) {
-              cursor.project(request.p.project);
-            } else {
-              console.log('warn: no support for project on cursor');
+        _queryDecorator(
+          request.p.collection,
+          request.p.find,
+          function (decoratedQuery: any) {
+            var cursor = viewdb
+              .collection(request.p.collection)
+              .find(decoratedQuery);
+            if (readPreference && cursor.setReadPreference) {
+              cursor.setReadPreference(readPreference);
             }
-          }
-          cursor.toArray(function (err: Error | null, result: any) {
-            if (err) {
-              console.log(err);
-            } else {
-              socket.emit('/vdb/response', {
-                i: request.i,
-                p: result
-              });
+            if (request.p.sort) {
+              cursor.sort(request.p.sort);
             }
-          });
-        });
+            if (_.isNumber(request.p.limit)) {
+              cursor.limit(request.p.limit);
+            } else if (globalLimit && _.isNumber(globalLimit)) {
+              cursor.limit(globalLimit);
+            }
+            if (_.isNumber(request.p.skip)) {
+              cursor.skip(request.p.skip);
+            }
+            if (request.p.project) {
+              if (cursor.project) {
+                cursor.project(request.p.project);
+              } else {
+                console.log('warn: no support for project on cursor');
+              }
+            }
+            cursor.toArray(function (err: Error | null, result: any) {
+              if (err) {
+                console.log(err);
+              } else {
+                socket.emit('/vdb/response', {
+                  i: request.i,
+                  p: result,
+                });
+              }
+            });
+          },
+        );
       } else if (request.p.count) {
-        _queryDecorator(request.p.collection, request.p.count, function (decoratedQuery: any) {
-          var cursor = viewdb.collection(request.p.collection).find(decoratedQuery);
-          if (readPreference && cursor.setReadPreference) {
-            cursor.setReadPreference(readPreference);
-          }
-          if (_.isNumber(request.p.limit)) {
-            cursor.limit(request.p.limit);
-          }
-          if (_.isNumber(request.p.skip)) {
-            cursor.skip(request.p.skip);
-          }
-          cursor.count(function (err: Error | null, result: any) {
-            if (err) {
-              console.log(err);
-            } else {
-              socket.emit('/vdb/response', {
-                i: request.i,
-                p: result
-              });
+        _queryDecorator(
+          request.p.collection,
+          request.p.count,
+          function (decoratedQuery: any) {
+            var cursor = viewdb
+              .collection(request.p.collection)
+              .find(decoratedQuery);
+            if (readPreference && cursor.setReadPreference) {
+              cursor.setReadPreference(readPreference);
             }
-            cursor.close(function (_err: Error | null) {});
-          });
-        });
+            if (_.isNumber(request.p.limit)) {
+              cursor.limit(request.p.limit);
+            }
+            if (_.isNumber(request.p.skip)) {
+              cursor.skip(request.p.skip);
+            }
+            cursor.count(function (err: Error | null, result: any) {
+              if (err) {
+                console.log(err);
+              } else {
+                socket.emit('/vdb/response', {
+                  i: request.i,
+                  p: result,
+                });
+              }
+              cursor.close(function (_err: Error | null) {});
+            });
+          },
+        );
       } else if (request.p.observe) {
         var observeId = request.p.id;
         var existingObserver = _observers[observeId];
@@ -216,7 +263,7 @@ class ViewDbSocketServer {
             observeId: observeId,
             query: request.p.observe,
             requestIndex: request.i,
-            socketId: _socketId
+            socketId: _socketId,
           });
           stopRegisteredObserver(registry, existingObserver);
         }
@@ -225,167 +272,220 @@ class ViewDbSocketServer {
           i: request.i,
           key: null,
           consumerId: null,
-          token: registrationToken
+          token: registrationToken,
         };
-        _queryDecorator(request.p.collection, request.p.observe, function (decoratedQuery: any) {
-          var pendingObserver = _observers[observeId];
-          if (_disconnected || !pendingObserver || pendingObserver.token !== registrationToken || _cancelledObserves.has(observeId)) {
-            _cancelledObserves.delete(observeId);
-            if (pendingObserver && pendingObserver.token === registrationToken) {
-              delete _observers[observeId];
-            }
-            return;
-          }
-          var effectiveLimit = _.isNumber(request.p.limit) ? request.p.limit :
-            (globalLimit && _.isNumber(globalLimit) ? globalLimit : undefined);
-
-          var key = observeKey(
-            request.p.collection,
-            decoratedQuery,
-            request.p.sort,
-            effectiveLimit,
-            request.p.skip,
-            request.p.project
-          );
-
-          var consumerId = _socketId + ':' + observeId;
-          var events = request.p.events || { i: true, a: true, r: true, c: true, m: true };
-
-          var consumer: ConsumerCallbacks = {
-            request: request,
-            socket: socket,
-            events: events,
-            ready: false
-          };
-
-          var shared = registry.get(key);
-          if (shared) {
-            // Join existing shared observer - send fresh init to this consumer
-            shared.consumers.set(consumerId, consumer);
-            if (events.i) {
-              var initCursor = viewdb.collection(request.p.collection).find(decoratedQuery);
-              if (readPreference && initCursor.setReadPreference) {
-                initCursor.setReadPreference(readPreference);
+        _queryDecorator(
+          request.p.collection,
+          request.p.observe,
+          function (decoratedQuery: any) {
+            var pendingObserver = _observers[observeId];
+            if (
+              _disconnected ||
+              !pendingObserver ||
+              pendingObserver.token !== registrationToken ||
+              _cancelledObserves.has(observeId)
+            ) {
+              _cancelledObserves.delete(observeId);
+              if (
+                pendingObserver &&
+                pendingObserver.token === registrationToken
+              ) {
+                delete _observers[observeId];
               }
-              if (request.p.sort) {
-                initCursor.sort(request.p.sort);
-              }
-              if (effectiveLimit !== undefined) {
-                initCursor.limit(effectiveLimit);
-              }
-              if (_.isNumber(request.p.skip)) {
-                initCursor.skip(request.p.skip);
-              }
-              if (request.p.project && initCursor.project) {
-                initCursor.project(request.p.project);
-              }
-              initCursor.toArray(function (err: Error | null, result: any) {
-                var currentObserver = _observers[observeId];
-                if (!currentObserver || currentObserver.token !== registrationToken || !shared!.consumers.has(consumerId)) {
-                  initCursor.close(function (_err: Error | null) {});
-                  return;
-                }
-                if (!err && result) {
-                  sendChange(socket, { i: { r: result } }, request);
-                }
-                consumer.ready = true;
-                initCursor.close(function (_err: Error | null) {});
-              });
-            } else {
-              consumer.ready = true;
-            }
-          } else {
-            // Create new shared observer
-            var newShared: SharedObserver = {
-              handle: null,
-              consumers: new Map()
-            };
-            newShared.consumers.set(consumerId, consumer);
-            registry.set(key, newShared);
-
-            var cursor = viewdb.collection(request.p.collection).find(decoratedQuery);
-            if (readPreference && cursor.setReadPreference) {
-              cursor.setReadPreference(readPreference);
-            }
-            if (request.p.sort) {
-              cursor.sort(request.p.sort);
-            }
-            if (effectiveLimit !== undefined) {
-              cursor.limit(effectiveLimit);
-            }
-            if (_.isNumber(request.p.skip)) {
-              cursor.skip(request.p.skip);
-            }
-            if (request.p.project) {
-              cursor.project(request.p.project);
-            }
-
-            var observeOptions: any = {
-              init: function (result: any) {
-                newShared.consumers.forEach(function (entry) {
-                  if (entry.events.i) {
-                    sendChange(entry.socket, { i: { r: result } }, entry.request);
-                  }
-                  entry.ready = true;
-                });
-              },
-              added: function (e: any, index: number) {
-                newShared.consumers.forEach(function (entry) {
-                  if (entry.ready && entry.events.a) {
-                    sendChange(entry.socket, { a: { e: e, i: index } }, entry.request);
-                  }
-                });
-              },
-              removed: function (e: any, index: number) {
-                newShared.consumers.forEach(function (entry) {
-                  if (entry.ready && entry.events.r) {
-                    sendChange(entry.socket, { r: { e: e, i: index } }, entry.request);
-                  }
-                });
-              },
-              changed: function (asis: any, tobe: any, index: number) {
-                newShared.consumers.forEach(function (entry) {
-                  if (entry.ready && entry.events.c) {
-                    sendChange(entry.socket, { c: { o: asis, n: tobe, i: index } }, entry.request);
-                  }
-                });
-              },
-              moved: function (e: any, oldIndex: number, newIndex: number) {
-                newShared.consumers.forEach(function (entry) {
-                  if (entry.ready && entry.events.m) {
-                    sendChange(entry.socket, { m: { e: e, o: oldIndex, n: newIndex } }, entry.request);
-                  }
-                });
-              },
-              oplog: true,
-              batchMs: _batchMs
-            };
-
-            var observeHandle = cursor.observe(observeOptions);
-            if (_disconnected || !_observers[observeId] || _observers[observeId].token !== registrationToken) {
-              observeHandle.stop();
-              registry.delete(key);
-              cursor.close(function (_err: Error | null) {});
               return;
             }
-            newShared.handle = observeHandle;
-            cursor.close(function (_err: Error | null) {});
-            shared = newShared;
-          }
+            var effectiveLimit = _.isNumber(request.p.limit)
+              ? request.p.limit
+              : globalLimit && _.isNumber(globalLimit)
+                ? globalLimit
+                : undefined;
 
-          _observers[observeId] = {
-            i: request.i,
-            key: key,
-            consumerId: consumerId,
-            token: registrationToken
-          };
-          socket.emit('/vdb/response', {
-            i: request.i,
-            p: {
-              handle: observeId
+            var key = observeKey(
+              request.p.collection,
+              decoratedQuery,
+              request.p.sort,
+              effectiveLimit,
+              request.p.skip,
+              request.p.project,
+            );
+
+            var consumerId = _socketId + ':' + observeId;
+            var events = request.p.events || {
+              i: true,
+              a: true,
+              r: true,
+              c: true,
+              m: true,
+            };
+
+            var consumer: ConsumerCallbacks = {
+              request: request,
+              socket: socket,
+              events: events,
+              ready: false,
+            };
+
+            var shared = registry.get(key);
+            if (shared) {
+              // Join existing shared observer - send fresh init to this consumer
+              shared.consumers.set(consumerId, consumer);
+              if (events.i) {
+                var initCursor = viewdb
+                  .collection(request.p.collection)
+                  .find(decoratedQuery);
+                if (readPreference && initCursor.setReadPreference) {
+                  initCursor.setReadPreference(readPreference);
+                }
+                if (request.p.sort) {
+                  initCursor.sort(request.p.sort);
+                }
+                if (effectiveLimit !== undefined) {
+                  initCursor.limit(effectiveLimit);
+                }
+                if (_.isNumber(request.p.skip)) {
+                  initCursor.skip(request.p.skip);
+                }
+                if (request.p.project && initCursor.project) {
+                  initCursor.project(request.p.project);
+                }
+                initCursor.toArray(function (err: Error | null, result: any) {
+                  var currentObserver = _observers[observeId];
+                  if (
+                    !currentObserver ||
+                    currentObserver.token !== registrationToken ||
+                    !shared!.consumers.has(consumerId)
+                  ) {
+                    initCursor.close(function (_err: Error | null) {});
+                    return;
+                  }
+                  if (!err && result) {
+                    sendChange(socket, { i: { r: result } }, request);
+                  }
+                  consumer.ready = true;
+                  initCursor.close(function (_err: Error | null) {});
+                });
+              } else {
+                consumer.ready = true;
+              }
+            } else {
+              // Create new shared observer
+              var newShared: SharedObserver = {
+                handle: null,
+                consumers: new Map(),
+              };
+              newShared.consumers.set(consumerId, consumer);
+              registry.set(key, newShared);
+
+              var cursor = viewdb
+                .collection(request.p.collection)
+                .find(decoratedQuery);
+              if (readPreference && cursor.setReadPreference) {
+                cursor.setReadPreference(readPreference);
+              }
+              if (request.p.sort) {
+                cursor.sort(request.p.sort);
+              }
+              if (effectiveLimit !== undefined) {
+                cursor.limit(effectiveLimit);
+              }
+              if (_.isNumber(request.p.skip)) {
+                cursor.skip(request.p.skip);
+              }
+              if (request.p.project) {
+                cursor.project(request.p.project);
+              }
+
+              var observeOptions: any = {
+                init: function (result: any) {
+                  newShared.consumers.forEach(function (entry) {
+                    if (entry.events.i) {
+                      sendChange(
+                        entry.socket,
+                        { i: { r: result } },
+                        entry.request,
+                      );
+                    }
+                    entry.ready = true;
+                  });
+                },
+                added: function (e: any, index: number) {
+                  newShared.consumers.forEach(function (entry) {
+                    if (entry.ready && entry.events.a) {
+                      sendChange(
+                        entry.socket,
+                        { a: { e: e, i: index } },
+                        entry.request,
+                      );
+                    }
+                  });
+                },
+                removed: function (e: any, index: number) {
+                  newShared.consumers.forEach(function (entry) {
+                    if (entry.ready && entry.events.r) {
+                      sendChange(
+                        entry.socket,
+                        { r: { e: e, i: index } },
+                        entry.request,
+                      );
+                    }
+                  });
+                },
+                changed: function (asis: any, tobe: any, index: number) {
+                  newShared.consumers.forEach(function (entry) {
+                    if (entry.ready && entry.events.c) {
+                      sendChange(
+                        entry.socket,
+                        { c: { o: asis, n: tobe, i: index } },
+                        entry.request,
+                      );
+                    }
+                  });
+                },
+                moved: function (e: any, oldIndex: number, newIndex: number) {
+                  newShared.consumers.forEach(function (entry) {
+                    if (entry.ready && entry.events.m) {
+                      sendChange(
+                        entry.socket,
+                        { m: { e: e, o: oldIndex, n: newIndex } },
+                        entry.request,
+                      );
+                    }
+                  });
+                },
+                oplog: true,
+                batchMs: _batchMs,
+              };
+
+              var observeHandle = cursor.observe(observeOptions);
+              if (
+                _disconnected ||
+                !_observers[observeId] ||
+                _observers[observeId].token !== registrationToken
+              ) {
+                observeHandle.stop();
+                registry.delete(key);
+                cursor.close(function (_err: Error | null) {});
+                return;
+              }
+              newShared.handle = observeHandle;
+              cursor.close(function (_err: Error | null) {});
+              shared = newShared;
             }
-          });
-        });
+
+            _observers[observeId] = {
+              i: request.i,
+              key: key,
+              consumerId: consumerId,
+              token: registrationToken,
+            };
+            socket.emit('/vdb/response', {
+              i: request.i,
+              p: {
+                handle: observeId,
+              },
+            });
+          },
+        );
       } else if (request.p['observe.stop']) {
         var handle = request.p['observe.stop'].h;
         if (handle) {
@@ -400,7 +500,12 @@ class ViewDbSocketServer {
           console.log('Observe stopped failed: ' + request.p['observe.stop'].h);
         }
       } else {
-        throw new Error('Unknown request from client: ' + _.keys(request) + ' || ' + JSON.stringify(request.p));
+        throw new Error(
+          'Unknown request from client: ' +
+            _.keys(request) +
+            ' || ' +
+            JSON.stringify(request.p),
+        );
       }
     });
   }

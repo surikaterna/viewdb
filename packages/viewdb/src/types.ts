@@ -50,7 +50,10 @@ export interface ObserveHandle {
  * Callback signature for _getDocuments implementations.
  * Used by Collection implementations across all stores.
  */
-export type GetDocumentsFn = (queryObject: QueryObject, callback: Callback<VDocument[]>) => void;
+export type GetDocumentsFn = (
+  queryObject: QueryObject,
+  callback: Callback<VDocument[]>,
+) => void;
 
 /**
  * Core collection contract that all persistence store collections should satisfy.

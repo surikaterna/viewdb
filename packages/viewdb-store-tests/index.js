@@ -9,7 +9,7 @@ var suiteMap = {
   query: query,
   cursor: cursor,
   count: count,
-  observe: observe
+  observe: observe,
 };
 
 function runStoreTests(config) {

@@ -7,7 +7,12 @@ function pushArray<T>(arr: T[], arr2: T[]): void {
   arr.push.apply(arr, arr2);
 }
 
-function buildOptions(cache: any[], callback: (result: any) => void, removed: any[], isRemote: boolean): any {
+function buildOptions(
+  cache: any[],
+  callback: (result: any) => void,
+  removed: any[],
+  isRemote: boolean,
+): any {
   return {
     init: function (result: any[]) {
       if (_.isEmpty(cache)) {
@@ -49,7 +54,7 @@ function buildOptions(cache: any[], callback: (result: any) => void, removed: an
         removed = [];
       }
       callback(e);
-    }
+    },
   };
 }
 
@@ -74,7 +79,12 @@ class HybridObserver {
   _remoteHandle: { stop: () => void } | null;
   _cacheUpdaterInterval: ReturnType<typeof setInterval> | null;
 
-  constructor(localCursor: any, remoteCursor: any, collectionOptions: any, options: any) {
+  constructor(
+    localCursor: any,
+    remoteCursor: any,
+    collectionOptions: any,
+    options: any,
+  ) {
     var self = this;
 
     this._initialized = false;
@@ -93,11 +103,21 @@ class HybridObserver {
     this._reconciledCache = [];
 
     // make sure refresh is only called once every x ms
-    var _refresh = _.throttle(this.refresh.bind(this), collectionOptions.throttleObserveRefresh);
+    var _refresh = _.throttle(
+      this.refresh.bind(this),
+      collectionOptions.throttleObserveRefresh,
+    );
 
-    var remoteOptions = buildOptions(this._remoteCache, _refresh, this._removed, true);
+    var remoteOptions = buildOptions(
+      this._remoteCache,
+      _refresh,
+      this._removed,
+      true,
+    );
     if (!this._getCache) {
-      this._localHandle = this._localCursor.observe(buildOptions(this._localCache, _refresh, this._removed, false));
+      this._localHandle = this._localCursor.observe(
+        buildOptions(this._localCache, _refresh, this._removed, false),
+      );
       this._remoteHandle = this._remoteCursor.observe(remoteOptions);
     } else {
       this._getCache(function (err: Error | null, data: any) {
@@ -114,7 +134,10 @@ class HybridObserver {
       };
 
       // While the observer is running, keep the cached data alive
-      this._cacheUpdaterInterval = setInterval(cacheUpdater, 1000 * 60 * Math.max(collectionOptions.cacheLifeTime / 2, 1));
+      this._cacheUpdaterInterval = setInterval(
+        cacheUpdater,
+        1000 * 60 * Math.max(collectionOptions.cacheLifeTime / 2, 1),
+      );
     }
 
     return {
@@ -126,7 +149,7 @@ class HybridObserver {
         self._localHandle && self._localHandle.stop();
         self._remoteHandle && self._remoteHandle.stop();
         clearInterval(self._cacheUpdaterInterval!);
-      }
+      },
     } as any;
   }
 
@@ -153,10 +176,10 @@ class HybridObserver {
           {
             comparatorId: function (a: { _id: string }, b: { _id: string }) {
               return a._id === b._id;
-            }
+            },
           },
-          self._options
-        )
+          self._options,
+        ),
       );
     }
 

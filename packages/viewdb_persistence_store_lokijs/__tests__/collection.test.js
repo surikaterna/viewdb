@@ -8,7 +8,7 @@ describe('Collection', function () {
       new Promise((resolve) => {
         store = new Store('test-suite', { inMemoryOnly: true });
         resolve();
-      })
+      }),
   );
   afterEach(
     () =>
@@ -23,7 +23,7 @@ describe('Collection', function () {
             });
           });
         }
-      })
+      }),
   );
   it('#find with empty array should return 0 docs', () =>
     new Promise((resolve) => {
@@ -41,13 +41,15 @@ describe('Collection', function () {
     new Promise((resolve, reject) => {
       store.open().then(function () {
         store.collection('dollhouse').insert({ _id: 'echo' });
-        store.collection('dollhouse2').insert({ _id: 'echo' }, function (err, result) {
-          if (err) {
-            reject(new Error('should not have thrown unique constraint'));
-          } else {
-            resolve();
-          }
-        });
+        store
+          .collection('dollhouse2')
+          .insert({ _id: 'echo' }, function (err, result) {
+            if (err) {
+              reject(new Error('should not have thrown unique constraint'));
+            } else {
+              resolve();
+            }
+          });
       });
     }));
   it('#update documents already existing', () =>
@@ -111,8 +113,12 @@ describe('Collection', function () {
     new Promise((resolve, reject) => {
       store.open().then(function () {
         var promises = [
-          store.collection('dollhouse').insert({ _id: 'echo', name: { first: 'ECHO', last: 'TV' } }),
-          store.collection('dollhouse').insert({ _id: 'sierra', name: { first: 'SIERRA', last: 'TV' } })
+          store
+            .collection('dollhouse')
+            .insert({ _id: 'echo', name: { first: 'ECHO', last: 'TV' } }),
+          store
+            .collection('dollhouse')
+            .insert({ _id: 'sierra', name: { first: 'SIERRA', last: 'TV' } }),
         ];
         Promise.all(promises)
           .then(function () {
@@ -183,7 +189,9 @@ describe('Collection', function () {
   it('#insert documents via bulk', () =>
     new Promise((resolve) => {
       store.open().then(function () {
-        store.collection('dollhouse').insert([{ _id: 'echo' }, { _id: 'sierra' }]);
+        store
+          .collection('dollhouse')
+          .insert([{ _id: 'echo' }, { _id: 'sierra' }]);
         store
           .collection('dollhouse')
           .find({})
@@ -196,18 +204,20 @@ describe('Collection', function () {
   it('#update documents via bulk', () =>
     new Promise((resolve) => {
       store.open().then(function () {
-        store.collection('dollhouse').insert([{ _id: 'echo' }, { _id: 'sierra' }], function () {
-          store.collection('dollhouse').save([
-            { _id: 'echo', version: 2 },
-            { _id: 'sierra', version: 22 }
-          ]);
-          store
-            .collection('dollhouse')
-            .find({})
-            .toArray(function (err, results) {
-              resolve();
-            });
-        });
+        store
+          .collection('dollhouse')
+          .insert([{ _id: 'echo' }, { _id: 'sierra' }], function () {
+            store.collection('dollhouse').save([
+              { _id: 'echo', version: 2 },
+              { _id: 'sierra', version: 22 },
+            ]);
+            store
+              .collection('dollhouse')
+              .find({})
+              .toArray(function (err, results) {
+                resolve();
+              });
+          });
       });
     }));
   it('#count should return number of documents', () =>
@@ -285,7 +295,11 @@ describe('Collection', function () {
   it('#should allow to save with $ chars in _syncProfiles', () =>
     new Promise((resolve) => {
       store.open().then(function () {
-        store.collection('_syncProfiles').insert({ id: 'echo', query: { $or: ['1', '2'] }, subQueries: { $or: ['1', '2'] } });
+        store.collection('_syncProfiles').insert({
+          id: 'echo',
+          query: { $or: ['1', '2'] },
+          subQueries: { $or: ['1', '2'] },
+        });
         store
           .collection('_syncProfiles')
           .find({ id: 'echo' })

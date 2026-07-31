@@ -24,7 +24,7 @@ class Client implements VdbClient {
     }
 
     this._requestOptions = {
-      headers: headers
+      headers: headers,
     };
   }
 
@@ -87,7 +87,7 @@ class Client implements VdbClient {
             {
               comparatorId: function (a: { id: string }, b: { id: string }) {
                 return a.id === b.id;
-              }
+              },
             },
             {
               added: function (e: any, i: number) {
@@ -106,9 +106,9 @@ class Client implements VdbClient {
                 delta.push({ m: { e: e, o: oldIndex, n: newIndex } });
                 cache.splice(oldIndex, 1);
                 cache.splice(newIndex, 0, e);
-              }
-            }
-          )
+              },
+            },
+          ),
         );
         callback(null, { changes: delta });
       });
@@ -120,7 +120,7 @@ class Client implements VdbClient {
     return {
       stop: function () {
         clearInterval(pollId);
-      }
+      },
     };
   }
 }

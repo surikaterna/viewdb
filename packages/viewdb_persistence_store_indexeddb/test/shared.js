@@ -18,5 +18,5 @@ runStoreTests({
       done();
     });
   },
-  suites: ['crud', 'query', 'cursor', 'count']
+  suites: ['crud', 'query', 'cursor', 'count'],
 });

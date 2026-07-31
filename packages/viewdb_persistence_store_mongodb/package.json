@@ -17,9 +17,7 @@
     "test": "vitest run",
     "test.watch": "vitest",
     "coverage": "vitest run --coverage",
-    "coverage-start": "vitest run --coverage",
-    "jshint": "jshint ./src",
-    "format": "prettier --write src __tests__"
+    "coverage-start": "vitest run --coverage"
   },
   "repository": {
     "type": "git",
@@ -28,10 +26,7 @@
   "author": "Andreas Karlsson",
   "devDependencies": {
     "@types/bluebird": "3.5.42",
-    "jshint": "^2.13.6",
     "mongodb-memory-server": "^10.0.0",
-    "prettier": "^2.8.8",
-    "prettier-config-surikaterna": "^1.0.1",
     "slf-debug": "^0.3.1",
     "viewdb": "*",
     "vitest": "2.1.9"

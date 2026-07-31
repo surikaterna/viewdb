@@ -61,7 +61,7 @@ describe('Viewdb versioning plugin', () => {
       var collection = viewDb.collection('test');
       collection.insert([
         { _id: '123', version: 10 },
-        { _id: '999', version: 101 }
+        { _id: '999', version: 101 },
       ]);
       collection.find({}).toArray(function (err, objects) {
         _.forEach(objects, function (o, i) {

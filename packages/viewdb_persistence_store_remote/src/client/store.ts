@@ -15,7 +15,10 @@ class Store {
     return Promise.resolve(this).nodeify(callback);
   }
 
-  collection(name: string, callback?: (collection: Collection) => void): Collection {
+  collection(
+    name: string,
+    callback?: (collection: Collection) => void,
+  ): Collection {
     var collection = this._collections[name];
     if (!collection) {
       collection = this._collections[name] = new Collection(this._client, name);

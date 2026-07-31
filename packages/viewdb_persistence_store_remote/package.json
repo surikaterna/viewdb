@@ -34,8 +34,6 @@
     "@types/crypto-js": "4.2.2",
     "@types/debug": "4.1.13",
     "nock": "^13.3.0",
-    "prettier": "3.0.3",
-    "prettier-config-surikaterna": "^1.0.1",
     "should": "^13.2.3",
     "socket.io-mock": "^1.2.3",
     "viewdb": "*",

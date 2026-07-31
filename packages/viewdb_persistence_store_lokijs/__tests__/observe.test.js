@@ -6,9 +6,12 @@ describe('Collection', function () {
   beforeEach(
     () =>
       new Promise((resolve) => {
-        store = new Store('test-suite', { inMemoryOnly: true, disableThrottle: true });
+        store = new Store('test-suite', {
+          inMemoryOnly: true,
+          disableThrottle: true,
+        });
         resolve();
-      })
+      }),
   );
   afterEach(
     () =>
@@ -23,7 +26,7 @@ describe('Collection', function () {
             });
           });
         }
-      })
+      }),
   );
   it('#observe with insert', () =>
     new Promise((resolve) => {
@@ -36,7 +39,7 @@ describe('Collection', function () {
               handle.stop();
               resolve();
             }, 10);
-          }
+          },
         });
         store.collection('dollhouse').insert({ _id: 'echo' });
       });
@@ -44,7 +47,9 @@ describe('Collection', function () {
   it('#observe with implicit remove', () =>
     new Promise((resolve) => {
       store.open().then(function () {
-        var cursor = store.collection('dollhouse').find({ _id: 'echo', status: 'confirmed' });
+        var cursor = store
+          .collection('dollhouse')
+          .find({ _id: 'echo', status: 'confirmed' });
         var haveAdded = false;
         var handle = cursor.observe({
           added: function (x) {
@@ -55,10 +60,14 @@ describe('Collection', function () {
             expect(x._id).toBe('echo');
             handle.stop();
             resolve();
-          }
+          },
         });
-        store.collection('dollhouse').insert({ _id: 'echo', status: 'confirmed' });
-        store.collection('dollhouse').save({ _id: 'echo', status: 'checked_in' });
+        store
+          .collection('dollhouse')
+          .insert({ _id: 'echo', status: 'confirmed' });
+        store
+          .collection('dollhouse')
+          .save({ _id: 'echo', status: 'checked_in' });
       });
     }));
   it('#observe with remove', () =>
@@ -71,7 +80,7 @@ describe('Collection', function () {
               expect(x._id).toBe('echo');
               handle.stop();
               resolve();
-            }
+            },
           });
           store.collection('dollhouse').remove({ _id: 'echo' });
         });
@@ -86,7 +95,7 @@ describe('Collection', function () {
           added: function (x) {
             expect(x._id).toBe('echo2');
             resolve();
-          }
+          },
         });
         store.collection('dollhouse').insert({ _id: 'echo2' });
       });
@@ -105,12 +114,14 @@ describe('Collection', function () {
             expect(n.age).toBe(100);
             handle.stop();
             resolve();
-          }
+          },
         });
 
-        store.collection('dollhouse').insert({ _id: 'echo', age: 10 }, function () {
-          store.collection('dollhouse').save({ _id: 'echo', age: 100 });
-        });
+        store
+          .collection('dollhouse')
+          .insert({ _id: 'echo', age: 10 }, function () {
+            store.collection('dollhouse').save({ _id: 'echo', age: 100 });
+          });
       });
     }));
   it('#observe with query and skip', () =>
@@ -135,7 +146,7 @@ describe('Collection', function () {
           added: function (x) {
             cursor.skip(++skip);
             realDone();
-          }
+          },
         });
       });
     }));
@@ -150,7 +161,7 @@ describe('Collection', function () {
               handle.stop();
               resolve();
             }, 10);
-          }
+          },
         });
       });
     }));
@@ -166,7 +177,7 @@ describe('Collection', function () {
                 handle.stop();
                 resolve();
               }, 10);
-            }
+            },
           });
         });
       });
@@ -183,7 +194,7 @@ describe('Collection', function () {
             expect(a._id).toBe('echo');
             handle.stop();
             resolve();
-          }
+          },
         });
       });
       setTimeout(function () {

@@ -10,7 +10,14 @@ class HybridCollection {
   _cacheCollection: any;
   _projectedDocumentCollection: any;
 
-  constructor(local: any, remote: any, name: string, options: any, cacheCollection?: any, projectedDocumentCollection?: any) {
+  constructor(
+    local: any,
+    remote: any,
+    name: string,
+    options: any,
+    cacheCollection?: any,
+    projectedDocumentCollection?: any,
+  ) {
     this._local = local;
     this._remote = remote;
     this._name = name;
@@ -25,7 +32,10 @@ class HybridCollection {
       this._local.find(query, options),
       this._remote.find(query, options),
       options,
-      Object.assign({}, this._options, { onCacheUpdateCallback: this._cacheQuery.bind(this), getCachedData: this._getCachedData.bind(this) })
+      Object.assign({}, this._options, {
+        onCacheUpdateCallback: this._cacheQuery.bind(this),
+        getCachedData: this._getCachedData.bind(this),
+      }),
     );
   }
 
@@ -50,14 +60,18 @@ class HybridCollection {
 
   remove(query: any, options?: any, callback?: any): any {
     var self = this;
-    return this._local.remove(query, options, function (err: Error | null, result: any) {
-      if (self._options.syncWrites) {
-        self._remote.remove(query, options);
-      }
-      if (callback) {
-        callback(err, result);
-      }
-    });
+    return this._local.remove(
+      query,
+      options,
+      function (err: Error | null, result: any) {
+        if (self._options.syncWrites) {
+          self._remote.remove(query, options);
+        }
+        if (callback) {
+          callback(err, result);
+        }
+      },
+    );
   }
 
   _cacheQuery(
@@ -66,7 +80,7 @@ class HybridCollection {
     limit: number,
     sort: Record<string, 1 | -1> | undefined,
     project: Record<string, 0 | 1> | undefined,
-    documents: any[]
+    documents: any[],
   ): void {
     var self = this;
 
@@ -85,11 +99,28 @@ class HybridCollection {
         collection = self._projectedDocumentCollection;
       }
 
-      collection.save(Object.assign({}, document, { _insertedAt: cachedDateTime }), { skipVersioning: true, skipTimestamp: true });
+      collection.save(
+        Object.assign({}, document, { _insertedAt: cachedDateTime }),
+        { skipVersioning: true, skipTimestamp: true },
+      );
     });
 
-    var queryHash = cacheUtils.generateQueryHash(query, self._name, skip, limit, sort, project);
-    this._cacheCollection.save({ _id: queryHash, createDateTime: cachedDateTime, resultSet: documentIds }, { skipVersioning: true, skipTimestamp: true });
+    var queryHash = cacheUtils.generateQueryHash(
+      query,
+      self._name,
+      skip,
+      limit,
+      sort,
+      project,
+    );
+    this._cacheCollection.save(
+      {
+        _id: queryHash,
+        createDateTime: cachedDateTime,
+        resultSet: documentIds,
+      },
+      { skipVersioning: true, skipTimestamp: true },
+    );
   }
 
   _getCachedData(
@@ -98,7 +129,7 @@ class HybridCollection {
     limit: number,
     sort: Record<string, 1 | -1> | undefined,
     project: Record<string, 0 | 1> | undefined,
-    callback: any
+    callback: any,
   ): void {
     var self = this;
     this._getCachedIds(query, skip, limit, sort, function (ids: any) {
@@ -113,7 +144,10 @@ class HybridCollection {
         collection = self._projectedDocumentCollection;
       }
 
-      collection.find({ _id: { $in: ids } }).toArray(function (cacheError: Error | null, cachedResults: any) {
+      collection.find({ _id: { $in: ids } }).toArray(function (
+        cacheError: Error | null,
+        cachedResults: any,
+      ) {
         if (cacheError) {
           callback(cacheError, cachedResults);
         }
@@ -128,26 +162,42 @@ class HybridCollection {
     });
   }
 
-  _getCachedIds(query: any, skip: number, limit: number, sort: Record<string, 1 | -1> | undefined, callback: any): void {
+  _getCachedIds(
+    query: any,
+    skip: number,
+    limit: number,
+    sort: Record<string, 1 | -1> | undefined,
+    callback: any,
+  ): void {
     if (!this._cacheCollection || !this._options.cacheLifeTime) {
       callback(undefined);
       return;
     }
 
-    var queryHash = cacheUtils.generateQueryHash(query, this._name, skip, limit, sort);
+    var queryHash = cacheUtils.generateQueryHash(
+      query,
+      this._name,
+      skip,
+      limit,
+      sort,
+    );
     var minimumChangeDateTime = new Date();
-    minimumChangeDateTime.setMinutes(minimumChangeDateTime.getMinutes() - this._options.cacheLifeTime);
+    minimumChangeDateTime.setMinutes(
+      minimumChangeDateTime.getMinutes() - this._options.cacheLifeTime,
+    );
     var minTimeEpoch = minimumChangeDateTime.getTime();
 
-    this._cacheCollection.find({ _id: queryHash, createDateTime: { $gt: minTimeEpoch } }).toArray(function (err: Error | null, result: any) {
-      var hasResult = result && result[0];
+    this._cacheCollection
+      .find({ _id: queryHash, createDateTime: { $gt: minTimeEpoch } })
+      .toArray(function (err: Error | null, result: any) {
+        var hasResult = result && result[0];
 
-      if (!hasResult) {
-        callback(undefined);
-        return;
-      }
-      callback(result[0].resultSet);
-    });
+        if (!hasResult) {
+          callback(undefined);
+          return;
+        }
+        callback(result[0].resultSet);
+      });
   }
 }
 

@@ -43,7 +43,14 @@ function ViewDBTimestampPlugin(viewDb: any): void {
       };
 
       const oldFindAndModify = coll.findAndModify;
-      coll.findAndModify = function (this: any, query: any, sort: any, update: any, options: any, cb: any) {
+      coll.findAndModify = function (
+        this: any,
+        query: any,
+        sort: any,
+        update: any,
+        options: any,
+        cb: any,
+      ) {
         const timestamp = new Date().valueOf();
         const clonedUpdate = _.clone(update);
         const setOnInsert = clonedUpdate.$setOnInsert || {};
@@ -57,11 +64,23 @@ function ViewDBTimestampPlugin(viewDb: any): void {
           delete set.createDateTime;
         }
         clonedUpdate.$set = set;
-        return oldFindAndModify.apply(this, [query, sort, clonedUpdate, options, cb]);
+        return oldFindAndModify.apply(this, [
+          query,
+          sort,
+          clonedUpdate,
+          options,
+          cb,
+        ]);
       };
 
       const oldUpdateMany = coll.updateMany;
-      coll.updateMany = function (this: any, query: any, update: any, options: any, cb: any) {
+      coll.updateMany = function (
+        this: any,
+        query: any,
+        update: any,
+        options: any,
+        cb: any,
+      ) {
         const timestamp = new Date().valueOf();
         const clonedUpdate = _.clone(update);
         const setOnInsert = clonedUpdate.$setOnInsert || {};
@@ -79,7 +98,13 @@ function ViewDBTimestampPlugin(viewDb: any): void {
       };
 
       const oldUpdateOne = coll.updateOne;
-      coll.updateOne = function (this: any, query: any, update: any, options: any, cb: any) {
+      coll.updateOne = function (
+        this: any,
+        query: any,
+        update: any,
+        options: any,
+        cb: any,
+      ) {
         const timestamp = new Date().valueOf();
         const clonedUpdate = _.clone(update);
         const setOnInsert = clonedUpdate.$setOnInsert || {};

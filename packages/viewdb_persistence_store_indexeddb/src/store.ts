@@ -25,14 +25,22 @@ class Store {
       request.onupgradeneeded = function (event: IDBVersionChangeEvent) {
         var db: IDBDatabase = (event.target as IDBOpenDBRequest).result;
         if (event.oldVersion < 1) {
-          var documents = db.createObjectStore('documents', { keyPath: '$collectionKey' });
-          documents.createIndex('$collection', '$collection', { unique: false });
+          var documents = db.createObjectStore('documents', {
+            keyPath: '$collectionKey',
+          });
+          documents.createIndex('$collection', '$collection', {
+            unique: false,
+          });
         }
         //fix for _id being keypath...
         if (event.oldVersion < 2) {
           db.deleteObjectStore('documents');
-          var documents = db.createObjectStore('documents', { keyPath: '$collectionKey' });
-          documents.createIndex('$collection', '$collection', { unique: false });
+          var documents = db.createObjectStore('documents', {
+            keyPath: '$collectionKey',
+          });
+          documents.createIndex('$collection', '$collection', {
+            unique: false,
+          });
         }
       };
       request.onerror = function (event: Event) {
@@ -65,7 +73,10 @@ class Store {
     }).nodeify(callback);
   }
 
-  collection(name: string, callback?: (collection: Collection) => void): Collection {
+  collection(
+    name: string,
+    callback?: (collection: Collection) => void,
+  ): Collection {
     var collection = this._collections[name];
     if (!collection) {
       collection = this._collections[name] = new Collection(this._db!, name);

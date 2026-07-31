@@ -18,9 +18,9 @@ var buildParams = function (defaults: any, query: any, collection: any): any {
       collection: collection._name,
       skip: skip,
       limit: limit,
-      sort: sort
+      sort: sort,
     },
-    defaults
+    defaults,
   );
   if (project) {
     params.project = project;
@@ -42,7 +42,7 @@ class Observer {
       a: !_.isNil(options.added),
       r: !_.isNil(options.removed),
       c: !_.isNil(options.changed),
-      m: !_.isNil(options.moved)
+      m: !_.isNil(options.moved),
     };
 
     var params = buildParams({ events: events }, query, collection);
@@ -55,43 +55,46 @@ class Observer {
     };
 
     var startObserver = function (): void {
-      currentHandle = collection._client.subscribe(params, function (err: Error | null, result: any) {
-        if (err) {
-          if (stopped) return;
-          currentHandle!.stop();
-          startObserver();
-          return;
-        }
-        if (stopped) return;
-        if (remoteHandle || result.handle) {
-          remoteHandle = result.handle || remoteHandle;
-
-          if (self.handles.indexOf(params.id) > -1) {
-            sendStopRequest();
+      currentHandle = collection._client.subscribe(
+        params,
+        function (err: Error | null, result: any) {
+          if (err) {
+            if (stopped) return;
             currentHandle!.stop();
-            _.remove(self.handles, params.id);
-          } else {
-            _.forEach(result.changes, function (c: any) {
-              if (c.i) {
-                // init
-                options.init(c.i.r);
-              } else if (c.a) {
-                // added
-                options.added(c.a.e, c.a.i);
-              } else if (c.r) {
-                // removed
-                options.removed(c.r.e, c.r.i);
-              } else if (c.c) {
-                // changed
-                options.changed(c.c.o, c.c.n, c.c.i);
-              } else if (c.m) {
-                // moved
-                options.moved(c.m.e, c.m.o, c.m.n);
-              }
-            });
+            startObserver();
+            return;
           }
-        }
-      });
+          if (stopped) return;
+          if (remoteHandle || result.handle) {
+            remoteHandle = result.handle || remoteHandle;
+
+            if (self.handles.indexOf(params.id) > -1) {
+              sendStopRequest();
+              currentHandle!.stop();
+              _.remove(self.handles, params.id);
+            } else {
+              _.forEach(result.changes, function (c: any) {
+                if (c.i) {
+                  // init
+                  options.init(c.i.r);
+                } else if (c.a) {
+                  // added
+                  options.added(c.a.e, c.a.i);
+                } else if (c.r) {
+                  // removed
+                  options.removed(c.r.e, c.r.i);
+                } else if (c.c) {
+                  // changed
+                  options.changed(c.c.o, c.c.n, c.c.i);
+                } else if (c.m) {
+                  // moved
+                  options.moved(c.m.e, c.m.o, c.m.n);
+                }
+              });
+            }
+          }
+        },
+      );
     };
 
     startObserver();
@@ -101,7 +104,9 @@ class Observer {
         if (stopped) return;
         stopped = true;
         if (!remoteHandle) {
-          LOG.warn('WARN unsubscribing before receiving subscription handle from server');
+          LOG.warn(
+            'WARN unsubscribing before receiving subscription handle from server',
+          );
           self.handles.push(params.id);
         }
         sendStopRequest();
@@ -109,7 +114,7 @@ class Observer {
           currentHandle.stop();
           currentHandle = null;
         }
-      }
+      },
     } as any;
   }
 }

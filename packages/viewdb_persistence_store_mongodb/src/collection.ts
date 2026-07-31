@@ -2,7 +2,10 @@ import { EventEmitter } from 'events';
 import { forEach, isFunction, isArray } from 'lodash';
 import Cursor = require('./cursor');
 import { nodeify } from './utils';
-import type { Collection as MongoCollection, Document as MongoDocument } from 'mongodb';
+import type {
+  Collection as MongoCollection,
+  Document as MongoDocument,
+} from 'mongodb';
 
 class Collection extends EventEmitter {
   _collection: MongoCollection<MongoDocument>;
@@ -19,11 +22,26 @@ class Collection extends EventEmitter {
   }
 
   find(query: any, options?: any): Cursor {
-    var cursor = (this._collection as any).find.apply(this._collection, arguments);
-    return new Cursor(this, { query: query }, options, cursor, this._oplogListener);
+    var cursor = (this._collection as any).find.apply(
+      this._collection,
+      arguments,
+    );
+    return new Cursor(
+      this,
+      { query: query },
+      options,
+      cursor,
+      this._oplogListener,
+    );
   }
 
-  findAndModify(query: any, sort: any, update: any, options: any, cb?: (err: Error | null, doc?: any) => void): Promise<any> {
+  findAndModify(
+    query: any,
+    sort: any,
+    update: any,
+    options: any,
+    cb?: (err: Error | null, doc?: any) => void,
+  ): Promise<any> {
     if (sort) {
       Object.assign(options, sort);
     }
@@ -48,7 +66,12 @@ class Collection extends EventEmitter {
     });
   }
 
-  updateMany(query: any, update: any, options?: any, cb?: (err: Error | null, result?: any) => void): any {
+  updateMany(
+    query: any,
+    update: any,
+    options?: any,
+    cb?: (err: Error | null, result?: any) => void,
+  ): any {
     var self = this;
     if (isFunction(options)) {
       cb = options;
@@ -60,11 +83,16 @@ class Collection extends EventEmitter {
         self.emit('change', { updateMany: update });
         return res;
       }),
-      cb
+      cb,
     );
   }
 
-  updateOne(query: any, update: any, options?: any, cb?: (err: Error | null, result?: any) => void): any {
+  updateOne(
+    query: any,
+    update: any,
+    options?: any,
+    cb?: (err: Error | null, result?: any) => void,
+  ): any {
     var self = this;
     if (isFunction(options)) {
       cb = options;
@@ -76,11 +104,15 @@ class Collection extends EventEmitter {
         self.emit('change', { updateOne: update });
         return res;
       }),
-      cb
+      cb,
     );
   }
 
-  remove(query: any, options?: any, cb?: (err: Error | null, result?: any) => void): any {
+  remove(
+    query: any,
+    options?: any,
+    cb?: (err: Error | null, result?: any) => void,
+  ): any {
     console.warn('Deprecated: use deleteMany or deleteOne instead');
     var self = this;
     if (isFunction(options)) {
@@ -93,13 +125,15 @@ class Collection extends EventEmitter {
         self.emit('change', { remove: query });
         return res;
       }),
-      cb
+      cb,
     );
   }
 
   deleteMany(query: any, options?: any): any {
     var self = this;
-    return this._collection.deleteMany(query, options).then(function (res: any) {
+    return this._collection.deleteMany(query, options).then(function (
+      res: any,
+    ) {
       self.emit('change', { remove: query });
       return res;
     });
@@ -128,9 +162,15 @@ class Collection extends EventEmitter {
     };
     var promise;
     if (isArray(docs)) {
-      promise = this._collection.insertMany(docs).then(onFulfilled).catch(onRejected);
+      promise = this._collection
+        .insertMany(docs)
+        .then(onFulfilled)
+        .catch(onRejected);
     } else {
-      promise = this._collection.insertOne(docs).then(onFulfilled).catch(onRejected);
+      promise = this._collection
+        .insertOne(docs)
+        .then(onFulfilled)
+        .catch(onRejected);
     }
     return promise;
   }
@@ -145,7 +185,9 @@ class Collection extends EventEmitter {
       if (!d._id) {
         operations.push({ insertOne: { document: d } });
       } else {
-        operations.push({ replaceOne: { filter: { _id: d._id }, replacement: d, upsert: true } });
+        operations.push({
+          replaceOne: { filter: { _id: d._id }, replacement: d, upsert: true },
+        });
       }
     });
     return this._collection
@@ -171,11 +213,15 @@ class Collection extends EventEmitter {
         self.emit('change', { drop: true });
         return res;
       }),
-      cb
+      cb,
     );
   }
 
-  createIndex(indexSpec: any, options?: any, cb?: (err: Error | null, result?: any) => void): any {
+  createIndex(
+    indexSpec: any,
+    options?: any,
+    cb?: (err: Error | null, result?: any) => void,
+  ): any {
     if (isFunction(options)) {
       cb = options;
       options = {};
@@ -183,7 +229,10 @@ class Collection extends EventEmitter {
     return nodeify(this._collection.createIndex(indexSpec, options), cb);
   }
 
-  _getDocuments(queryObject: any, callback: (err: Error | null, result?: any[]) => void): void {
+  _getDocuments(
+    queryObject: any,
+    callback: (err: Error | null, result?: any[]) => void,
+  ): void {
     var query = queryObject.query || queryObject;
     var cursor = this._collection.find(query);
     if (queryObject.skip) {

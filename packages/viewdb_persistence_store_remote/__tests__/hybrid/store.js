@@ -10,7 +10,9 @@ describe('Store', function () {
       var remoteStore = new LocalStore();
 
       remoteStore.collection('alfa').insert({ id: 'abc' }, function () {
-        var hcursor = new Store(localStore, remoteStore, { cacheQueries: true });
+        var hcursor = new Store(localStore, remoteStore, {
+          cacheQueries: true,
+        });
         hcursor
           .collection('alfa')
           .find({})
@@ -18,10 +20,19 @@ describe('Store', function () {
             if (res.length > 0) {
               // Caching of data is not sync action, wait for next tick before fetching data
               setTimeout(function () {
-                hcursor.collection('alfa')._getCachedData({}, undefined, undefined, undefined, undefined, function (err, data) {
-                  data.length.should.equal(1);
-                  resolve();
-                });
+                hcursor
+                  .collection('alfa')
+                  ._getCachedData(
+                    {},
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    function (err, data) {
+                      data.length.should.equal(1);
+                      resolve();
+                    },
+                  );
               });
             }
           });
@@ -37,37 +48,61 @@ describe('Store', function () {
       var localStore = new LocalStore();
       var remoteStore = new LocalStore();
 
-      remoteStore.collection('alfa').insert({ id: 'abc', property: 'def' }, function () {
-        var hcursor = new Store(localStore, remoteStore, { cacheQueries: true });
-        hcursor
-          .collection('alfa')
-          .find({ id: 'abc' })
-          .project({ id: 1 })
-          .toArray(function (err, res) {
-            if (res.length > 0) {
-              // Caching of data is not sync action, wait for next tick before fetching data
-              setTimeout(function () {
-                hcursor
-                  .collection('alfa')
-                  .find({ id: 'abc' })
-                  .toArray(function (err2, projectedRes) {
-                    if (projectedRes.length > 0) {
-                      setTimeout(function () {
-                        hcursor.collection('alfa')._getCachedData({ id: 'abc' }, undefined, undefined, undefined, undefined, function (_err, data) {
-                          hcursor.collection('alfa')._getCachedData({ id: 'abc' }, undefined, undefined, undefined, { id: 1 }, function (_err2, projectedData) {
-                            data.length.should.equal(1);
-                            projectedData.length.should.equal(1);
-                            projectedData[0]._insertedAt.should.be.belowOrEqual(data[0]._insertedAt);
-                            resolve();
-                          });
-                        });
-                      });
-                    }
-                  });
-              });
-            }
+      remoteStore
+        .collection('alfa')
+        .insert({ id: 'abc', property: 'def' }, function () {
+          var hcursor = new Store(localStore, remoteStore, {
+            cacheQueries: true,
           });
-      });
+          hcursor
+            .collection('alfa')
+            .find({ id: 'abc' })
+            .project({ id: 1 })
+            .toArray(function (err, res) {
+              if (res.length > 0) {
+                // Caching of data is not sync action, wait for next tick before fetching data
+                setTimeout(function () {
+                  hcursor
+                    .collection('alfa')
+                    .find({ id: 'abc' })
+                    .toArray(function (err2, projectedRes) {
+                      if (projectedRes.length > 0) {
+                        setTimeout(function () {
+                          hcursor
+                            .collection('alfa')
+                            ._getCachedData(
+                              { id: 'abc' },
+                              undefined,
+                              undefined,
+                              undefined,
+                              undefined,
+                              function (_err, data) {
+                                hcursor
+                                  .collection('alfa')
+                                  ._getCachedData(
+                                    { id: 'abc' },
+                                    undefined,
+                                    undefined,
+                                    undefined,
+                                    { id: 1 },
+                                    function (_err2, projectedData) {
+                                      data.length.should.equal(1);
+                                      projectedData.length.should.equal(1);
+                                      projectedData[0]._insertedAt.should.be.belowOrEqual(
+                                        data[0]._insertedAt,
+                                      );
+                                      resolve();
+                                    },
+                                  );
+                              },
+                            );
+                        });
+                      }
+                    });
+                });
+              }
+            });
+        });
     }));
 
   it('should call remote if cache is no longer correct', () =>
@@ -76,7 +111,9 @@ describe('Store', function () {
       var remoteStore = new LocalStore();
 
       remoteStore.collection('alfa').insert({ id: 'abc' }, function () {
-        var hcursor = new Store(localStore, remoteStore, { cacheQueries: true });
+        var hcursor = new Store(localStore, remoteStore, {
+          cacheQueries: true,
+        });
 
         hcursor
           .collection('alfa')
@@ -84,9 +121,18 @@ describe('Store', function () {
           .toArray(function (err, res) {
             if (res.length > 0) {
               setTimeout(function () {
-                hcursor.collection('alfa')._getCachedData({}, undefined, undefined, undefined, undefined, function (err, data) {
-                  data.length.should.equal(1);
-                });
+                hcursor
+                  .collection('alfa')
+                  ._getCachedData(
+                    {},
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    function (err, data) {
+                      data.length.should.equal(1);
+                    },
+                  );
               });
             }
           });

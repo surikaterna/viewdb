@@ -1,7 +1,11 @@
 import _ = require('lodash');
 import { MergeOptions } from './types';
 
-function contains<T>(list: T[], element: T, comparator: (a: T, b: T) => boolean): T | undefined {
+function contains<T>(
+  list: T[],
+  element: T,
+  comparator: (a: T, b: T) => boolean,
+): T | undefined {
   for (const i in list) {
     const n = list[i];
     if (comparator(element, n)) {
@@ -11,7 +15,12 @@ function contains<T>(list: T[], element: T, comparator: (a: T, b: T) => boolean)
   return undefined;
 }
 
-function mergeWithMap<T>(asis: T[], tobe: T[], options: MergeOptions<T>, keyFn: (e: T) => string): T[] {
+function mergeWithMap<T>(
+  asis: T[],
+  tobe: T[],
+  options: MergeOptions<T>,
+  keyFn: (e: T) => string,
+): T[] {
   const comparator = options.comparator || _.isEqual;
   const list = _.slice(asis);
 
@@ -45,7 +54,8 @@ function mergeWithMap<T>(asis: T[], tobe: T[], options: MergeOptions<T>, keyFn: 
     const key = keyFn(e);
     const found = listMap.get(key);
     // Check if found element is actually still in list (not removed)
-    const inList = found !== undefined && list.indexOf(found) !== -1 ? found : undefined;
+    const inList =
+      found !== undefined && list.indexOf(found) !== -1 ? found : undefined;
 
     if (inList === undefined) {
       // added
