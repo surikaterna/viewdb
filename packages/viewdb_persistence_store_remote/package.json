@@ -9,8 +9,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "clean": "rimraf dist tsconfig.tsbuildinfo",
-    "prepublishOnly": "npm run clean && npm run build",
+    "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test.watch": "vitest",
     "coverage": "vitest run --coverage",
