@@ -268,11 +268,17 @@ describe('Observe', function () {
         };
       }
     };
-    var handle = new Observer({ query: {} }, {}, collection, {
-      init: function () {
-        initCalls++;
-      }
-    }, oplogListener);
+    var handle = new Observer(
+      { query: {} },
+      {},
+      collection,
+      {
+        init: function () {
+          initCalls++;
+        }
+      },
+      oplogListener
+    );
 
     await handle.stop();
     loadInitialCallback(null, [{ _id: 'late' }]);
