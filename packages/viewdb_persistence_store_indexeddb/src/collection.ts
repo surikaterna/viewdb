@@ -1,6 +1,5 @@
 import Promise = require('bluebird');
 import _ = require('lodash');
-import { v4 as uuid } from 'uuid';
 import Kuery = require('kuery');
 import { EventEmitter } from 'events';
 
@@ -73,7 +72,7 @@ class Collection extends EventEmitter {
       function addNext() {
         var document = documents[currentIndex++];
         if (!_.has(document, '_id')) {
-          document['_id'] = document['id'] || uuid();
+          document['_id'] = document['id'] || crypto.randomUUID();
         }
         document.$collection = self._name;
         document.$collectionKey = self._getKey(document);

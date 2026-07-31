@@ -1,5 +1,4 @@
 import { Logger } from 'slf';
-import { v4 as uuid } from 'uuid';
 import _ = require('lodash');
 import Observer = require('./observe');
 
@@ -29,7 +28,7 @@ class RemoteCursor extends Cursor {
     var limit = _.get(this, '_query.limit', _.get(options, 'limit', 0));
 
     var params: any = {
-      id: uuid(),
+      id: crypto.randomUUID(),
       count: this._query.query || this._query,
       collection: this._collection._name
     };

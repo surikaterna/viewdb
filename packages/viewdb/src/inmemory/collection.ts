@@ -1,5 +1,4 @@
 import _ = require('lodash');
-import { v4 as uuid } from 'uuid';
 import { EventEmitter } from 'events';
 import Kuery = require('kuery');
 import Cursor = require('../cursor');
@@ -30,7 +29,7 @@ class Collection extends EventEmitter implements CollectionLike {
         return callback!(new Error('Document must be object'));
       }
       if (!_.has(document, '_id')) {
-        document._id = document.id || uuid();
+        document._id = document.id || crypto.randomUUID();
       }
       const idx = _.findIndex(this._documents, { _id: document._id });
       if (op === 'insert' && idx >= 0) {
