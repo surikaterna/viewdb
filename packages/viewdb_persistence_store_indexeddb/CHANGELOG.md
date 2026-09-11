@@ -1,5 +1,11 @@
 # viewdb_persistence_store_indexeddb
 
+## 0.6.2
+
+### Patch Changes
+
+- Upgrade to Node v26, and upgrade dependencies to remove vulnerabilities.
+
 ## 0.6.1
 
 ### Patch Changes

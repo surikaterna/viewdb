@@ -1,5 +1,11 @@
 # viewdb_persistence_store_lokijs
 
+## 1.1.2
+
+### Patch Changes
+
+- Upgrade to Node v26, and upgrade dependencies to remove vulnerabilities.
+
 ## 1.1.1
 
 ### Patch Changes
