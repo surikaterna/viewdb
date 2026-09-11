@@ -1,6 +1,6 @@
 {
   "name": "viewdb_persistence_store_lokijs",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "LokiJS persistence store for ViewDB",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -25,11 +25,11 @@
   },
   "devDependencies": {
     "@types/lokijs": "1.5.14",
-    "@types/node": "^18.0.0",
+    "@types/node": "^26.5.1",
     "typescript": "^5.0.0",
     "viewdb": "*",
     "viewdb-store-tests": "*",
-    "vitest": "2.1.9"
+    "vitest": "^5.0.0"
   },
   "dependencies": {
     "bluebird": "^3.7.2",

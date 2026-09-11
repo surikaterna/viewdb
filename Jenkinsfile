@@ -24,7 +24,7 @@ pipeline {
         stage('Install dependencies') {
             agent {
                 docker {
-                    image 'node:22-alpine'
+                    image 'node:26-alpine'
                     label 'lynx'
                 }
             }
@@ -42,7 +42,7 @@ pipeline {
         stage('Build') {
             agent {
                 docker {
-                    image 'node:22-alpine'
+                    image 'node:26-alpine'
                     label 'lynx'
                 }
             }
@@ -56,10 +56,10 @@ pipeline {
             }
         }
 
-        stage('Lint') {
+        stage('Check style') {
             agent {
                 docker {
-                    image 'node:22-alpine'
+                    image 'node:26-alpine'
                     label 'lynx'
                 }
             }
@@ -69,14 +69,14 @@ pipeline {
             }
 
             steps {
-                sh 'npm run lint'
+                sh 'npm run check-style:ci'
             }
         }
 
         stage('Test') {
             agent {
                 docker {
-                    image 'node:22-bullseye'
+                    image 'node:26-bullseye'
                     label 'lynx'
                 }
             }
@@ -93,7 +93,7 @@ pipeline {
         stage('Audit') {
             agent {
                 docker {
-                    image 'node:22-alpine'
+                    image 'node:26-alpine'
                     label 'lynx'
                 }
             }
@@ -110,7 +110,7 @@ pipeline {
         stage('Publish to npm') {
             agent {
                 docker {
-                    image 'node:22-alpine'
+                    image 'node:26-alpine'
                     label 'lynx'
                 }
             }

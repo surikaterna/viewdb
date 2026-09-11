@@ -39,7 +39,9 @@ function observeKey(collection: string, query: any, sort?: any, limit?: any, ski
 function getSharedRegistry(viewdb: any): Map<string, SharedObserver> {
   if (!viewdb._vdbSharedObservers) {
     viewdb._vdbSharedObservers = new Map<string, SharedObserver>();
-    viewdb._getObserverStats = function() { return getObserverStats(viewdb); };
+    viewdb._getObserverStats = function () {
+      return getObserverStats(viewdb);
+    };
   }
   return viewdb._vdbSharedObservers;
 }
@@ -47,15 +49,18 @@ function getSharedRegistry(viewdb: any): Map<string, SharedObserver> {
 interface ObserverStats {
   sharedObserverCount: number;
   totalConsumerCount: number;
-  perCollection: Record<string, {
-    sharedObservers: number;
-    consumers: number;
-    evalCount: number;
-    matchCount: number;
-    missCount: number;
-    rawChangedCount: number;
-    emittedChangedCount: number;
-  }>;
+  perCollection: Record<
+    string,
+    {
+      sharedObservers: number;
+      consumers: number;
+      evalCount: number;
+      matchCount: number;
+      missCount: number;
+      rawChangedCount: number;
+      emittedChangedCount: number;
+    }
+  >;
 }
 
 function getObserverStats(viewdb: any): ObserverStats {
@@ -93,7 +98,7 @@ function getObserverStats(viewdb: any): ObserverStats {
       var observerStats = shared.handle.getStats();
       colStats.evalCount += observerStats.evalCount;
       colStats.matchCount += observerStats.matchCount;
-      colStats.missCount += (observerStats.evalCount - observerStats.matchCount);
+      colStats.missCount += observerStats.evalCount - observerStats.matchCount;
       colStats.rawChangedCount += observerStats.rawChangedCount;
       colStats.emittedChangedCount += observerStats.emittedChangedCount;
     }
@@ -236,17 +241,9 @@ class ViewDbSocketServer {
             }
             return;
           }
-          var effectiveLimit = _.isNumber(request.p.limit) ? request.p.limit :
-            (globalLimit && _.isNumber(globalLimit) ? globalLimit : undefined);
+          var effectiveLimit = _.isNumber(request.p.limit) ? request.p.limit : globalLimit && _.isNumber(globalLimit) ? globalLimit : undefined;
 
-          var key = observeKey(
-            request.p.collection,
-            decoratedQuery,
-            request.p.sort,
-            effectiveLimit,
-            request.p.skip,
-            request.p.project
-          );
+          var key = observeKey(request.p.collection, decoratedQuery, request.p.sort, effectiveLimit, request.p.skip, request.p.project);
 
           var consumerId = _socketId + ':' + observeId;
           var events = request.p.events || { i: true, a: true, r: true, c: true, m: true };
