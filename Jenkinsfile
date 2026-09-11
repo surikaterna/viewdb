@@ -56,7 +56,7 @@ pipeline {
             }
         }
 
-        stage('Lint') {
+        stage('Check style') {
             agent {
                 docker {
                     image 'node:26-alpine'
@@ -69,7 +69,7 @@ pipeline {
             }
 
             steps {
-                sh 'npm run lint'
+                sh 'npm run check-style:ci'
             }
         }
 

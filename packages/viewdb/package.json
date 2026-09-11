@@ -17,10 +17,7 @@
     "test": "vitest run",
     "test.watch": "vitest",
     "coverage": "vitest run --coverage",
-    "coverage-start": "npm run coverage && start coverage/lcov-report/index.html",
-    "format": "prettier --write src test",
-    "jshint": "jshint ./src",
-    "jscs": "jscs -p google ./src"
+    "coverage-start": "npm run coverage && start coverage/lcov-report/index.html"
   },
   "repository": {
     "type": "git",
@@ -33,9 +30,6 @@
     "@types/lodash": "4.17.24",
     "@types/node": "26.5.1",
     "@types/uuid": "9.0.8",
-    "jshint": "^2.13.6",
-    "prettier": "^2.8.7",
-    "prettier-config-surikaterna": "^1.0.1",
     "vitest": "^5.0.0"
   },
   "dependencies": {

@@ -11,13 +11,14 @@
     "clean": "turbo run clean",
     "clean:all": "turbo run clean && rimraf .turbo",
     "test": "turbo run test",
-    "lint": "turbo run lint",
-    "format": "turbo run format",
+    "check-style": "biome check --write .",
+    "check-style:ci": "biome check .",
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "changeset:publish": "changeset publish"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.13",
     "@changesets/cli": "^3.0.2",
     "rimraf": "^6.1.2",
     "turbo": "^2.10.12",

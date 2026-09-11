@@ -8,8 +8,10 @@
     "test": {
       "dependsOn": ["^build"]
     },
-    "lint": {},
-    "format": {},
+    "//#check-style": {
+      "cache": false
+    },
+    "//#check-style:ci": {},
     "clean": {
       "cache": false
     }
