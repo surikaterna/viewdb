@@ -51,7 +51,7 @@ describe('Viewdb timestamp plugin', () => {
         });
       });
     }));
-  it('should update changeDateTime on builk save', () =>
+  it('should update changeDateTime on bulk save', () =>
     new Promise((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbTimestampPlugin(viewDb);
@@ -110,7 +110,7 @@ describe('Viewdb timestamp plugin', () => {
           expect(object.changeDateTime).toBeGreaterThan(insertTime);
           resolve();
         });
-      }, 1);
+      }, 10);
     }));
 
   it('should skip changing timestamp with skipTimestamp option on save', () =>
