@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "@types/lokijs": "1.5.14",
-    "@types/node": "^18.0.0",
+    "@types/node": "^26.5.1",
     "typescript": "^5.0.0",
     "viewdb": "*",
     "viewdb-store-tests": "*",
