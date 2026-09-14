@@ -24,7 +24,7 @@ pipeline {
         stage('Install dependencies') {
             agent {
                 docker {
-                    image 'node:26-alpine'
+                    image 'node:26-bookworm'
                     label 'lynx'
                 }
             }
@@ -42,7 +42,7 @@ pipeline {
         stage('Build') {
             agent {
                 docker {
-                    image 'node:26-alpine'
+                    image 'node:26-bookworm'
                     label 'lynx'
                 }
             }
@@ -59,7 +59,7 @@ pipeline {
         stage('Check style') {
             agent {
                 docker {
-                    image 'node:26-alpine'
+                    image 'node:26-bookworm'
                     label 'lynx'
                 }
             }
@@ -76,7 +76,7 @@ pipeline {
         stage('Test') {
             agent {
                 docker {
-                    image 'node:26-bullseye'
+                    image 'node:26-bookworm'
                     label 'lynx'
                 }
             }
@@ -93,7 +93,7 @@ pipeline {
         stage('Audit') {
             agent {
                 docker {
-                    image 'node:26-alpine'
+                    image 'node:26-bookworm'
                     label 'lynx'
                 }
             }
@@ -110,7 +110,7 @@ pipeline {
         stage('Publish to npm') {
             agent {
                 docker {
-                    image 'node:26-alpine'
+                    image 'node:26-bookworm'
                     label 'lynx'
                 }
             }
