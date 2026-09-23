@@ -158,11 +158,14 @@ describe('Observe-Update Remote', function () {
       };
       new ViewDbSocketServer(localRemote, localSocketServer, decorator);
 
-      var handle = localClientVdb.collection('dollhouse').find({ _id: 'pending' }).observe({
-        init: function () {
-          reject(new Error('stopped observer should not receive init'));
-        }
-      });
+      var handle = localClientVdb
+        .collection('dollhouse')
+        .find({ _id: 'pending' })
+        .observe({
+          init: function () {
+            reject(new Error('stopped observer should not receive init'));
+          }
+        });
       handle.stop();
 
       setTimeout(function () {

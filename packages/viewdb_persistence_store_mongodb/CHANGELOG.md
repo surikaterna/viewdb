@@ -1,5 +1,11 @@
 # viewdb_persistence_store_mongodb
 
+## 4.5.2
+
+### Patch Changes
+
+- Upgrade to Node v26, and upgrade dependencies to remove vulnerabilities.
+
 ## 4.5.1
 
 ### Patch Changes

@@ -200,13 +200,13 @@ class Observer {
       this._cache!.splice(index, 1);
       this._cacheIndex!.delete(doc.o._id);
 
-    // Cancel any pending batched changed for this document
-    if (this._pendingChanged) {
-      this._pendingChanged.delete(doc.o._id);
-    }
-    if (this._emittedInWindow) {
-      this._emittedInWindow.delete(doc.o._id);
-    }
+      // Cancel any pending batched changed for this document
+      if (this._pendingChanged) {
+        this._pendingChanged.delete(doc.o._id);
+      }
+      if (this._emittedInWindow) {
+        this._emittedInWindow.delete(doc.o._id);
+      }
 
       // Keep id->index map in sync for all shifted entries.
       for (var i = index; i < this._cache!.length; i++) {

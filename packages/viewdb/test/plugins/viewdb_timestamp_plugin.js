@@ -12,7 +12,7 @@ describe('Viewdb timestamp plugin', () => {
       var collection = viewDb.collection('test');
       var currentTime = new Date().valueOf();
 
-      // wait 1ms until update operation to check for lastModified updated
+      // wait before update operation to check for lastModified updated
       setTimeout(function () {
         collection.insert(obj, function () {
           collection.find({ id: '123' }).toArray(function (err, objects) {
@@ -35,7 +35,7 @@ describe('Viewdb timestamp plugin', () => {
       var collection = viewDb.collection('test');
       var currentTime = new Date().valueOf();
 
-      // wait 1ms until update operation to check for lastModified updated
+      // wait before update operation to check for lastModified updated
       setTimeout(function () {
         collection.insert([{ _id: '123' }, { _id: '999' }], function () {
           collection.find({}).toArray(function (err, objects) {
@@ -51,7 +51,7 @@ describe('Viewdb timestamp plugin', () => {
         });
       });
     }));
-  it('should update changeDateTime on builk save', () =>
+  it('should update changeDateTime on bulk save', () =>
     new Promise((resolve, reject) => {
       var viewDb = new ViewDb();
       new ViewDbTimestampPlugin(viewDb);
@@ -83,7 +83,7 @@ describe('Viewdb timestamp plugin', () => {
         }, 100);
       });
 
-      // wait 1ms until update operation to check for lastModified updated
+      // wait before update operation to check for lastModified updated
     }));
   it('should update changeDateTime on save', () =>
     new Promise((resolve, reject) => {
@@ -100,7 +100,7 @@ describe('Viewdb timestamp plugin', () => {
         insertTime = object.createDateTime;
       });
 
-      // wait 1ms until update operation to check for changeDateTime updated
+      // wait before update operation to check for changeDateTime updated
       setTimeout(function () {
         obj.name = 'Pelle';
         collection.save(obj);
@@ -110,7 +110,7 @@ describe('Viewdb timestamp plugin', () => {
           expect(object.changeDateTime).toBeGreaterThan(insertTime);
           resolve();
         });
-      }, 1);
+      }, 10);
     }));
 
   it('should skip changing timestamp with skipTimestamp option on save', () =>
@@ -128,7 +128,7 @@ describe('Viewdb timestamp plugin', () => {
         insertTime = object.createDateTime;
       });
 
-      // wait 1ms until update operation to check for changeDateTime updated
+      // wait before update operation to check for changeDateTime updated
       setTimeout(function () {
         obj.name = 'Pelle';
         collection.save(obj, { skipTimestamp: true }, function () {
@@ -139,7 +139,7 @@ describe('Viewdb timestamp plugin', () => {
             resolve();
           });
         });
-      }, 1);
+      }, 10);
     }));
 
   it('should work together with version plugin', () =>

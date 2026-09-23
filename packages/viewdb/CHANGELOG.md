@@ -1,5 +1,11 @@
 # viewdb
 
+## 0.13.2
+
+### Patch Changes
+
+- Upgrade to Node v26, and upgrade dependencies to remove vulnerabilities.
+
 ## 0.13.1
 
 ### Patch Changes

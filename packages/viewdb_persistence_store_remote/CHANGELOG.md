@@ -1,5 +1,11 @@
 # viewdb_persistence_store_remote
 
+## 4.4.2
+
+### Patch Changes
+
+- Upgrade to Node v26, and upgrade dependencies to remove vulnerabilities.
+
 ## 4.4.1
 
 ### Patch Changes

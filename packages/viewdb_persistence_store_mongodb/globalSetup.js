@@ -5,7 +5,7 @@ let replSet;
 export async function setup() {
   replSet = await MongoMemoryReplSet.create({
     replSet: { count: 1, storageEngine: 'wiredTiger' },
-    binary: { version: '5.0.15' }
+    binary: { version: '7.0.37' }
   });
   const uri = replSet.getUri();
   process.env.MONGO_URI = uri;
