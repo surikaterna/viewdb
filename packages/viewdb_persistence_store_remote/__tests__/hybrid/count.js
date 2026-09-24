@@ -67,4 +67,9 @@ describe('Hybrid cursor count', function () {
     var result = await count(hybrid.collection('items').find({ category: 'match' }).skip(1).limit(2), { skip: 3, limit: 4 });
     assert.equal(result, 2);
   });
+
+  it('gives explicit cursor skip(0) precedence over count options', async function () {
+    var result = await count(hybrid.collection('items').find({ category: 'match' }).skip(0), { skip: 2 });
+    assert.equal(result, 4);
+  });
 });

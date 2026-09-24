@@ -12,6 +12,7 @@ class HybridCursor {
   _sort: Record<string, 1 | -1> | undefined;
   _limit: number | undefined;
   _skip: number;
+  _skipSet: boolean;
   _local: any;
   _remote: any;
   _findOptions: any;
@@ -25,6 +26,7 @@ class HybridCursor {
     this._sort = undefined;
     this._limit = undefined;
     this._skip = 0;
+    this._skipSet = false;
     this._local = local;
     this._remote = remote;
     this._findOptions = findOptions;
@@ -163,6 +165,7 @@ class HybridCursor {
 
   skip(skip: number): this {
     this._skip = skip;
+    this._skipSet = true;
     return this;
   }
 
@@ -204,7 +207,7 @@ class HybridCursor {
       this._local.limit(this._limit);
       this._remote.limit(this._limit);
     }
-    if (this._skip) {
+    if (this._skipSet) {
       this._local.skip(this._skip);
       this._remote.skip(this._skip);
     }
