@@ -3,6 +3,7 @@ import Observe = require('./observe');
 import reconcile = require('./reconcile');
 import _ = require('lodash');
 import TimeTracker = require('./timeTracker');
+import RemoteCursor = require('../client/cursor');
 import { LoggerFactory } from 'slf';
 
 var LOG = LoggerFactory.getLogger('viewdb:remote:hybrid-cursor');
@@ -12,6 +13,7 @@ class HybridCursor {
   _sort: Record<string, 1 | -1> | undefined;
   _limit: number | undefined;
   _skip: number;
+  _skipSet: boolean;
   _local: any;
   _remote: any;
   _findOptions: any;
@@ -25,6 +27,7 @@ class HybridCursor {
     this._sort = undefined;
     this._limit = undefined;
     this._skip = 0;
+    this._skipSet = false;
     this._local = local;
     this._remote = remote;
     this._findOptions = findOptions;
@@ -163,6 +166,7 @@ class HybridCursor {
 
   skip(skip: number): this {
     this._skip = skip;
+    this._skipSet = true;
     return this;
   }
 
@@ -185,9 +189,6 @@ class HybridCursor {
 
   _count(options: any, callback: any): void {
     var self = this;
-    var localCount: any = null;
-    var remoteCount: any = null;
-
     var timeTracker = new TimeTracker();
     var wrappedCallback = callback;
 
@@ -203,13 +204,22 @@ class HybridCursor {
       };
     }
 
+    if (this._limit !== undefined) {
+      this._local.limit(this._limit);
+      this._remote.limit(this._limit);
+    }
+    if (this._skipSet) {
+      this._local.skip(this._skip);
+      this._remote.skip(this._skip);
+    }
+
+    var hasCountBounds = options && (options.skip !== undefined || options.limit !== undefined);
     timeTracker.start();
 
     function serverResult(err: Error | null, count: any) {
       if (err) {
         return wrappedCallback(err);
       }
-      remoteCount = count;
       return wrappedCallback(null, count);
     }
 
@@ -218,18 +228,19 @@ class HybridCursor {
         return wrappedCallback(err, count);
       }
 
-      localCount = count;
-      if (remoteCount) {
-        wrappedCallback(null, remoteCount);
-      } else {
-        if (self._options.localFirst) {
-          wrappedCallback(err, localCount);
-        }
+      if (self._options.localFirst && !hasCountBounds) {
+        wrappedCallback(null, count);
       }
     }
 
-    this._local.count(options, localResult);
-    this._remote.count(options, serverResult);
+    this._local.count(localResult);
+    // The remote client cursor accepts (applySkipLimit, options, callback);
+    // a plain ViewDb remote cursor, also supported by HybridStore, accepts only (callback).
+    if (this._remote instanceof RemoteCursor) {
+      this._remote.count(true, options, serverResult);
+    } else {
+      this._remote.count(serverResult);
+    }
   }
 
   count(options?: any, callback?: any): void {
@@ -239,7 +250,9 @@ class HybridCursor {
       options = undefined;
     }
 
-    if (this._getCachedData) {
+    if (options && (options.skip !== undefined || options.limit !== undefined)) {
+      this._count(options, callback);
+    } else if (this._getCachedData) {
       this._getCachedData(this._query, this._skip, this._limit, this._sort, this._project, function (err: Error | null, data: any) {
         if (data) {
           callback(null, data.length);

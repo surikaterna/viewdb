@@ -1,5 +1,11 @@
 # viewdb_persistence_store_remote
 
+## 4.4.3
+
+### Patch Changes
+
+- 75cafcb: Fix hybrid cursor counts against ViewDb's callback-only local cursor, including remote skip/limit and explicit count options.
+
 ## 4.4.2
 
 ### Patch Changes
