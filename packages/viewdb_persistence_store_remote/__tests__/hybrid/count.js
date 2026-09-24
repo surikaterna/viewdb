@@ -72,4 +72,13 @@ describe('Hybrid cursor count', function () {
     var result = await count(hybrid.collection('items').find({ category: 'match' }).skip(0), { skip: 2 });
     assert.equal(result, 4);
   });
+
+  it('counts through a callback-only ViewDb remote cursor', async function () {
+    var plainRemote = new ViewDb();
+    plainRemote.collection('items').insert({ _id: 1, category: 'match' });
+    plainRemote.collection('items').insert({ _id: 2, category: 'other' });
+    plainRemote.collection('items').insert({ _id: 3, category: 'match' });
+    var cursor = new ViewDb(new HybridStore(local, plainRemote, { localFirst: false })).collection('items').find({ category: 'match' }).skip(1);
+    assert.equal(await count(cursor), 1);
+  });
 });

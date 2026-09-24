@@ -3,6 +3,7 @@ import Observe = require('./observe');
 import reconcile = require('./reconcile');
 import _ = require('lodash');
 import TimeTracker = require('./timeTracker');
+import RemoteCursor = require('../client/cursor');
 import { LoggerFactory } from 'slf';
 
 var LOG = LoggerFactory.getLogger('viewdb:remote:hybrid-cursor');
@@ -233,7 +234,11 @@ class HybridCursor {
     }
 
     this._local.count(localResult);
-    this._remote.count(true, options, serverResult);
+    if (this._remote instanceof RemoteCursor) {
+      this._remote.count(true, options, serverResult);
+    } else {
+      this._remote.count(serverResult);
+    }
   }
 
   count(options?: any, callback?: any): void {
