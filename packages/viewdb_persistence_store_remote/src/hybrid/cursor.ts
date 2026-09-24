@@ -234,6 +234,8 @@ class HybridCursor {
     }
 
     this._local.count(localResult);
+    // The remote client cursor accepts (applySkipLimit, options, callback);
+    // a plain ViewDb remote cursor, also supported by HybridStore, accepts only (callback).
     if (this._remote instanceof RemoteCursor) {
       this._remote.count(true, options, serverResult);
     } else {
