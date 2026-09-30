@@ -1,5 +1,11 @@
 # viewdb_persistence_store_lokijs
 
+## 1.1.3
+
+### Patch Changes
+
+- Upgrade slf dependencies to the latest versions.
+
 ## 1.1.2
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "viewdb_persistence_store_mongodb",
-  "version": "4.5.2",
+  "version": "4.5.3",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,7 +27,7 @@
   "devDependencies": {
     "@types/bluebird": "3.5.42",
     "mongodb-memory-server": "^10.0.0",
-    "slf-debug": "^0.3.1",
+    "slf-debug": "^0.3.2",
     "viewdb": "*",
     "vitest": "^5.0.0"
   },
@@ -41,7 +41,7 @@
     "kuery": "^2.0.0",
     "lodash": "^4.18.0",
     "mongodb": "^6.12.0",
-    "slf": "^2.0.3"
+    "slf": "^2.1.0"
   },
   "peerDependencies": {
     "viewdb": "*"

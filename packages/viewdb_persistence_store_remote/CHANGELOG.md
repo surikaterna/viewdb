@@ -1,5 +1,11 @@
 # viewdb_persistence_store_remote
 
+## 4.4.4
+
+### Patch Changes
+
+- Upgrade slf dependencies to the latest versions.
+
 ## 4.4.3
 
 ### Patch Changes

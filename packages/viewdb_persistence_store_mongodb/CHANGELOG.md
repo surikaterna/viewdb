@@ -1,5 +1,11 @@
 # viewdb_persistence_store_mongodb
 
+## 4.5.3
+
+### Patch Changes
+
+- Upgrade slf dependencies to the latest versions.
+
 ## 4.5.2
 
 ### Patch Changes
