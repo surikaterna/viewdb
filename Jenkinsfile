@@ -117,7 +117,7 @@ pipeline {
 
             when {
                 expression {
-                    BRANCH_NAME == 'develop' || BRANCH_NAME ==~ /release\/\d+\.\d+\.\d+/
+                    BRANCH_NAME == 'develop' || isReleaseBranch()
                 }
             }
 
