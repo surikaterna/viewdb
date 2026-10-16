@@ -87,6 +87,10 @@ class Client {
     return req.i;
   }
 
+  cancelRequest(id: number): void {
+    delete this._requests[id];
+  }
+
   subscribe(payload: Record<string, unknown>, callback: RequestCallback): { stop: () => void } {
     var self = this;
     var i = this.request(payload, callback, true);

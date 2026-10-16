@@ -29,10 +29,10 @@ export interface SharedObserver extends StableQueryConfig {
   snapshot: ServerDocument[] | null;
   snapshotIdentities: Array<DocumentId | undefined>;
   windowed: boolean;
-  originalQuery: Record<string, unknown>;
-  queryDecorator: QueryDecorator;
   pendingChanges: boolean;
   initializing: boolean;
+  reconciling: boolean;
+  reconcileDirty: boolean;
 }
 
 export interface ServerChangedEvent {
@@ -90,18 +90,27 @@ export function delivered(socket: VdbSocket, consumer: ConsumerCallbacks, change
   socket.emit('/vdb/response', { i: consumer.request.i, p: { changes: changes, sequence: consumer.sequence } });
 }
 
-export function cacheDocument(_socket: VdbSocket, consumer: ConsumerCallbacks, doc: unknown): WireDocument | undefined {
+export function cacheDocument(_socket: VdbSocket, consumer: ConsumerCallbacks, doc: unknown, identity?: DocumentId): WireDocument | undefined {
   var normalized = normalizeDocument(doc);
-  if (!normalized) return undefined;
-  if (consumer.delta) getSharedSnapshotCache().seed(consumer, consumer.namespace, consumer.collection, normalized);
+  var id = normalized ? documentId(normalized) : documentId(doc);
+  if (id === undefined) id = identity;
+  if (!normalized) {
+    if (consumer.delta && id !== undefined) getSharedSnapshotCache().delete(consumer, id);
+    return undefined;
+  }
+  if (consumer.delta) getSharedSnapshotCache().seed(consumer, consumer.namespace, consumer.collection, normalized, identity);
   return normalized;
 }
 
-export function changedFor(_socket: VdbSocket, consumer: ConsumerCallbacks, tobe: ServerDocument, index: number): ServerChangedEvent {
+export function changedFor(_socket: VdbSocket, consumer: ConsumerCallbacks, tobe: ServerDocument, index: number, identity?: DocumentId): ServerChangedEvent {
   var normalized = normalizeDocument(tobe);
-  if (!normalized) return { c: { o: null, n: tobe, i: index } };
-  var id = documentId(normalized);
+  var id = normalized ? documentId(normalized) : documentId(tobe);
+  if (id === undefined) id = identity;
   var cache = consumer.delta ? getSharedSnapshotCache() : undefined;
+  if (!normalized) {
+    if (id !== undefined && cache) cache.delete(consumer, id);
+    return { c: { o: null, n: tobe, i: index } };
+  }
   var old = id !== undefined && cache ? cache.get(consumer, consumer.namespace, consumer.collection, id) : undefined;
   var before = old && validVersion(old.version) ? old.version : undefined;
   var version = validVersion(normalized.version) ? normalized.version : undefined;
@@ -109,94 +118,117 @@ export function changedFor(_socket: VdbSocket, consumer: ConsumerCallbacks, tobe
     var patch = compare(old.document, normalized);
     var delta: ObserverDelta = { documentId: id, baseVersion: before, version: version, patch: patch, i: index };
     if (encodedBytes({ d: delta }) < encodedBytes({ c: { o: null, n: normalized, i: index } })) {
-      cache!.seed(consumer, consumer.namespace, consumer.collection, normalized);
+      cache!.seed(consumer, consumer.namespace, consumer.collection, normalized, id);
       return { d: delta };
     }
   }
-  if (id !== undefined && cache) cache.seed(consumer, consumer.namespace, consumer.collection, normalized);
+  if (id !== undefined && cache) cache.seed(consumer, consumer.namespace, consumer.collection, normalized, id);
   return { c: { o: null, n: normalized, i: index } };
 }
-
 export function reconcileObserver(shared: SharedObserver, attempts: number = 2): void {
+  if (shared.consumers.size === 0) return;
   shared.revision++;
-  queryStable(shared, 2, function (error, documents, identities) {
-    if (error || !documents) {
-      if (attempts > 0)
-        setTimeout(function () {
-          reconcileObserver(shared, attempts - 1);
-        }, 10);
-      else
+  if (shared.reconciling) {
+    shared.reconcileDirty = true;
+    return;
+  }
+  shared.reconciling = true;
+  var reconcile = function (remainingAttempts: number) {
+    if (shared.consumers.size === 0) {
+      shared.reconciling = false;
+      shared.reconcileDirty = false;
+      return;
+    }
+    shared.reconcileDirty = false;
+    queryStable(shared, 0, function (error, documents, identities) {
+      if (shared.consumers.size === 0) {
+        shared.reconciling = false;
+        shared.reconcileDirty = false;
+        return;
+      }
+      if (error || !documents) {
+        if (shared.reconcileDirty) return reconcile(attempts);
+        if (remainingAttempts > 0)
+          return setTimeout(function () {
+            reconcile(remainingAttempts - 1);
+          }, 10);
+        shared.reconciling = false;
         shared.consumers.forEach(function (entry) {
           if (entry.ready) emitError(entry.socket, entry.request, 'RECOVERY_FAILED', 'Unable to obtain a stable observer window');
         });
-      return;
-    }
-    if (!shared.snapshot) {
-      shared.snapshot = documents;
-      shared.snapshotIdentities = identities || [];
-      return;
-    }
-    var publicRows = new Map<ServerDocument, ServerDocument>();
-    var oldRows = shared.snapshot.map(function (document, index) {
-      return rowWithIdentity(document, shared.snapshotIdentities[index], publicRows);
-    });
-    var newRows = documents.map(function (document, index) {
-      return rowWithIdentity(document, identities && identities[index], publicRows);
-    });
-    var changes: MergeEvent[] = [];
-    var canKeyById =
-      newRows.every(function (document) {
-        return stableIdKey(document) !== undefined;
-      }) &&
-      oldRows.every(function (document) {
-        return stableIdKey(document) !== undefined;
-      });
-    var options: MergeOptions = {
-      keyFn: canKeyById
-        ? function (document) {
-            return stableIdKey(document)!;
-          }
-        : undefined,
-      added: function (document, index) {
-        changes.push({ kind: 'a', document: document, index: index });
-      },
-      removed: function (document, index) {
-        changes.push({ kind: 'r', document: document, index: index });
-      },
-      changed: function (oldDocument, newDocument, index) {
-        changes.push({ kind: 'c', oldDocument: oldDocument, document: newDocument, index: index });
-      },
-      moved: function (document, oldIndex, newIndex) {
-        changes.push({ kind: 'm', document: document, index: newIndex, oldIndex: oldIndex, newIndex: newIndex });
+        return;
       }
-    };
-    require('viewdb').merge(oldRows, newRows, options);
-    shared.snapshot = documents.map(function (document) {
-      return normalizeDocument(document) || document;
-    });
-    shared.snapshotIdentities = identities || [];
-    changes.forEach(function (change) {
-      var document = publicRows.get(change.document) || change.document;
-      var oldDocument = change.oldDocument ? publicRows.get(change.oldDocument) || change.oldDocument : undefined;
-      shared.consumers.forEach(function (entry) {
-        if (!entry.ready) return;
-        if (change.kind === 'c') {
-          if (entry.delta) delivered(entry.socket, entry, [changedFor(entry.socket, entry, document, change.index)]);
-          else if (entry.events.c) sendChange(entry.socket, { c: { o: oldDocument!, n: document, i: change.index } }, entry.request);
-        } else if (change.kind === 'a') {
-          if (entry.delta) {
-            var added = cacheDocument(entry.socket, entry, document) || document;
-            delivered(entry.socket, entry, [{ a: { e: added, i: change.index } }]);
-          } else if (entry.events.a) sendChange(entry.socket, { a: { e: document, i: change.index } }, entry.request);
-        } else if (change.kind === 'r') {
-          if (entry.delta) {
-            var removedId = documentId(document);
-            if (removedId !== undefined) getSharedSnapshotCache().delete(entry, removedId);
-            delivered(entry.socket, entry, [{ r: { e: document, i: change.index } }]);
-          } else if (entry.events.r) sendChange(entry.socket, { r: { e: document, i: change.index } }, entry.request);
-        } else if (entry.delta) delivered(entry.socket, entry, [{ m: { e: document, o: change.oldIndex, n: change.newIndex } }]);
-        else if (entry.events.m) sendChange(entry.socket, { m: { e: document, o: change.oldIndex, n: change.newIndex } }, entry.request);
+      if (!shared.snapshot) {
+        shared.snapshot = documents;
+        shared.snapshotIdentities = identities || [];
+        shared.reconciling = false;
+        return;
+      }
+      var publicRows = new Map<ServerDocument, ServerDocument>();
+      var oldRows = shared.snapshot.map(function (document, index) {
+        return rowWithIdentity(document, shared.snapshotIdentities[index], publicRows);
       });
+      var newRows = documents.map(function (document, index) {
+        return rowWithIdentity(document, identities && identities[index], publicRows);
+      });
+      var changes: MergeEvent[] = [];
+      var canKeyById =
+        newRows.every(function (document) {
+          return stableIdKey(document) !== undefined;
+        }) &&
+        oldRows.every(function (document) {
+          return stableIdKey(document) !== undefined;
+        });
+      var options: MergeOptions = {
+        keyFn: canKeyById
+          ? function (document) {
+              return stableIdKey(document)!;
+            }
+          : undefined,
+        added: function (document, index) {
+          changes.push({ kind: 'a', document: document, index: index });
+        },
+        removed: function (document, index) {
+          changes.push({ kind: 'r', document: document, index: index });
+        },
+        changed: function (oldDocument, newDocument, index) {
+          changes.push({ kind: 'c', oldDocument: oldDocument, document: newDocument, index: index });
+        },
+        moved: function (document, oldIndex, newIndex) {
+          changes.push({ kind: 'm', document: document, index: newIndex, oldIndex: oldIndex, newIndex: newIndex });
+        }
+      };
+      require('viewdb').merge(oldRows, newRows, options);
+      shared.snapshot = documents.map(function (document) {
+        return normalizeDocument(document) || document;
+      });
+      shared.snapshotIdentities = identities || [];
+      changes.forEach(function (change) {
+        var identity = documentId(change.document);
+        var document = publicRows.get(change.document) || change.document;
+        var oldDocument = change.oldDocument ? publicRows.get(change.oldDocument) || change.oldDocument : undefined;
+        shared.consumers.forEach(function (entry) {
+          if (!entry.ready) return;
+          if (change.kind === 'c') {
+            if (entry.delta) delivered(entry.socket, entry, [changedFor(entry.socket, entry, document, change.index, identity)]);
+            else if (entry.events.c) sendChange(entry.socket, { c: { o: oldDocument!, n: document, i: change.index } }, entry.request);
+          } else if (change.kind === 'a') {
+            if (entry.delta) {
+              var added = cacheDocument(entry.socket, entry, document, identity) || document;
+              delivered(entry.socket, entry, [{ a: { e: added, i: change.index } }]);
+            } else if (entry.events.a) sendChange(entry.socket, { a: { e: document, i: change.index } }, entry.request);
+          } else if (change.kind === 'r') {
+            if (entry.delta) {
+              if (identity !== undefined) getSharedSnapshotCache().delete(entry, identity);
+              delivered(entry.socket, entry, [{ r: { e: document, i: change.index } }]);
+            } else if (entry.events.r) sendChange(entry.socket, { r: { e: document, i: change.index } }, entry.request);
+          } else if (entry.delta) delivered(entry.socket, entry, [{ m: { e: document, o: change.oldIndex, n: change.newIndex } }]);
+          else if (entry.events.m) sendChange(entry.socket, { m: { e: document, o: change.oldIndex, n: change.newIndex } }, entry.request);
+        });
+      });
+      if (shared.reconcileDirty) return reconcile(attempts);
+      shared.reconciling = false;
     });
-  });
+  };
+  reconcile(attempts);
 }

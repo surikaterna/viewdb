@@ -1,6 +1,6 @@
 import _ = require('lodash');
 import { Logger } from 'slf';
-import { DeltaCacheLimits, ObserverDocumentResponse, ObserverSnapshotResponse, WireDocument } from '../deltaProtocol';
+import { DeltaCacheLimits } from '../deltaProtocol';
 import { documentId, normalizeDocument } from '../deltaCache';
 import { VdbSocket } from '../types';
 import { getObserverStats } from './observerStats';
@@ -15,7 +15,8 @@ import {
   sendChange,
   SharedObserver
 } from './deltaDelivery';
-import { projectionWithIdentity, ServerDocument, StableQueryConfig, queryStable } from './stableQuery';
+import { projectionWithIdentity, ServerDocument, queryStable } from './stableQuery';
+import { recoverObserver } from './recovery';
 import { getSharedSnapshotCache, viewdbNamespace } from './sharedSnapshotCache';
 var LOG = Logger.getLogger('viewdb:remote:server');
 
@@ -219,7 +220,7 @@ class ViewDbSocketServer {
             _observers[observeId] = { i: request.i, key: key, consumerId: consumerId, token: registrationToken };
             socket.emit('/vdb/response', { i: request.i, p: request.p.deltaVersion === 1 ? { handle: observeId, deltaVersion: 1 } : { handle: observeId } });
             if (shared.snapshot && !shared.initializing && (events.i || consumer.delta)) {
-              queryStable(shared, 2, function (err: Error | null, result?: ServerDocument[]) {
+              queryStable(shared, 2, function (err: Error | null, result?: ServerDocument[], identities?: Array<string | number | undefined>) {
                 var currentObserver = _observers[observeId];
                 if (!currentObserver || currentObserver.token !== registrationToken || !joiningShared.consumers.has(consumerId)) return;
                 if (err || !result) {
@@ -229,8 +230,8 @@ class ViewDbSocketServer {
                   return;
                 }
                 if (consumer.delta) {
-                  var docs = result.map(function (doc) {
-                    return cacheDocument(socket, consumer, doc) || doc;
+                  var docs = result.map(function (doc, index) {
+                    return cacheDocument(socket, consumer, doc, identities && identities[index]) || doc;
                   });
                   delivered(socket, consumer, [events.i ? { i: { r: docs } } : { s: { r: docs } }]);
                 } else sendChange(socket, { i: { r: result } }, request);
@@ -254,10 +255,10 @@ class ViewDbSocketServer {
               snapshot: null,
               snapshotIdentities: [],
               windowed: needsWindow,
-              originalQuery: request.p.observe,
-              queryDecorator: _queryDecorator,
               pendingChanges: false,
-              initializing: true
+              initializing: true,
+              reconciling: false,
+              reconcileDirty: false
             };
             newShared.consumers.set(consumerId, consumer);
             registry.set(key, newShared);
@@ -301,8 +302,8 @@ class ViewDbSocketServer {
                     if (newShared.consumers.get(pair[0]) !== entry) return;
                     entry.ready = true;
                     if (entry.delta) {
-                      var docs = documents.map(function (doc) {
-                        return cacheDocument(entry.socket, entry, doc) || doc;
+                      var docs = documents.map(function (doc, index) {
+                        return cacheDocument(entry.socket, entry, doc, identities && identities[index]) || doc;
                       });
                       if (entry.events.i) delivered(entry.socket, entry, [{ i: { r: docs } }]);
                       else delivered(entry.socket, entry, [{ s: { r: docs } }]);
@@ -410,58 +411,18 @@ class ViewDbSocketServer {
           emitError(socket, request, 'OBSERVER_NOT_FOUND', 'Observer is not registered on this socket');
         } else {
           var token = registration.token;
-          const activeConsumer = recoveryConsumer;
-          var activeShared = recoveryShared;
-          activeShared.queryDecorator(activeShared.collection, activeShared.originalQuery, function (decoratedQuery: Record<string, unknown>) {
+          var registeredKey = registration.key!;
+          var registeredConsumerId = registration.consumerId!;
+          recoverObserver(socket, request, recoveryRequest, recoveryConsumer, recoveryShared, _queryDecorator, function () {
             var current = _observers[recoveryRequest.h];
-            if (!current || current.token !== token || current.key !== registration.key || current.consumerId !== registration.consumerId) return;
-            var recoveryView: StableQueryConfig = {
-              viewdb: activeShared.viewdb,
-              collection: activeShared.collection,
-              query: decoratedQuery,
-              sort: activeShared.sort,
-              limit: activeShared.limit,
-              skip: activeShared.skip,
-              project: activeShared.project,
-              readPreference: activeConsumer.readPreference,
-              get revision() {
-                return activeShared.revision;
-              }
-            };
-            queryStable(recoveryView, 2, function (err: Error | null, documents?: ServerDocument[], identities?: Array<string | number | undefined>) {
-              var latest = _observers[recoveryRequest.h];
-              if (!latest || latest.token !== token || latest.key !== registration.key || latest.consumerId !== registration.consumerId) return;
-              if (err || !documents) {
-                emitError(socket, request, 'RECOVERY_FAILED', 'Unable to obtain a stable observer result');
-                return;
-              }
-              var wireDocuments: WireDocument[] = [];
-              for (var i = 0; i < documents.length; i++) {
-                var wireDocument = normalizeDocument(documents[i]);
-                if (!wireDocument) {
-                  emitError(socket, request, 'RECOVERY_FAILED', 'Observer result contains a document that cannot be recovered as JSON');
-                  return;
-                }
-                wireDocuments.push(wireDocument);
-              }
-              var sequence = activeConsumer.sequence;
-              if (request.p['observe.snapshot']) {
-                wireDocuments.forEach(function (document) {
-                  cacheDocument(socket, activeConsumer, document);
-                });
-                var snapshot: ObserverSnapshotResponse = { documents: wireDocuments, sequence: sequence };
-                socket.emit('/vdb/response', { i: request.i, p: snapshot });
-              } else {
-                var found = wireDocuments.findIndex(function (doc, index) {
-                  var identity = identities && identities[index];
-                  return (identity === undefined ? documentId(doc) : identity) === recoveryRequest.documentId;
-                });
-                if (found >= 0) cacheDocument(socket, activeConsumer, wireDocuments[found]);
-                var response: ObserverDocumentResponse =
-                  found < 0 ? { visible: false, sequence: sequence } : { visible: true, document: wireDocuments[found], index: found, sequence: sequence };
-                socket.emit('/vdb/response', { i: request.i, p: response });
-              }
-            });
+            return Boolean(
+              current &&
+                current.token === token &&
+                current.key === registeredKey &&
+                current.consumerId === registeredConsumerId &&
+                registry.get(registeredKey) === recoveryShared &&
+                recoveryShared?.consumers.get(registeredConsumerId) === recoveryConsumer
+            );
           });
         }
       } else if (request.p['observe.stop']) {

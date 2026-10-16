@@ -16,9 +16,16 @@ FakeClient.prototype.subscribe = function (payload, callback) {
 };
 
 FakeClient.prototype.request = function (payload, callback) {
-  var request = { payload: payload, callback: callback, completed: false };
+  var request = { payload: payload, callback: callback, completed: false, id: this.requests.length + 101 };
   this.requests.push(request);
-  return this.requests.length + 100;
+  return request.id;
+};
+
+FakeClient.prototype.cancelRequest = function (id) {
+  var request = this.requests.find(function (entry) {
+    return entry.id === id;
+  });
+  if (request) request.completed = true;
 };
 
 FakeClient.prototype.send = function (response) {

@@ -1,6 +1,6 @@
 import crypto = require('crypto');
 import { DeltaCacheLimits, DocumentId, WireDocument } from '../deltaProtocol';
-import { validVersion } from '../deltaCache';
+import { documentId, validVersion } from '../deltaCache';
 
 interface SnapshotEntry {
   key: string;
@@ -70,9 +70,9 @@ export class SharedSnapshotCache {
     return { size: this.entries.size, bytes: this.bytes };
   }
 
-  seed(consumer: object, namespace: number, collection: string, document: WireDocument): void {
-    const id = document._id;
-    if (typeof id !== 'string' && typeof id !== 'number') return;
+  seed(consumer: object, namespace: number, collection: string, document: WireDocument, identity?: DocumentId): void {
+    const id = identity === undefined ? documentId(document) : identity;
+    if (id === undefined) return;
     const metadata = this.metadata(consumer);
     const version = validVersion(document.version) ? document.version : undefined;
     const prior = metadata.rows.get(id);

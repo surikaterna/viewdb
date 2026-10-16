@@ -22,8 +22,9 @@ export interface ObserverParams {
 
 export interface ObserverClient {
   options?: SocketClientOptions;
-  subscribe(params: ObserverParams, callback: (err: Error | string | null, response?: unknown) => void): { stop: () => void };
-  request(payload: Record<string, unknown>, callback?: (err: Error | null, response?: unknown) => void): number;
+  cancelRequest?(id: number): void;
+  subscribe(payload: Record<string, unknown>, callback: (err: Error | string | null, response?: unknown) => void): { stop: () => void };
+  request(payload: Record<string, unknown>, callback?: (err: Error | null, response?: unknown) => void): number | void;
 }
 
 export interface RemoteCollection {
@@ -79,6 +80,8 @@ export function buildParams(defaults: ObserverDefaults, query: ObserverQuery, co
   return params;
 }
 export function documentVersionFor(change: ObserverChange, id: DocumentId): unknown {
+  if (change.a && documentId(change.a.e) === id) return change.a.e.version;
+  if (change.r && documentId(change.r.e) === id) return change.r.e.version;
   if (change.d && change.d.documentId === id) return change.d.version;
   if (change.c && documentId(change.c.n) === id) return change.c.n.version;
   return undefined;
@@ -125,4 +128,36 @@ export function updatePendingTarget(pendingDocuments: Map<DocumentId, PendingDoc
 
 export function isIndex(value: unknown): value is number {
   return validVersion(value);
+}
+
+export class RecoveryRequests {
+  private readonly ids = new Set<number>();
+
+  request(client: ObserverClient, payload: Record<string, unknown>, callback: (error: Error | null, response?: unknown) => void, active: () => boolean): void {
+    var id: number | undefined;
+    var completed = false;
+    var returnedId = client.request(payload, (error, response) => {
+      completed = true;
+      if (id !== undefined) this.ids.delete(id);
+      callback(error, response);
+    });
+    if (typeof returnedId === 'number') id = returnedId;
+    if (!completed && active() && typeof returnedId === 'number') this.ids.add(returnedId);
+    else if (typeof returnedId === 'number') client.cancelRequest?.(returnedId);
+  }
+
+  cancelAll(client: ObserverClient): void {
+    this.ids.forEach((id) => {
+      client.cancelRequest?.(id);
+    });
+    this.ids.clear();
+  }
+}
+
+export function coveredByRecovery(record: EventRecord, id: DocumentId, recoveredVersion: number, sequence: number): boolean {
+  var version = documentVersionFor(record.change, id);
+  return (
+    (record.sequence !== undefined && record.sequence <= sequence && version !== undefined) ||
+    (Boolean(record.change.d) && validVersion(version) && version <= recoveredVersion)
+  );
 }

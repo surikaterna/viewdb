@@ -12,7 +12,16 @@ import type {
   WireDocument
 } from '../deltaProtocol';
 import { isObserverDocumentResponse, isObserverResponse, isObserverSnapshotResponse } from './observe_protocol';
-import { buildParams, copyDocuments, documentVersionFor, isIndex, isStructural, reconcileSnapshot, updatePendingTarget } from './observe_helpers';
+import {
+  buildParams,
+  copyDocuments,
+  coveredByRecovery,
+  isIndex,
+  isStructural,
+  reconcileSnapshot,
+  RecoveryRequests,
+  updatePendingTarget
+} from './observe_helpers';
 import type {
   EventRecord,
   ObserverCallbacks,
@@ -49,6 +58,8 @@ class Observer {
   private pendingDocuments = new Map<DocumentId, PendingDocumentRecovery>();
   private snapshotPending: object | null = null;
   private snapshotOnNextEvent = false;
+  private readonly recoveryRequests = new RecoveryRequests();
+  private recoveryRetryCount = 0;
 
   constructor(collection: RemoteCollection, options: ObserverCallbacks, query: ObserverQuery) {
     this.collection = collection;
@@ -68,6 +79,7 @@ class Observer {
 
   private resetGeneration(): void {
     this.cache.clear();
+    this.recoveryRequests.cancelAll(this.collection._client);
     this.remoteHandle = null;
     this.deltaSupported = false;
     this.scope = '';
@@ -79,6 +91,7 @@ class Observer {
     this.pendingDocuments.clear();
     this.snapshotPending = null;
     this.snapshotOnNextEvent = false;
+    this.recoveryRetryCount = 0;
   }
 
   private startObserver(): void {
@@ -113,7 +126,6 @@ class Observer {
       this.receiveResponse(generation, rawResponse);
     });
   }
-
   private sendStopRequest(): void {
     if (this.stopSent || !this.params) return;
     this.stopSent = true;
@@ -145,7 +157,6 @@ class Observer {
       this.acceptRecord(record);
     });
   }
-
   private isRecovering(): boolean {
     return this.snapshotPending !== null || this.pendingDocuments.size > 0;
   }
@@ -166,7 +177,6 @@ class Observer {
     }
     this.processRecord(record);
   }
-
   private processRecord(record: EventRecord): void {
     var change = record.change;
     if (change.i) {
@@ -357,14 +367,19 @@ class Observer {
     var pending: PendingDocumentRecovery = { targetVersion: targetVersion };
     this.pendingDocuments.set(id, pending);
     var generation = this.generation;
-    this.collection._client.request({ 'observe.document': { h: this.remoteHandle, documentId: id } }, (err: Error | null, rawResponse?: unknown) => {
-      if (generation !== this.generation || this.stopped || this.pendingDocuments.get(id) !== pending) return;
-      if (err || !isObserverDocumentResponse(rawResponse) || !isIndex(rawResponse.sequence)) {
-        this.failRecovery(generation);
-        return;
-      }
-      this.finishDocumentRecovery(id, pending, rawResponse);
-    });
+    this.recoveryRequests.request(
+      this.collection._client,
+      { 'observe.document': { h: this.remoteHandle, documentId: id } },
+      (err, rawResponse) => {
+        if (generation !== this.generation || this.stopped || this.pendingDocuments.get(id) !== pending) return;
+        if (err || !isObserverDocumentResponse(rawResponse) || !isIndex(rawResponse.sequence)) {
+          this.failRecovery(generation);
+          return;
+        }
+        this.finishDocumentRecovery(id, pending, rawResponse);
+      },
+      () => generation === this.generation && !this.stopped && this.pendingDocuments.get(id) === pending
+    );
   }
 
   private finishDocumentRecovery(id: DocumentId, pending: PendingDocumentRecovery, response: ObserverDocumentResponse): void {
@@ -398,16 +413,18 @@ class Observer {
     }
     if (generation !== this.generation || this.stopped) return;
     this.pendingDocuments.delete(id);
-    if (this.pendingDocuments.size === 0) this.replayBuffered(id, version);
+    if (this.pendingDocuments.size === 0) {
+      this.recoveryRetryCount = 0;
+      this.replayBuffered(id, version, response.sequence);
+    }
   }
 
-  private replayBuffered(recoveredId: DocumentId, recoveredVersion: number): void {
+  private replayBuffered(recoveredId: DocumentId, recoveredVersion: number, recoverySequence: number): void {
     var records = this.buffered;
     this.buffered = [];
     for (var index = 0; index < records.length; index++) {
       var record = records[index];
-      var recoveredDocumentVersion = documentVersionFor(record.change, recoveredId);
-      if (validVersion(recoveredDocumentVersion) && recoveredDocumentVersion <= recoveredVersion) continue;
+      if (coveredByRecovery(record, recoveredId, recoveredVersion, recoverySequence)) continue;
       if (this.isRecovering()) {
         this.buffered.push.apply(this.buffered, records.slice(index));
         return;
@@ -418,18 +435,24 @@ class Observer {
 
   private requestSnapshot(): void {
     if (this.snapshotPending || !this.remoteHandle || !this.deltaSupported) return;
+    this.recoveryRequests.cancelAll(this.collection._client);
     this.pendingDocuments.clear();
     var pending = {};
     this.snapshotPending = pending;
     var generation = this.generation;
-    this.collection._client.request({ 'observe.snapshot': { h: this.remoteHandle } }, (err: Error | null, rawResponse?: unknown) => {
-      if (generation !== this.generation || this.stopped || this.snapshotPending !== pending) return;
-      if (err || !isObserverSnapshotResponse(rawResponse) || !isIndex(rawResponse.sequence)) {
-        this.failRecovery(generation);
-        return;
-      }
-      this.finishSnapshot(rawResponse);
-    });
+    this.recoveryRequests.request(
+      this.collection._client,
+      { 'observe.snapshot': { h: this.remoteHandle } },
+      (err, rawResponse) => {
+        if (generation !== this.generation || this.stopped || this.snapshotPending !== pending) return;
+        if (err || !isObserverSnapshotResponse(rawResponse) || !isIndex(rawResponse.sequence)) {
+          this.failRecovery(generation);
+          return;
+        }
+        this.finishSnapshot(rawResponse);
+      },
+      () => generation === this.generation && !this.stopped && this.snapshotPending === pending
+    );
   }
 
   private finishSnapshot(response: ObserverSnapshotResponse): void {
@@ -439,7 +462,7 @@ class Observer {
     this.currentResult = documents;
     this.currentResultKnown = true;
     this.resultInitialized = true;
-    this.snapshotOnNextEvent = false;
+    this.recoveryRetryCount = 0;
     this.cache.clear(this.scope);
     this.currentResult.forEach((document) => {
       this.cache.set(this.scope, document);
@@ -457,10 +480,16 @@ class Observer {
 
   private failRecovery(generation: number): void {
     if (generation !== this.generation || this.stopped) return;
+    this.recoveryRequests.cancelAll(this.collection._client);
     this.pendingDocuments.clear();
     this.snapshotPending = null;
     this.buffered = [];
     this.currentResultKnown = false;
+    if (this.recoveryRetryCount < 1 && this.deltaSupported) {
+      this.recoveryRetryCount++;
+      this.requestSnapshot();
+      return;
+    }
     this.snapshotOnNextEvent = this.deltaSupported;
   }
 
