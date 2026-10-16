@@ -23,16 +23,18 @@ export interface ObserverDelta {
   patch: Operation[];
   i: number;
 }
-
+export type ObserverRowKeys = string[];
 export interface ObserverChange {
-  i?: { r: WireDocument[] };
+  i?: { r: WireDocument[]; rowKeys?: ObserverRowKeys };
   /** Private initialization for consumers without a public init callback. */
-  s?: { r: WireDocument[] };
-  a?: { e: WireDocument; i: number };
-  r?: { e: WireDocument; i: number };
-  c?: { o?: WireDocument | null; n: WireDocument; i: number };
-  m?: { e: WireDocument; o: number; n: number };
+  s?: { r: WireDocument[]; rowKeys?: ObserverRowKeys };
+  a?: { e: WireDocument; i: number; rowKey?: string };
+  r?: { e: WireDocument; i: number; rowKey?: string };
+  c?: { o?: WireDocument | null; n: WireDocument; i: number; rowKey?: string };
+  m?: { e: WireDocument; o: number; n: number; rowKey?: string };
   d?: ObserverDelta;
+  /** Projected row identity for delta changes. */
+  rowKey?: string;
 }
 
 export interface ObserverResponse {
@@ -41,6 +43,7 @@ export interface ObserverResponse {
   changes?: ObserverChange[];
   /** Monotonic delivery sequence within this registration. */
   sequence?: number;
+  rowKeys?: ObserverRowKeys;
 }
 
 export interface ObserverDocumentRequest {
@@ -53,11 +56,13 @@ export interface ObserverDocumentResponse {
   document?: WireDocument;
   index?: number;
   sequence: number;
+  rowKey?: string;
 }
 
 export interface ObserverSnapshotResponse {
   documents: WireDocument[];
   sequence: number;
+  rowKeys?: ObserverRowKeys;
 }
 
 export interface ObserverRequest {

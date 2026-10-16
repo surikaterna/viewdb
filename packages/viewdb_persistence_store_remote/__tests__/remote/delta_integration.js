@@ -65,7 +65,7 @@ const settle = () => new Promise((resolve) => setImmediate(resolve));
 async function until(predicate) {
   for (let attempt = 0; attempt < 100; attempt++) {
     if (predicate()) return;
-    await settle();
+    await new Promise((resolve) => setTimeout(resolve, 1));
   }
   expect(predicate()).toBe(true);
 }
@@ -74,8 +74,8 @@ describe('Negotiated remote and hybrid deltas', () => {
   afterEach(() => {
     ViewDbSocketServer.configureDeltaCache({ maxBytes: 256 * 1024 * 1024, maxEntries: 65536 });
   });
-  it.each([true, false])('reconciles hybrid movement during recovery with init callback=%s', async (withInit) => {
-    const harness = setup();
+  it.each([true, false])('preserves hybrid full-document movement with no baseline budget and init callback=%s', async (withInit) => {
+    const harness = setup({ deltaCache: { maxBytes: 0 } });
     const collection = harness.server.collection('items');
     collection.insert([doc('a', 1, 1), doc('b', 1, 2)]);
     const result = [];
@@ -92,29 +92,15 @@ describe('Negotiated remote and hybrid deltas', () => {
     const handle = harness.hybrid.collection('items').find({}).sort({ rank: 1 }).observe(options);
     try {
       await until(() => result.length === 2);
-      let delayed;
-      harness.intercept((response, release) => {
-        const delta = response.p?.changes?.[0]?.d;
-        if (delta?.documentId === 'a' && delta.version === 2) return true;
-        if (response.p?.visible === true) {
-          delayed = release;
-          return true;
-        }
-        return false;
-      });
       collection.save(doc('a', 2, 1));
       await settle();
       collection.save(doc('a', 3, 1));
-      await until(() => delayed !== undefined);
-      expect(result).toEqual([doc('a', 1, 1), doc('b', 1, 2)]);
+      await until(() => result[0]?.version === 3);
       collection.save(doc('a', 4, 3));
-      await settle();
-      harness.intercept(() => false);
-      delayed();
       await until(() => result[1]?._id === 'a' && result[1]?.version === 4);
       expect(result).toEqual([doc('b', 1, 2), doc('a', 4, 3)]);
       expect(inits).toBe(withInit ? 1 : 0);
-      expect(harness.requests.some((request) => request.p['observe.snapshot'])).toBe(true);
+      expect(harness.packets.some((packet) => packet.p?.changes?.some((change) => change.d))).toBe(false);
       collection.save(doc('a', 5, 3));
       await until(() => result[1]?.version === 5);
       expect(result[1]).toEqual(doc('a', 5, 3));

@@ -27,7 +27,6 @@ export interface StableQueryConfig {
   limit?: number;
   skip?: number;
   project?: Record<string, unknown>;
-  readPreference?: unknown;
   revision: number;
 }
 
@@ -46,7 +45,7 @@ export function projectionWithIdentity(project: Record<string, unknown>): Record
 
 function queryCursor(shared: StableQueryConfig): ServerCursor {
   var cursor = shared.viewdb.collection(shared.collection).find(shared.query);
-  if (shared.readPreference !== undefined && cursor.setReadPreference) cursor.setReadPreference(shared.readPreference);
+  if (cursor.setReadPreference) cursor.setReadPreference('primary');
   if (shared.sort) cursor.sort(shared.sort);
   if (shared.limit !== undefined) cursor.limit(shared.limit);
   if (shared.skip !== undefined) cursor.skip(shared.skip);

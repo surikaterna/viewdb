@@ -1,4 +1,5 @@
 import { compare } from 'fast-json-patch';
+import HmacSHA256 = require('crypto-js/hmac-sha256');
 import { DocumentId, ObserverDelta, ResponseError, WireDocument } from '../deltaProtocol';
 import { documentId, encodedBytes, normalizeDocument, validVersion } from '../deltaCache';
 import { VdbSocket } from '../types';
@@ -13,6 +14,7 @@ export interface ServerRequest {
 export type QueryDecorator = (collection: string, query: Record<string, unknown>, callback: (decoratedQuery: Record<string, unknown>) => void) => void;
 
 export interface ConsumerCallbacks {
+  id: string;
   request: ServerRequest;
   socket: VdbSocket;
   events: { i?: boolean; a?: boolean; r?: boolean; c?: boolean; m?: boolean };
@@ -21,7 +23,14 @@ export interface ConsumerCallbacks {
   collection: string;
   namespace: number;
   sequence: number;
-  readPreference: unknown;
+  rowKeySecret?: string;
+  rebindPending?: boolean;
+  sort?: Record<string, unknown>;
+  skip?: number;
+  project?: Record<string, unknown>;
+  limit?: number;
+  windowed: boolean;
+  pendingRebindKey?: string;
 }
 export interface SharedObserver extends StableQueryConfig {
   handle: { stop: () => void; getStats?: () => { evalCount: number; matchCount: number; rawChangedCount: number; emittedChangedCount: number } } | null;
@@ -33,11 +42,16 @@ export interface SharedObserver extends StableQueryConfig {
   initializing: boolean;
   reconciling: boolean;
   reconcileDirty: boolean;
+  reconcileWaiters: Array<(stable: boolean) => void>;
+  initializationWaiters: Array<(stable: boolean) => void>;
+  reconcileRetryTimer?: NodeJS.Timeout;
+  reconcileRetryDelay: number;
 }
 
 export interface ServerChangedEvent {
-  c?: { o: null; n: ServerDocument; i: number };
+  c?: { o: null; n: ServerDocument; i: number; rowKey?: string };
   d?: ObserverDelta;
+  rowKey?: string;
 }
 
 interface MergeEvent {
@@ -62,6 +76,23 @@ function stableIdKey(document: unknown): string | undefined {
   return id === undefined ? undefined : typeof id + ':' + String(id);
 }
 
+export function rowKeyFor(consumer: ConsumerCallbacks, identity: DocumentId | undefined): string | undefined {
+  var secret = consumer.rowKeySecret;
+  if (identity === undefined || !secret) return undefined;
+  return HmacSHA256(typeof identity + ':' + String(identity), secret).toString();
+}
+
+export function rowKeysFor(consumer: ConsumerCallbacks, documents: ServerDocument[], identities?: Array<DocumentId | undefined>): string[] | undefined {
+  var rowKeys: string[] = [];
+  for (var index = 0; index < documents.length; index++) {
+    var identity = documentId(documents[index]);
+    if (identity === undefined && identities) identity = identities[index];
+    var rowKey = rowKeyFor(consumer, identity);
+    if (rowKey === undefined) return undefined;
+    rowKeys.push(rowKey);
+  }
+  return rowKeys;
+}
 function rowWithIdentity(document: ServerDocument, identity: DocumentId | undefined, publicRows: Map<ServerDocument, ServerDocument>): ServerDocument {
   var id = documentId(document) === undefined ? identity : documentId(document);
   if (id === undefined || documentId(document) !== undefined) {
@@ -106,10 +137,11 @@ export function changedFor(_socket: VdbSocket, consumer: ConsumerCallbacks, tobe
   var normalized = normalizeDocument(tobe);
   var id = normalized ? documentId(normalized) : documentId(tobe);
   if (id === undefined) id = identity;
+  var key = rowKeyFor(consumer, id);
   var cache = consumer.delta ? getSharedSnapshotCache() : undefined;
   if (!normalized) {
     if (id !== undefined && cache) cache.delete(consumer, id);
-    return { c: { o: null, n: tobe, i: index } };
+    return { c: { o: null, n: tobe, i: index, rowKey: key } };
   }
   var old = id !== undefined && cache ? cache.get(consumer, consumer.namespace, consumer.collection, id) : undefined;
   var before = old && validVersion(old.version) ? old.version : undefined;
@@ -128,16 +160,63 @@ export function changedFor(_socket: VdbSocket, consumer: ConsumerCallbacks, tobe
     var delta: ObserverDelta = { documentId: id, baseVersion: before, version: version, patch: patch, i: index };
     if (encodedBytes({ d: delta }) < encodedBytes({ c: { o: null, n: normalized, i: index } })) {
       cache!.seed(consumer, consumer.namespace, consumer.collection, normalized, id);
-      return { d: delta };
+      return key === undefined ? { d: delta } : { d: delta, rowKey: key };
     }
   }
   if (id !== undefined && cache) cache.seed(consumer, consumer.namespace, consumer.collection, normalized, id);
-  return { c: { o: null, n: normalized, i: index } };
+  return { c: { o: null, n: normalized, i: index, rowKey: key } };
 }
+function notifyReconcileWaiters(shared: SharedObserver, stable: boolean): void {
+  var waiters = shared.reconcileWaiters.splice(0);
+  waiters.forEach(function (waiter) {
+    waiter(stable);
+  });
+}
+
+function stableObserver(shared: SharedObserver): void {
+  shared.reconciling = false;
+  shared.reconcileDirty = false;
+  shared.reconcileRetryDelay = 100;
+  notifyReconcileWaiters(shared, true);
+}
+
+function failedObserver(shared: SharedObserver): void {
+  shared.reconciling = false;
+  shared.reconcileDirty = false;
+  shared.consumers.forEach(function (entry) {
+    if (entry.ready) emitError(entry.socket, entry.request, 'RECOVERY_FAILED', 'Unable to obtain a stable observer window');
+  });
+  notifyReconcileWaiters(shared, false);
+  if (shared.reconcileRetryTimer || shared.consumers.size === 0) return;
+  var delay = shared.reconcileRetryDelay;
+  shared.reconcileRetryDelay = Math.min(delay * 2, 5000);
+  shared.reconcileRetryTimer = setTimeout(function () {
+    shared.reconcileRetryTimer = undefined;
+    if (shared.consumers.size > 0) reconcileObserver(shared);
+  }, delay);
+}
+
+export function waitForObserverInitialization(shared: SharedObserver, callback: (stable: boolean) => void): void {
+  if (!shared.initializing) {
+    callback(true);
+    return;
+  }
+  shared.initializationWaiters.push(callback);
+}
+
+export function waitForObserverCommit(shared: SharedObserver, callback: (stable: boolean) => void): void {
+  if (!shared.windowed) {
+    callback(true);
+    return;
+  }
+  shared.reconcileWaiters.push(callback);
+  if (!shared.reconciling && !shared.reconcileRetryTimer) reconcileObserver(shared);
+}
+
 export function reconcileObserver(shared: SharedObserver, attempts: number = 2): void {
   if (shared.consumers.size === 0) return;
   shared.revision++;
-  if (shared.reconciling) {
+  if (shared.reconciling || shared.reconcileRetryTimer) {
     shared.reconcileDirty = true;
     return;
   }
@@ -146,6 +225,7 @@ export function reconcileObserver(shared: SharedObserver, attempts: number = 2):
     if (shared.consumers.size === 0) {
       shared.reconciling = false;
       shared.reconcileDirty = false;
+      notifyReconcileWaiters(shared, false);
       return;
     }
     shared.reconcileDirty = false;
@@ -153,24 +233,21 @@ export function reconcileObserver(shared: SharedObserver, attempts: number = 2):
       if (shared.consumers.size === 0) {
         shared.reconciling = false;
         shared.reconcileDirty = false;
+        notifyReconcileWaiters(shared, false);
         return;
       }
-      if (error || !documents) {
-        if (shared.reconcileDirty) return reconcile(attempts);
+      if (error || !documents || shared.reconcileDirty) {
         if (remainingAttempts > 0)
           return setTimeout(function () {
             reconcile(remainingAttempts - 1);
           }, 10);
-        shared.reconciling = false;
-        shared.consumers.forEach(function (entry) {
-          if (entry.ready) emitError(entry.socket, entry.request, 'RECOVERY_FAILED', 'Unable to obtain a stable observer window');
-        });
+        failedObserver(shared);
         return;
       }
       if (!shared.snapshot) {
         shared.snapshot = documents;
         shared.snapshotIdentities = identities || [];
-        shared.reconciling = false;
+        stableObserver(shared);
         return;
       }
       var publicRows = new Map<ServerDocument, ServerDocument>();
@@ -224,19 +301,20 @@ export function reconcileObserver(shared: SharedObserver, attempts: number = 2):
           } else if (change.kind === 'a') {
             if (entry.delta) {
               var added = cacheDocument(entry.socket, entry, document, identity) || document;
-              delivered(entry.socket, entry, [{ a: { e: added, i: change.index } }]);
+              delivered(entry.socket, entry, [{ a: { e: added, i: change.index, rowKey: rowKeyFor(entry, identity) } }]);
             } else if (entry.events.a) sendChange(entry.socket, { a: { e: document, i: change.index } }, entry.request);
           } else if (change.kind === 'r') {
             if (entry.delta) {
               if (identity !== undefined) getSharedSnapshotCache().delete(entry, identity);
-              delivered(entry.socket, entry, [{ r: { e: document, i: change.index } }]);
+              delivered(entry.socket, entry, [{ r: { e: document, i: change.index, rowKey: rowKeyFor(entry, identity) } }]);
             } else if (entry.events.r) sendChange(entry.socket, { r: { e: document, i: change.index } }, entry.request);
-          } else if (entry.delta) delivered(entry.socket, entry, [{ m: { e: document, o: change.oldIndex, n: change.newIndex } }]);
+          } else if (entry.delta)
+            delivered(entry.socket, entry, [{ m: { e: document, o: change.oldIndex, n: change.newIndex, rowKey: rowKeyFor(entry, identity) } }]);
           else if (entry.events.m) sendChange(entry.socket, { m: { e: document, o: change.oldIndex, n: change.newIndex } }, entry.request);
         });
       });
-      if (shared.reconcileDirty) return reconcile(attempts);
-      shared.reconciling = false;
+      stableObserver(shared);
+      if (shared.reconcileDirty) reconcileObserver(shared, remainingAttempts);
     });
   };
   reconcile(attempts);

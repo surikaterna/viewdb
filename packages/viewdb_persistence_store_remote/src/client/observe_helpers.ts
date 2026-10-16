@@ -1,6 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import { cloneDocument, documentId, validVersion } from '../deltaCache';
 import type { DocumentId, ObserverChange, SocketClientOptions, WireDocument } from '../deltaProtocol';
+import _ = require('lodash');
 
 export interface ObserverQuery {
   [key: string]: unknown;
@@ -17,7 +18,7 @@ export interface ObserverParams {
   observe: unknown;
   collection: string;
   events: { i: boolean; a: boolean; r: boolean; c: boolean; m: boolean };
-  deltaVersion: 1;
+  deltaVersion?: 1;
 }
 
 export interface ObserverClient {
@@ -34,7 +35,7 @@ export interface RemoteCollection {
 
 export interface ObserverDefaults {
   events: ObserverParams['events'];
-  deltaVersion: 1;
+  deltaVersion?: 1;
 }
 
 export interface ObserverCallbacks {
@@ -53,16 +54,6 @@ export interface EventRecord {
 export interface PendingDocumentRecovery {
   targetVersion?: number;
 }
-
-export interface MergeOptions {
-  keyFn?: (document: WireDocument) => string;
-  added?: (document: WireDocument, index: number) => void;
-  removed?: (document: WireDocument, index: number) => void;
-  changed?: (oldDocument: WireDocument, newDocument: WireDocument, index: number) => void;
-  moved?: (document: WireDocument, oldIndex: number, newIndex: number) => void;
-}
-
-export var merge = require('viewdb').merge as (asis: WireDocument[] | null, tobe: WireDocument[], options?: MergeOptions) => WireDocument[];
 
 export function buildParams(defaults: ObserverDefaults, query: ObserverQuery, collection: RemoteCollection): ObserverParams {
   var id = uuid();
@@ -99,26 +90,82 @@ export function copyDocuments(documents: WireDocument[]): WireDocument[] {
 export function isStructural(change: ObserverChange): boolean {
   return Boolean(change.i || change.s || change.a || change.r || change.m);
 }
-export function reconcileSnapshot(current: WireDocument[] | null, documents: WireDocument[], callbacks: ObserverCallbacks): WireDocument[] {
-  var canKeyById =
-    documents.every((document) => idKey(document) !== undefined) && (current === null || current.every((document) => idKey(document) !== undefined));
-  var options: MergeOptions = {
-    added: (document, index) => {
-      if (callbacks.added) callbacks.added(cloneDocument(document), index);
+export interface ObserverRowIdentity {
+  id?: DocumentId;
+  rowKey?: string;
+  version?: number;
+}
+interface MergeRow extends WireDocument {
+  key: string;
+  index: number;
+  document: WireDocument | null;
+}
+
+interface RowMergeOptions {
+  keyFn: (row: MergeRow) => string;
+  added?: (row: MergeRow, index: number) => void;
+  removed?: (row: MergeRow, index: number) => void;
+  changed?: (oldRow: MergeRow, newRow: MergeRow, index: number) => void;
+  moved?: (row: MergeRow, oldIndex: number, newIndex: number) => void;
+}
+
+var merge = require('viewdb').merge as (current: MergeRow[] | null, next: MergeRow[], options: RowMergeOptions) => MergeRow[];
+
+export function reconcileSnapshotRows(
+  current: ObserverRowIdentity[] | null,
+  documents: WireDocument[],
+  rowKeys: string[] | undefined,
+  getCached: (row: ObserverRowIdentity) => WireDocument | undefined,
+  callbacks: ObserverCallbacks,
+  shouldContinue: () => boolean
+): ObserverRowIdentity[] {
+  var keyed =
+    !!current &&
+    !!rowKeys &&
+    rowKeys.length === documents.length &&
+    current.every((row) => typeof row.rowKey === 'string' && row.rowKey.length > 0) &&
+    rowKeys.every((key) => typeof key === 'string' && key.length > 0);
+  var prior: MergeRow[] | null = current
+    ? current.map((row, index) => ({
+        key: keyed ? 'row:' + row.rowKey : row.id === undefined ? 'old:' + index : 'id:' + idKey({ _id: row.id }),
+        index: index,
+        document: null
+      }))
+    : null;
+  var nextRows: ObserverRowIdentity[] = [];
+  var next: MergeRow[] = documents.map((document, index) => {
+    var id = documentId(document);
+    var rowKey = rowKeys && rowKeys.length === documents.length ? rowKeys[index] : undefined;
+    nextRows.push({ id: id, rowKey: rowKey, version: validVersion(document.version) ? document.version : undefined });
+    return {
+      key: keyed ? 'row:' + rowKey : id === undefined ? 'new:' + index : 'id:' + idKey({ _id: id }),
+      index: index,
+      document: document
+    };
+  });
+  var merged = merge(prior, next, {
+    keyFn: (row) => String(row.key),
+    added: (row, index) => {
+      if (shouldContinue() && callbacks.added && row.document) callbacks.added(cloneDocument(row.document), index);
     },
-    removed: (document, index) => {
-      if (callbacks.removed) callbacks.removed(cloneDocument(document), index);
+    removed: (row, index) => {
+      if (!shouldContinue() || !callbacks.removed || !current) return;
+      var old = getCached(current[row.index]);
+      if (old) callbacks.removed(cloneDocument(old), index);
     },
-    changed: (oldDocument, newDocument, index) => {
-      if (callbacks.changed) callbacks.changed(cloneDocument(oldDocument), cloneDocument(newDocument), index);
+    changed: (oldRow, newRow, index) => {
+      if (!shouldContinue() || !callbacks.changed || !current || !newRow.document) return;
+      var old = getCached(current[oldRow.index]);
+      var document = newRow.document;
+      if (!old || !_.isEqual(old, document)) {
+        callbacks.changed(old ? cloneDocument(old) : null, cloneDocument(document), index);
+      }
     },
-    moved: (document, oldIndex, newIndex) => {
-      if (callbacks.moved) callbacks.moved(cloneDocument(document), oldIndex, newIndex);
+    moved: (row, oldIndex, newIndex) => {
+      if (shouldContinue() && callbacks.moved && row.document) callbacks.moved(cloneDocument(row.document), oldIndex, newIndex);
     }
-  };
-  if (canKeyById) options.keyFn = (document) => idKey(document)!;
-  merge(current, documents, options);
-  return copyDocuments(documents);
+  });
+  return merged.map((row) => nextRows[row.index]);
 }
 
 export function updatePendingTarget(pendingDocuments: Map<DocumentId, PendingDocumentRecovery>, id: DocumentId, version: unknown): void {

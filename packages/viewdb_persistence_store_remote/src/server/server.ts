@@ -1,44 +1,22 @@
 import _ = require('lodash');
+import { v4 as uuid } from 'uuid';
 import { Logger } from 'slf';
 import { DeltaCacheLimits } from '../deltaProtocol';
-import { documentId, normalizeDocument } from '../deltaCache';
 import { VdbSocket } from '../types';
 import { getObserverStats } from './observerStats';
-import {
-  cacheDocument,
-  changedFor,
-  ConsumerCallbacks,
-  delivered,
-  emitError,
-  QueryDecorator,
-  reconcileObserver,
-  sendChange,
-  SharedObserver
-} from './deltaDelivery';
-import { projectionWithIdentity, ServerDocument, queryStable } from './stableQuery';
+import { cacheDocument, ConsumerCallbacks, delivered, emitError, QueryDecorator, rowKeysFor, sendChange, SharedObserver } from './deltaDelivery';
+import { ServerDocument, queryStable } from './stableQuery';
 import { recoverObserver } from './recovery';
 import { getSharedSnapshotCache, viewdbNamespace } from './sharedSnapshotCache';
+import {
+  createSharedObserver,
+  observeKey,
+  ObserveRegistration,
+  rebindConsumerToAuthorizedQuery,
+  removeConsumer,
+  stopRegisteredObserver
+} from './observerLifecycle';
 var LOG = Logger.getLogger('viewdb:remote:server');
-
-interface ObserveRegistration {
-  i: number;
-  key: string | null;
-  consumerId: string | null;
-  token: number;
-}
-interface ServerObserveCallbacks {
-  init: (documents: ServerDocument[]) => void;
-  added: (document: ServerDocument, index: number) => void;
-  removed: (document: ServerDocument, index: number) => void;
-  changed: (oldDocument: ServerDocument | null, newDocument: ServerDocument, index: number) => void;
-  moved: (document: ServerDocument, oldIndex: number, newIndex: number) => void;
-  oplog: boolean;
-  batchMs: number;
-}
-
-function observeKey(collection: string, query: any, sort?: any, limit?: any, skip?: any, project?: any): string {
-  return JSON.stringify({ collection, query, sort, limit, skip, project });
-}
 
 function getSharedRegistry(viewdb: any): Map<string, SharedObserver> {
   if (!viewdb._vdbSharedObservers) {
@@ -48,24 +26,6 @@ function getSharedRegistry(viewdb: any): Map<string, SharedObserver> {
     };
   }
   return viewdb._vdbSharedObservers;
-}
-
-function removeConsumer(registry: Map<string, SharedObserver>, key: string, consumerId: string): void {
-  var shared = registry.get(key);
-  if (!shared) return;
-  var consumer = shared.consumers.get(consumerId);
-  if (consumer) {
-    getSharedSnapshotCache().clear(consumer);
-    shared.consumers.delete(consumerId);
-  }
-  if (shared.consumers.size === 0) {
-    if (shared.handle) shared.handle.stop();
-    registry.delete(key);
-  }
-}
-
-function stopRegisteredObserver(registry: Map<string, SharedObserver>, observer: ObserveRegistration): void {
-  if (observer.key && observer.consumerId) removeConsumer(registry, observer.key, observer.consumerId);
 }
 
 class ViewDbSocketServer {
@@ -98,8 +58,8 @@ class ViewDbSocketServer {
     socket.on('disconnect', function () {
       _disconnected = true;
       _.forOwn(_observers, function (observer: any, observeId: string) {
-        stopRegisteredObserver(registry, observer);
         delete _observers[observeId];
+        stopRegisteredObserver(registry, observer);
       });
     });
 
@@ -173,6 +133,7 @@ class ViewDbSocketServer {
             requestIndex: request.i,
             socketId: _socketId
           });
+          delete _observers[observeId];
           stopRegisteredObserver(registry, existingObserver);
         }
         var registrationToken = ++_observeRegistrationSeq;
@@ -201,6 +162,7 @@ class ViewDbSocketServer {
           var deltaEnabled = request.p.deltaVersion === 1;
 
           var consumer: ConsumerCallbacks = {
+            id: consumerId,
             request: request,
             socket: socket,
             events: events,
@@ -209,7 +171,12 @@ class ViewDbSocketServer {
             collection: request.p.collection,
             namespace: namespace,
             sequence: 0,
-            readPreference: readPreference
+            rowKeySecret: deltaEnabled ? uuid() : undefined,
+            sort: request.p.sort,
+            skip: _.isNumber(request.p.skip) ? request.p.skip : undefined,
+            project: request.p.project,
+            limit: effectiveLimit,
+            windowed: needsWindow
           };
 
           var shared = registry.get(key);
@@ -231,7 +198,9 @@ class ViewDbSocketServer {
                     var docs = committedDocuments.map(function (doc, index) {
                       return cacheDocument(socket, consumer, doc, committedIdentities[index]) || doc;
                     });
-                    delivered(socket, consumer, [events.i ? { i: { r: docs } } : { s: { r: docs } }]);
+                    var rowKeys = rowKeysFor(consumer, committedDocuments, committedIdentities);
+                    var initial = { r: docs, rowKeys: rowKeys };
+                    delivered(socket, consumer, [events.i ? { i: initial } : { s: initial }]);
                   } else sendChange(socket, { i: { r: committedDocuments } }, request);
                 }, 0);
               } else
@@ -248,173 +217,47 @@ class ViewDbSocketServer {
                     var docs = result.map(function (doc, index) {
                       return cacheDocument(socket, consumer, doc, identities && identities[index]) || doc;
                     });
-                    delivered(socket, consumer, [events.i ? { i: { r: docs } } : { s: { r: docs } }]);
+                    var rowKeys = rowKeysFor(consumer, result, identities);
+                    var initial = { r: docs, rowKeys: rowKeys };
+                    delivered(socket, consumer, [events.i ? { i: initial } : { s: initial }]);
                   } else sendChange(socket, { i: { r: result } }, request);
                   consumer.ready = true;
                 });
             } else if (!events.i && !consumer.delta && !shared.initializing) consumer.ready = true;
           } else {
-            // Create new shared observer
-            var newShared: SharedObserver = {
-              handle: null,
-              consumers: new Map(),
-              viewdb: viewdb,
-              collection: request.p.collection,
-              query: decoratedQuery,
-              sort: request.p.sort,
-              limit: effectiveLimit,
-              skip: request.p.skip,
-              project: request.p.project,
-              readPreference: readPreference,
-              revision: 0,
-              snapshot: null,
-              snapshotIdentities: [],
-              windowed: needsWindow,
-              pendingChanges: false,
-              initializing: true,
-              reconciling: false,
-              reconcileDirty: false
-            };
-            newShared.consumers.set(consumerId, consumer);
-            registry.set(key, newShared);
-            _observers[observeId] = { i: request.i, key: key, consumerId: consumerId, token: registrationToken };
-            socket.emit('/vdb/response', { i: request.i, p: request.p.deltaVersion === 1 ? { handle: observeId, deltaVersion: 1 } : { handle: observeId } });
-
-            var cursor = viewdb.collection(request.p.collection).find(decoratedQuery);
-            if (readPreference && cursor.setReadPreference) {
-              cursor.setReadPreference(readPreference);
-            }
-            if (request.p.sort) {
-              cursor.sort(request.p.sort);
-            }
-            if (effectiveLimit !== undefined) {
-              cursor.limit(effectiveLimit);
-            }
-            if (_.isNumber(request.p.skip)) {
-              cursor.skip(request.p.skip);
-            }
-            if (request.p.project) {
-              cursor.project(projectionWithIdentity(request.p.project));
-            }
-
-            var observeOptions: ServerObserveCallbacks = {
-              init: function (result: ServerDocument[]) {
-                var initialize = function (documents: ServerDocument[], identities?: Array<string | number | undefined>) {
-                  newShared.pendingChanges = false;
-                  newShared.snapshot = newShared.windowed
-                    ? documents.map(function (doc) {
-                        return normalizeDocument(doc) || doc;
-                      })
-                    : [];
-                  newShared.snapshotIdentities = identities || [];
-                  var initialConsumers: Array<[string, ConsumerCallbacks]> = [];
-                  newShared.consumers.forEach(function (entry, id) {
-                    initialConsumers.push([id, entry]);
+            var initializationFailureSent = false;
+            try {
+              shared = createSharedObserver(
+                viewdb,
+                registry,
+                key,
+                decoratedQuery,
+                consumer,
+                readPreference,
+                _batchMs,
+                function () {
+                  _observers[observeId] = { i: request.i, key: key, consumerId: consumerId, token: registrationToken };
+                  socket.emit('/vdb/response', {
+                    i: request.i,
+                    p: request.p.deltaVersion === 1 ? { handle: observeId, deltaVersion: 1 } : { handle: observeId }
                   });
-                  newShared.initializing = false;
-                  initialConsumers.forEach(function (pair) {
-                    var entry = pair[1];
-                    if (newShared.consumers.get(pair[0]) !== entry) return;
-                    entry.ready = true;
-                    if (entry.delta) {
-                      var docs = documents.map(function (doc, index) {
-                        return cacheDocument(entry.socket, entry, doc, identities && identities[index]) || doc;
-                      });
-                      if (entry.events.i) delivered(entry.socket, entry, [{ i: { r: docs } }]);
-                      else delivered(entry.socket, entry, [{ s: { r: docs } }]);
-                    } else if (entry.events.i) sendChange(entry.socket, { i: { r: documents } }, entry.request);
-                  });
-                };
-                if (!newShared.pendingChanges && !newShared.windowed) {
-                  initialize(result);
-                  return;
+                },
+                function () {
+                  initializationFailureSent = true;
+                  var current = _observers[observeId];
+                  if (current && current.token === registrationToken) delete _observers[observeId];
                 }
-                queryStable(newShared, 2, function (error: Error | null, documents?: ServerDocument[], identities?: Array<string | number | undefined>) {
-                  if (!error && documents) {
-                    initialize(documents, identities);
-                    return;
-                  }
-                  newShared.consumers.forEach(function (entry, id) {
-                    emitError(entry.socket, entry.request, 'RECOVERY_FAILED', 'Unable to obtain a stable observer initialization');
-                    removeConsumer(registry, key, id);
-                  });
-                });
-              },
-              added: function (document: ServerDocument, index: number) {
-                if (!newShared.snapshot) {
-                  newShared.pendingChanges = true;
-                  newShared.revision++;
-                  return;
-                }
-                if (newShared.windowed) return reconcileObserver(newShared);
-                newShared.revision++;
-                newShared.consumers.forEach(function (entry) {
-                  if (!entry.ready || (!entry.delta && !entry.events.a)) return;
-                  var addedDocument = entry.delta ? cacheDocument(entry.socket, entry, document) || document : document;
-                  if (entry.delta) delivered(entry.socket, entry, [{ a: { e: addedDocument, i: index } }]);
-                  else sendChange(entry.socket, { a: { e: addedDocument, i: index } }, entry.request);
-                });
-              },
-              removed: function (document: ServerDocument, index: number) {
-                if (!newShared.snapshot) {
-                  newShared.pendingChanges = true;
-                  newShared.revision++;
-                  return;
-                }
-                if (newShared.windowed) return reconcileObserver(newShared);
-                newShared.revision++;
-                newShared.consumers.forEach(function (entry) {
-                  if (entry.delta) {
-                    var removedId = documentId(document);
-                    if (removedId !== undefined) getSharedSnapshotCache().delete(entry, removedId);
-                    if (entry.ready) delivered(entry.socket, entry, [{ r: { e: document, i: index } }]);
-                  } else if (entry.ready && entry.events.r) sendChange(entry.socket, { r: { e: document, i: index } }, entry.request);
-                });
-              },
-              changed: function (oldDocument: ServerDocument | null, newDocument: ServerDocument, index: number) {
-                if (!newShared.snapshot) {
-                  newShared.pendingChanges = true;
-                  newShared.revision++;
-                  return;
-                }
-                if (newShared.windowed) return reconcileObserver(newShared);
-                newShared.revision++;
-                newShared.consumers.forEach(function (entry) {
-                  if (!entry.ready || (!entry.delta && !entry.events.c)) return;
-                  var change = entry.delta ? changedFor(entry.socket, entry, newDocument, index) : { c: { o: oldDocument, n: newDocument, i: index } };
-                  if (entry.delta) delivered(entry.socket, entry, [change]);
-                  else sendChange(entry.socket, change, entry.request);
-                });
-              },
-              moved: function (document: ServerDocument, oldIndex: number, newIndex: number) {
-                if (!newShared.snapshot) {
-                  newShared.pendingChanges = true;
-                  newShared.revision++;
-                  return;
-                }
-                if (newShared.windowed) return reconcileObserver(newShared);
-                newShared.revision++;
-                newShared.consumers.forEach(function (entry) {
-                  if (!entry.ready) return;
-                  var change = { m: { e: document, o: oldIndex, n: newIndex } };
-                  if (entry.delta) delivered(entry.socket, entry, [change]);
-                  else if (entry.events.m) sendChange(entry.socket, change, entry.request);
-                });
-              },
-              oplog: true,
-              batchMs: _batchMs
-            };
-
-            var observeHandle = cursor.observe(observeOptions);
-            if (_disconnected || registry.get(key) !== newShared || newShared.consumers.size === 0) {
-              observeHandle.stop();
-              if (registry.get(key) === newShared) registry.delete(key);
-              cursor.close(function (_err: Error | null) {});
-              return;
+              );
+            } catch {
+              shared = undefined;
             }
-            newShared.handle = observeHandle;
-            cursor.close(function (_err: Error | null) {});
-            shared = newShared;
+            if (!shared) {
+              var currentRegistration = _observers[observeId];
+              if (currentRegistration && currentRegistration.token === registrationToken) {
+                if (!initializationFailureSent) emitError(socket, request, 'RECOVERY_FAILED', 'Unable to initialize observer');
+                delete _observers[observeId];
+              }
+            }
           }
         });
       } else if (request.p['observe.document'] || request.p['observe.snapshot']) {
@@ -422,31 +265,30 @@ class ViewDbSocketServer {
         var registration = _observers[recoveryRequest.h];
         var recoveryShared = registration && registration.key ? registry.get(registration.key) : undefined;
         var recoveryConsumer = registration && registration.consumerId && recoveryShared ? recoveryShared.consumers.get(registration.consumerId) : undefined;
-        if (!registration || !recoveryShared || !recoveryConsumer || !recoveryConsumer.ready || !recoveryConsumer.delta) {
+        if (!registration || !recoveryShared || !recoveryConsumer || (!recoveryConsumer.ready && !recoveryConsumer.rebindPending) || !recoveryConsumer.delta) {
           emitError(socket, request, 'OBSERVER_NOT_FOUND', 'Observer is not registered on this socket');
         } else {
+          const activeRecoveryConsumer = recoveryConsumer;
           var token = registration.token;
-          var registeredKey = registration.key!;
           var registeredConsumerId = registration.consumerId!;
-          recoverObserver(socket, request, recoveryRequest, recoveryConsumer, recoveryShared, _queryDecorator, function () {
+          var isCurrent = function () {
             var current = _observers[recoveryRequest.h];
-            return Boolean(
-              current &&
-                current.token === token &&
-                current.key === registeredKey &&
-                current.consumerId === registeredConsumerId &&
-                registry.get(registeredKey) === recoveryShared &&
-                recoveryShared?.consumers.get(registeredConsumerId) === recoveryConsumer
-            );
-          });
+            if (_disconnected || !current || current.token !== token || current.consumerId !== registeredConsumerId || !current.key) return false;
+            var owner = registry.get(current.key);
+            return Boolean(owner && owner.consumers.get(registeredConsumerId) === recoveryConsumer);
+          };
+          var rebindAuthorizedQuery = function (query: Record<string, unknown>, callback: (error: Error | null, shared?: SharedObserver) => void) {
+            rebindConsumerToAuthorizedQuery(viewdb, registry, registration, activeRecoveryConsumer, query, readPreference, _batchMs, isCurrent, callback);
+          };
+          recoverObserver(socket, request, recoveryRequest, recoveryConsumer, recoveryShared, _queryDecorator, isCurrent, rebindAuthorizedQuery);
         }
       } else if (request.p['observe.stop']) {
         var handle = request.p['observe.stop'].h;
         if (handle) {
           if (_observers[handle]) {
             var obs = _observers[handle];
-            stopRegisteredObserver(registry, obs);
             delete _observers[handle];
+            stopRegisteredObserver(registry, obs);
           } else {
             _cancelledObserves.add(handle);
           }

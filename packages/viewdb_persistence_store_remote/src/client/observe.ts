@@ -1,27 +1,13 @@
 import _ = require('lodash');
 import { applyPatch } from 'fast-json-patch';
 import { Logger } from 'slf';
-import { BaselineCache, cloneDocument, documentId, normalizeDocument, validVersion } from '../deltaCache';
-import type {
-  DocumentId,
-  ObserverChange,
-  ObserverDocumentResponse,
-  ObserverResponse,
-  ObserverSnapshotResponse,
-  SocketClientOptions,
-  WireDocument
-} from '../deltaProtocol';
+import { cloneDocument, documentId, normalizeDocument, validVersion } from '../deltaCache';
+import type { DocumentId, ObserverChange, ObserverDocumentResponse, ObserverResponse, ObserverSnapshotResponse, WireDocument } from '../deltaProtocol';
 import { isObserverDocumentResponse, isObserverResponse, isObserverSnapshotResponse } from './observe_protocol';
-import {
-  buildParams,
-  copyDocuments,
-  coveredByRecovery,
-  isIndex,
-  isStructural,
-  reconcileSnapshot,
-  RecoveryRequests,
-  updatePendingTarget
-} from './observe_helpers';
+import { buildParams, copyDocuments, coveredByRecovery, isIndex, isStructural, RecoveryRequests, updatePendingTarget } from './observe_helpers';
+import { bufferRecord as bufferRecoveryRecord, bufferRecords as bufferRecoveryRecords } from './observer_buffer';
+import type { RecoveryBufferState } from './observer_buffer';
+import { ObserverRowState } from './observer_row_state';
 import type {
   EventRecord,
   ObserverCallbacks,
@@ -33,35 +19,32 @@ import type {
 } from './observe_helpers';
 
 var LOG = Logger.getLogger('viewdb:remote:observe');
-
-class Observer {
+class Observer extends ObserverRowState implements RecoveryBufferState {
   handles: string[] = [];
   private readonly collection: RemoteCollection;
   private readonly callbacks: ObserverCallbacks;
   private readonly query: ObserverQuery;
   private readonly events: { i: boolean; a: boolean; r: boolean; c: boolean; m: boolean };
-  private readonly cache: BaselineCache;
-  private readonly clientOptions: SocketClientOptions;
   private stopped = false;
   private generation = 0;
   private params: ObserverParams | null = null;
   private remoteHandle: string | null = null;
   private currentHandle: { stop: () => void } | null = null;
   private stopSent = false;
-  private deltaSupported = false;
-  private scope = '';
-  private currentResult: WireDocument[] = [];
-  private resultInitialized = false;
-  private currentResultKnown = false;
   private waitingForHandle: EventRecord[] = [];
-  private buffered: EventRecord[] = [];
+  buffered: EventRecord[] = [];
+  bufferedBytes = 0;
   private pendingDocuments = new Map<DocumentId, PendingDocumentRecovery>();
   private snapshotPending: object | null = null;
   private snapshotOnNextEvent = false;
+  snapshotDirty = false;
+  dirtyThroughSequence: number | undefined;
+  dirtyUnknownSequence = false;
   private readonly recoveryRequests = new RecoveryRequests();
   private recoveryRetryCount = 0;
 
   constructor(collection: RemoteCollection, options: ObserverCallbacks, query: ObserverQuery) {
+    super((collection._client.options || {}).deltaCache);
     this.collection = collection;
     this.callbacks = options || {};
     this.query = query;
@@ -72,8 +55,6 @@ class Observer {
       c: !_.isNil(this.callbacks.changed),
       m: !_.isNil(this.callbacks.moved)
     };
-    this.clientOptions = collection._client.options || {};
-    this.cache = new BaselineCache(this.clientOptions.deltaCache);
     this.startObserver();
   }
 
@@ -83,14 +64,18 @@ class Observer {
     this.remoteHandle = null;
     this.deltaSupported = false;
     this.scope = '';
-    this.currentResult = [];
+    this.currentRows = [];
     this.currentResultKnown = false;
     this.resultInitialized = false;
     this.waitingForHandle = [];
     this.buffered = [];
+    this.bufferedBytes = 0;
     this.pendingDocuments.clear();
     this.snapshotPending = null;
     this.snapshotOnNextEvent = false;
+    this.snapshotDirty = false;
+    this.dirtyThroughSequence = undefined;
+    this.dirtyUnknownSequence = false;
     this.recoveryRetryCount = 0;
   }
 
@@ -103,7 +88,9 @@ class Observer {
     var events = this.events;
     var defaults: ObserverDefaults = {
       events: events,
-      deltaVersion: 1
+      // Removed callbacks carry their full payload on structural events. Keep
+      // those observers on the full protocol so retention never hides removals.
+      deltaVersion: this.callbacks.removed ? undefined : 1
     };
     this.params = buildParams(defaults, this.query, this.collection);
     this.scope = this.params.id;
@@ -150,50 +137,86 @@ class Observer {
       var queued = this.waitingForHandle;
       this.waitingForHandle = [];
       queued.forEach((record) => {
-        this.acceptRecord(record);
+        if (generation === this.generation && !this.stopped) this.acceptRecord(record);
       });
     }
     records.forEach((record) => {
-      this.acceptRecord(record);
+      if (generation === this.generation && !this.stopped) this.acceptRecord(record);
     });
   }
+  private bufferRecord(record: EventRecord): void {
+    bufferRecoveryRecord(this, record, () => this.requestSnapshot());
+  }
+
+  private bufferRecords(records: EventRecord[]): void {
+    bufferRecoveryRecords(this, records, () => this.requestSnapshot());
+  }
+
   private isRecovering(): boolean {
     return this.snapshotPending !== null || this.pendingDocuments.size > 0;
   }
 
+  private acceptAuthoritativeSnapshot(record: EventRecord): void {
+    this.recoveryRequests.cancelAll(this.collection._client);
+    this.pendingDocuments.clear();
+    this.snapshotPending = null;
+    this.snapshotOnNextEvent = false;
+    this.snapshotDirty = false;
+    this.dirtyThroughSequence = undefined;
+    this.dirtyUnknownSequence = false;
+    var barrier = record.sequence;
+    var later = this.buffered.filter((entry) => barrier === undefined || entry.sequence === undefined || entry.sequence > barrier);
+    this.buffered = [];
+    this.bufferedBytes = 0;
+    var generation = this.generation;
+    this.processRecord(record);
+    if (generation !== this.generation || this.stopped) return;
+    later.forEach((entry) => {
+      if (generation === this.generation && !this.stopped) this.acceptRecord(entry);
+    });
+  }
+
   private acceptRecord(record: EventRecord): void {
     if (this.stopped) return;
+    if (record.change.s && this.resultInitialized) {
+      this.acceptAuthoritativeSnapshot(record);
+      return;
+    }
     if (this.snapshotOnNextEvent) {
       this.snapshotOnNextEvent = false;
-      this.buffered.push(record);
+      this.bufferRecord(record);
       this.requestSnapshot();
       return;
     }
     if (this.isRecovering()) {
-      this.buffered.push(record);
+      this.bufferRecord(record);
       if (isStructural(record.change) && this.deltaSupported) this.requestSnapshot();
       else if (record.change.d) updatePendingTarget(this.pendingDocuments, record.change.d.documentId, record.change.d.version);
       return;
     }
     this.processRecord(record);
   }
+
   private processRecord(record: EventRecord): void {
     var change = record.change;
+    var generation = this.generation;
     if (change.i) {
-      this.installResult(change.i.r);
-      if (this.callbacks.init) this.callbacks.init(copyDocuments(change.i.r));
+      this.installResult(change.i.r, change.i.rowKeys);
+      if (generation === this.generation && !this.stopped && this.callbacks.init) this.callbacks.init(copyDocuments(change.i.r));
     } else if (change.s) {
-      this.installResult(change.s.r);
+      if (this.resultInitialized) {
+        this.installSnapshotResult(change.s.r, change.s.rowKeys, () => this.generation === generation && !this.stopped, this.callbacks);
+      } else this.installResult(change.s.r, change.s.rowKeys);
     } else if (change.a) {
-      if (this.addDocument(change.a.e, change.a.i) && this.callbacks.added) {
+      if (this.addDocument(change.a.e, change.a.i, change.a.rowKey) && this.callbacks.added) {
         this.callbacks.added(cloneDocument(change.a.e), change.a.i);
       }
     } else if (change.r) {
-      if (this.removeDocument(change.r.e, change.r.i) && this.callbacks.removed) {
+      if (this.removeDocument(change.r.e, change.r.i, change.r.rowKey) && this.callbacks.removed) {
         this.callbacks.removed(cloneDocument(change.r.e), change.r.i);
       }
     } else if (change.c) {
-      if (this.applyFullChange(change.c.n, change.c.i) && this.callbacks.changed) {
+      if (this.applyFullChange(change.c.n, change.c.i, change.c.rowKey) && this.callbacks.changed) {
         var oldDocument = change.c.o;
         this.callbacks.changed(
           oldDocument === null || oldDocument === undefined ? oldDocument : cloneDocument(oldDocument),
@@ -202,100 +225,12 @@ class Observer {
         );
       }
     } else if (change.m) {
-      if (this.moveDocument(change.m.e, change.m.o, change.m.n) && this.callbacks.moved) {
+      if (this.moveDocument(change.m.e, change.m.o, change.m.n, change.m.rowKey) && this.callbacks.moved) {
         this.callbacks.moved(cloneDocument(change.m.e), change.m.o, change.m.n);
       }
     } else if (change.d) {
       this.applyDelta(record, change.d);
     }
-  }
-
-  private installResult(documents: WireDocument[]): void {
-    this.cache.clear(this.scope);
-    this.currentResult = copyDocuments(documents);
-    this.currentResultKnown = true;
-    this.resultInitialized = true;
-    this.currentResult.forEach((document) => {
-      this.cache.set(this.scope, document);
-    });
-  }
-
-  private addDocument(document: WireDocument, index: number): boolean {
-    this.cache.set(this.scope, document);
-    var id = documentId(document);
-    if (!this.currentResultKnown || !isIndex(index) || index > this.currentResult.length) {
-      this.invalidateResult();
-      return !this.deltaSupported;
-    }
-    if (id !== undefined && this.currentResult.some((item) => documentId(item) === id)) {
-      this.invalidateResult();
-      return !this.deltaSupported;
-    }
-    this.currentResult.splice(index, 0, cloneDocument(document));
-    return true;
-  }
-
-  private removeDocument(document: WireDocument, index: number): boolean {
-    var id = documentId(document);
-    if (id !== undefined) this.cache.delete(this.scope, id);
-    if (
-      !this.currentResultKnown ||
-      !isIndex(index) ||
-      index >= this.currentResult.length ||
-      (id !== undefined && documentId(this.currentResult[index]) !== id)
-    ) {
-      this.invalidateResult();
-      return !this.deltaSupported;
-    }
-    this.currentResult.splice(index, 1);
-    return true;
-  }
-
-  private applyFullChange(document: WireDocument, index: number): boolean {
-    var id = documentId(document);
-    if (!this.currentResultKnown) {
-      if (id === undefined) this.cache.clear(this.scope);
-      else this.cache.set(this.scope, document);
-      if (this.deltaSupported) this.requestSnapshot();
-      return !this.deltaSupported;
-    }
-    if (!isIndex(index) || index >= this.currentResult.length) {
-      this.invalidateResult();
-      return !this.deltaSupported;
-    }
-    var existingId = documentId(this.currentResult[index]);
-    if (existingId !== undefined && id !== undefined && existingId !== id) {
-      this.cache.delete(this.scope, existingId);
-      this.cache.set(this.scope, document);
-      this.invalidateResult();
-      return !this.deltaSupported;
-    }
-    if (id === undefined) this.cache.clear(this.scope);
-    else this.cache.set(this.scope, document);
-    this.currentResult[index] = cloneDocument(document);
-    return true;
-  }
-
-  private invalidateResult(): void {
-    this.currentResultKnown = false;
-    if (this.deltaSupported) this.requestSnapshot();
-  }
-
-  private moveDocument(document: WireDocument, oldIndex: number, newIndex: number): boolean {
-    if (
-      !this.currentResultKnown ||
-      !isIndex(oldIndex) ||
-      !isIndex(newIndex) ||
-      oldIndex >= this.currentResult.length ||
-      newIndex > this.currentResult.length ||
-      (documentId(document) !== undefined && documentId(this.currentResult[oldIndex]) !== documentId(document))
-    ) {
-      this.invalidateResult();
-      return !this.deltaSupported;
-    }
-    var moved = this.currentResult.splice(oldIndex, 1)[0];
-    this.currentResult.splice(newIndex, 0, moved);
-    return true;
   }
 
   private applyDelta(record: EventRecord, delta: NonNullable<ObserverChange['d']>): void {
@@ -305,24 +240,25 @@ class Observer {
       this.requestSnapshot();
       return;
     }
-    var baseline = this.cache.get(this.scope, id);
-    if (validVersion(delta.version) && this.currentResultKnown) {
-      var current = this.currentResult.find((document) => documentId(document) === id);
-      if (current && validVersion(current.version) && current.version >= delta.version) return;
-    }
+    var rowKey = record.change.rowKey;
+    var position = this.currentResultKnown ? this.currentRows.findIndex((row) => (rowKey ? row.rowKey === rowKey : row.id === id)) : -1;
+    var deliveredVersion = position >= 0 ? this.currentRows[position].version : undefined;
+    if (validVersion(delta.version) && validVersion(deliveredVersion) && deliveredVersion >= delta.version) return;
+    var projectedRow = position >= 0 && this.currentRows[position].id === undefined;
+    var baseline = projectedRow ? this.cache.getForRow(this.scope, rowKey!) : this.cache.get(this.scope, id);
     if (baseline && validVersion(baseline.version) && validVersion(delta.version) && baseline.version >= delta.version) return;
     if (!validVersion(delta.version)) {
-      this.buffered.push(record);
+      this.bufferRecord(record);
       this.requestSnapshot();
       return;
     }
     if (!validVersion(delta.baseVersion) || delta.version <= delta.baseVersion || !isIndex(delta.i) || !Array.isArray(delta.patch)) {
-      this.buffered.push(record);
+      this.bufferRecord(record);
       this.beginDocumentRecovery(id, delta.version);
       return;
     }
     if (!baseline || !validVersion(baseline.version) || baseline.version !== delta.baseVersion) {
-      this.buffered.push(record);
+      this.bufferRecord(record);
       this.beginDocumentRecovery(id, delta.version);
       return;
     }
@@ -333,25 +269,26 @@ class Observer {
       if (!normalized) throw new Error('Patch did not produce a JSON document');
       patched = normalized;
     } catch (error) {
-      this.buffered.push(record);
+      this.bufferRecord(record);
       this.beginDocumentRecovery(id, delta.version);
       return;
     }
-    if (documentId(patched) !== id || !validVersion(patched.version) || patched.version !== delta.version) {
-      this.buffered.push(record);
+    if ((documentId(patched) !== id && !projectedRow) || !validVersion(patched.version) || patched.version !== delta.version) {
+      this.bufferRecord(record);
       this.beginDocumentRecovery(id, delta.version);
       return;
     }
-    if (this.currentResultKnown) {
-      var position = this.currentResult.findIndex((document) => documentId(document) === id);
-      if (position < 0 || position !== delta.i) {
-        this.buffered.push(record);
-        this.requestSnapshot();
-        return;
-      }
+    if (this.currentResultKnown && (position < 0 || position !== delta.i)) {
+      this.bufferRecord(record);
+      this.requestSnapshot();
+      return;
     }
-    this.cache.set(this.scope, patched);
-    if (this.currentResultKnown) this.currentResult[delta.i] = cloneDocument(patched);
+    if (projectedRow && rowKey) this.cache.setForRow(this.scope, rowKey, patched);
+    else this.cache.set(this.scope, patched);
+    if (position >= 0) {
+      if (rowKey) this.currentRows[position].rowKey = rowKey;
+      this.currentRows[position].version = delta.version;
+    }
     if (this.callbacks.changed) {
       this.callbacks.changed(cloneDocument(baseline), cloneDocument(patched), delta.i);
     }
@@ -390,24 +327,32 @@ class Observer {
     }
     var document = response.document;
     var version = document.version;
-    if (documentId(document) !== id || !validVersion(version) || (pending.targetVersion !== undefined && version < pending.targetVersion)) {
-      this.requestSnapshot();
-      return;
-    }
-    var old = this.cache.get(this.scope, id);
-    if (old && validVersion(old.version) && version < old.version) {
-      this.requestSnapshot();
-      return;
-    }
+    var position = -1;
     if (this.currentResultKnown) {
-      var position = this.currentResult.findIndex((item) => documentId(item) === id);
+      position = this.currentRows.findIndex((row) => (response.rowKey ? row.rowKey === response.rowKey : row.id === id));
       if (position < 0 || position !== response.index) {
         this.requestSnapshot();
         return;
       }
     }
-    this.cache.set(this.scope, document);
-    if (this.currentResultKnown) this.currentResult[response.index] = cloneDocument(document);
+    if (
+      (documentId(document) !== id && (!response.rowKey || position < 0)) ||
+      !validVersion(version) ||
+      (pending.targetVersion !== undefined && version < pending.targetVersion)
+    ) {
+      this.requestSnapshot();
+      return;
+    }
+    var projectedRow = response.rowKey !== undefined && position >= 0 && this.currentRows[position].id === undefined;
+    var old = projectedRow ? this.cache.getForRow(this.scope, response.rowKey!) : this.cache.get(this.scope, id);
+    if (old && validVersion(old.version) && version < old.version) {
+      this.requestSnapshot();
+      return;
+    }
+    if (response.rowKey && position >= 0) this.currentRows[position].rowKey = response.rowKey;
+    if (position >= 0) this.currentRows[position].version = version;
+    if (projectedRow && response.rowKey) this.cache.setForRow(this.scope, response.rowKey, document);
+    else this.cache.set(this.scope, document);
     if (this.callbacks.changed) {
       this.callbacks.changed(old ? cloneDocument(old) : null, cloneDocument(document), response.index);
     }
@@ -420,20 +365,23 @@ class Observer {
   }
 
   private replayBuffered(recoveredId: DocumentId, recoveredVersion: number, recoverySequence: number): void {
+    var generation = this.generation;
     var records = this.buffered;
     this.buffered = [];
+    this.bufferedBytes = 0;
     for (var index = 0; index < records.length; index++) {
+      if (generation !== this.generation || this.stopped) return;
       var record = records[index];
       if (coveredByRecovery(record, recoveredId, recoveredVersion, recoverySequence)) continue;
       if (this.isRecovering()) {
-        this.buffered.push.apply(this.buffered, records.slice(index));
+        this.bufferRecords(records.slice(index));
         return;
       }
       this.acceptRecord(record);
     }
   }
 
-  private requestSnapshot(): void {
+  protected requestSnapshot(): void {
     if (this.snapshotPending || !this.remoteHandle || !this.deltaSupported) return;
     this.recoveryRequests.cancelAll(this.collection._client);
     this.pendingDocuments.clear();
@@ -457,24 +405,26 @@ class Observer {
 
   private finishSnapshot(response: ObserverSnapshotResponse): void {
     var generation = this.generation;
-    var documents = reconcileSnapshot(this.resultInitialized ? this.currentResult : null, response.documents, this.callbacks);
-    if (generation !== this.generation || this.stopped) return;
-    this.currentResult = documents;
-    this.currentResultKnown = true;
-    this.resultInitialized = true;
+    if (this.snapshotDirty && (this.dirtyUnknownSequence || (this.dirtyThroughSequence !== undefined && response.sequence < this.dirtyThroughSequence))) {
+      this.dirtyUnknownSequence = false;
+      this.snapshotPending = null;
+      this.requestSnapshot();
+      return;
+    }
+    this.snapshotDirty = false;
+    this.dirtyThroughSequence = undefined;
+    this.dirtyUnknownSequence = false;
+    if (!this.installSnapshotResult(response.documents, response.rowKeys, () => generation === this.generation && !this.stopped, this.callbacks)) return;
     this.recoveryRetryCount = 0;
-    this.cache.clear(this.scope);
-    this.currentResult.forEach((document) => {
-      this.cache.set(this.scope, document);
-    });
     var later: EventRecord[] = [];
     this.buffered.forEach((record) => {
       if (record.sequence === undefined || record.sequence > response.sequence) later.push(record);
     });
     this.buffered = [];
+    this.bufferedBytes = 0;
     this.snapshotPending = null;
     later.forEach((record) => {
-      this.acceptRecord(record);
+      if (generation === this.generation && !this.stopped) this.acceptRecord(record);
     });
   }
 
@@ -484,6 +434,7 @@ class Observer {
     this.pendingDocuments.clear();
     this.snapshotPending = null;
     this.buffered = [];
+    this.bufferedBytes = 0;
     this.currentResultKnown = false;
     if (this.recoveryRetryCount < 1 && this.deltaSupported) {
       this.recoveryRetryCount++;

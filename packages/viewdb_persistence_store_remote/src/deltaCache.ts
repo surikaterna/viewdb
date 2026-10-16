@@ -1,4 +1,5 @@
 import type { DeltaCacheLimits, DocumentId, JsonValue, WireDocument } from './deltaProtocol';
+import { cloneFullValue } from './fullDocument';
 
 export const DEFAULT_CACHE_BYTES = 8 * 1024 * 1024;
 export const DEFAULT_CACHE_ENTRIES = 2048;
@@ -46,9 +47,9 @@ export function normalizeDocument(document: unknown): WireDocument | undefined {
   }
 }
 
-/** Only used for documents already received as JSON wire values. */
+/** Isolate full-event callbacks, including Socket.IO binary fields. */
 export function cloneDocument<T>(document: T): T {
-  return JSON.parse(JSON.stringify(document));
+  return cloneFullValue(document);
 }
 
 export function encodedBytes(value: unknown): number {
@@ -99,11 +100,22 @@ export class BaselineCache {
   }
 
   private key(scope: string, id: DocumentId): string {
-    return JSON.stringify([scope, id]);
+    return JSON.stringify([scope, 'id', id]);
+  }
+
+  private rowKey(scope: string, rowKey: string): string {
+    return JSON.stringify([scope, 'row', rowKey]);
   }
 
   get(scope: string, id: DocumentId): WireDocument | undefined {
-    const key = this.key(scope, id);
+    return this.getEntry(this.key(scope, id));
+  }
+
+  getForRow(scope: string, rowKey: string): WireDocument | undefined {
+    return this.getEntry(this.rowKey(scope, rowKey));
+  }
+
+  private getEntry(key: string): WireDocument | undefined {
     const entry = this.entries.get(key);
     if (!entry) return undefined;
     this.entries.delete(key);
@@ -114,15 +126,22 @@ export class BaselineCache {
   set(scope: string, value: unknown): void {
     const id = documentId(value);
     if (id === undefined) return;
+    this.setEntry(scope, this.key(scope, id), value);
+  }
+
+  setForRow(scope: string, rowKey: string, value: unknown): void {
+    this.setEntry(scope, this.rowKey(scope, rowKey), value);
+  }
+
+  private setEntry(scope: string, key: string, value: unknown): void {
     const document = normalizeDocument(value);
     if (!document || !validVersion(document.version)) {
-      this.delete(scope, id);
+      this.deleteEntry(key);
       return;
     }
-    const key = this.key(scope, id);
     const previous = this.entries.get(key);
     if (previous && validVersion(previous.document.version) && previous.document.version > document.version) return;
-    this.delete(scope, id);
+    this.deleteEntry(key);
     if (this.maxEntries === 0 || this.maxBytes === 0) return;
     const bytes = encodedBytes(document);
     if (bytes > this.maxBytes) return;
@@ -138,7 +157,14 @@ export class BaselineCache {
   }
 
   delete(scope: string, id: DocumentId): void {
-    const key = this.key(scope, id);
+    this.deleteEntry(this.key(scope, id));
+  }
+
+  deleteForRow(scope: string, rowKey: string): void {
+    this.deleteEntry(this.rowKey(scope, rowKey));
+  }
+
+  private deleteEntry(key: string): void {
     const entry = this.entries.get(key);
     if (!entry) return;
     this.byteCount -= entry.bytes;

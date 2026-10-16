@@ -6,7 +6,7 @@ const projectedCollection = require('./delta_query_fixture.cjs');
 async function until(predicate) {
   for (let attempt = 0; attempt < 100; attempt++) {
     if (predicate()) return;
-    await new Promise((resolve) => setImmediate(resolve));
+    await new Promise((resolve) => setTimeout(resolve, 1));
   }
   expect(predicate()).toBe(true);
 }
