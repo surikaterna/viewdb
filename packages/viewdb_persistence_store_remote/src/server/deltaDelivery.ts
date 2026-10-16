@@ -114,7 +114,16 @@ export function changedFor(_socket: VdbSocket, consumer: ConsumerCallbacks, tobe
   var old = id !== undefined && cache ? cache.get(consumer, consumer.namespace, consumer.collection, id) : undefined;
   var before = old && validVersion(old.version) ? old.version : undefined;
   var version = validVersion(normalized.version) ? normalized.version : undefined;
-  if (consumer.events.c && old && before !== undefined && version !== undefined && version > before && id !== undefined) {
+  if (
+    consumer.events.c &&
+    old &&
+    before !== undefined &&
+    version !== undefined &&
+    version > before &&
+    id !== undefined &&
+    documentId(old.document) === id &&
+    documentId(normalized) === id
+  ) {
     var patch = compare(old.document, normalized);
     var delta: ObserverDelta = { documentId: id, baseVersion: before, version: version, patch: patch, i: index };
     if (encodedBytes({ d: delta }) < encodedBytes({ c: { o: null, n: normalized, i: index } })) {

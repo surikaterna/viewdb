@@ -220,23 +220,38 @@ class ViewDbSocketServer {
             _observers[observeId] = { i: request.i, key: key, consumerId: consumerId, token: registrationToken };
             socket.emit('/vdb/response', { i: request.i, p: request.p.deltaVersion === 1 ? { handle: observeId, deltaVersion: 1 } : { handle: observeId } });
             if (shared.snapshot && !shared.initializing && (events.i || consumer.delta)) {
-              queryStable(shared, 2, function (err: Error | null, result?: ServerDocument[], identities?: Array<string | number | undefined>) {
-                var currentObserver = _observers[observeId];
-                if (!currentObserver || currentObserver.token !== registrationToken || !joiningShared.consumers.has(consumerId)) return;
-                if (err || !result) {
-                  emitError(socket, request, 'RECOVERY_FAILED', 'Unable to obtain observer initialization');
-                  removeConsumer(registry, key, consumerId);
-                  delete _observers[observeId];
-                  return;
-                }
-                if (consumer.delta) {
-                  var docs = result.map(function (doc, index) {
-                    return cacheDocument(socket, consumer, doc, identities && identities[index]) || doc;
-                  });
-                  delivered(socket, consumer, [events.i ? { i: { r: docs } } : { s: { r: docs } }]);
-                } else sendChange(socket, { i: { r: result } }, request);
-                consumer.ready = true;
-              });
+              if (shared.windowed) {
+                setTimeout(function () {
+                  var currentObserver = _observers[observeId];
+                  if (!currentObserver || currentObserver.token !== registrationToken || !joiningShared.consumers.has(consumerId)) return;
+                  var committedDocuments = joiningShared.snapshot!;
+                  var committedIdentities = joiningShared.snapshotIdentities;
+                  consumer.ready = true;
+                  if (consumer.delta) {
+                    var docs = committedDocuments.map(function (doc, index) {
+                      return cacheDocument(socket, consumer, doc, committedIdentities[index]) || doc;
+                    });
+                    delivered(socket, consumer, [events.i ? { i: { r: docs } } : { s: { r: docs } }]);
+                  } else sendChange(socket, { i: { r: committedDocuments } }, request);
+                }, 0);
+              } else
+                queryStable(shared, 2, function (err: Error | null, result?: ServerDocument[], identities?: Array<string | number | undefined>) {
+                  var currentObserver = _observers[observeId];
+                  if (!currentObserver || currentObserver.token !== registrationToken || !joiningShared.consumers.has(consumerId)) return;
+                  if (err || !result) {
+                    emitError(socket, request, 'RECOVERY_FAILED', 'Unable to obtain observer initialization');
+                    removeConsumer(registry, key, consumerId);
+                    delete _observers[observeId];
+                    return;
+                  }
+                  if (consumer.delta) {
+                    var docs = result.map(function (doc, index) {
+                      return cacheDocument(socket, consumer, doc, identities && identities[index]) || doc;
+                    });
+                    delivered(socket, consumer, [events.i ? { i: { r: docs } } : { s: { r: docs } }]);
+                  } else sendChange(socket, { i: { r: result } }, request);
+                  consumer.ready = true;
+                });
             } else if (!events.i && !consumer.delta && !shared.initializing) consumer.ready = true;
           } else {
             // Create new shared observer

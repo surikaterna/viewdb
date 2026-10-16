@@ -155,9 +155,15 @@ export class RecoveryRequests {
 }
 
 export function coveredByRecovery(record: EventRecord, id: DocumentId, recoveredVersion: number, sequence: number): boolean {
-  var version = documentVersionFor(record.change, id);
+  var change = record.change;
+  var version = documentVersionFor(change, id);
+  var sameFullDocument =
+    Boolean(change.a && documentId(change.a.e) === id) ||
+    Boolean(change.r && documentId(change.r.e) === id) ||
+    Boolean(change.c && documentId(change.c.n) === id) ||
+    Boolean(change.d && change.d.documentId === id);
   return (
-    (record.sequence !== undefined && record.sequence <= sequence && version !== undefined) ||
-    (Boolean(record.change.d) && validVersion(version) && version <= recoveredVersion)
+    (sameFullDocument && record.sequence !== undefined && record.sequence <= sequence) ||
+    (Boolean(change.d) && validVersion(version) && version <= recoveredVersion)
   );
 }

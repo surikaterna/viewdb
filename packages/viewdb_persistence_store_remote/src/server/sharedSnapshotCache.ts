@@ -1,4 +1,4 @@
-import crypto = require('crypto');
+import SHA256 = require('crypto-js/sha256');
 import { DeltaCacheLimits, DocumentId, WireDocument } from '../deltaProtocol';
 import { documentId, validVersion } from '../deltaCache';
 
@@ -83,7 +83,7 @@ export class SharedSnapshotCache {
     if (prior && prior.version !== undefined && prior.version > version) return;
     const json = JSON.stringify(document);
     const bytes = Buffer.byteLength(json, 'utf8');
-    const digest = crypto.createHash('sha256').update(String(namespace)).update('\0').update(collection).update('\0').update(json).digest('hex');
+    const digest = SHA256(`${namespace}\0${collection}\0${json}`).toString();
     let key = digest;
     let suffix = 0;
     while (true) {
