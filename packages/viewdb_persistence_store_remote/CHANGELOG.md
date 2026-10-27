@@ -1,5 +1,11 @@
 # viewdb_persistence_store_remote
 
+## 4.4.5
+
+### Patch Changes
+
+- 226a911: Verify trusted publishing; no functional changes.
+
 ## 4.4.4
 
 ### Patch Changes

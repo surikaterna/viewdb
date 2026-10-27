@@ -1,5 +1,11 @@
 # viewdb_persistence_store_indexeddb
 
+## 0.6.3
+
+### Patch Changes
+
+- 226a911: Verify trusted publishing; no functional changes.
+
 ## 0.6.2
 
 ### Patch Changes
