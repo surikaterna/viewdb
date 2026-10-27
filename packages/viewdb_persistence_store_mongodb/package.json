@@ -21,15 +21,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/surikaterna/viewdb_persistence_store_mongodb.git"
+    "url": "git+https://github.com/surikaterna/viewdb.git",
+    "directory": "packages/viewdb_persistence_store_mongodb"
   },
   "author": "Andreas Karlsson",
   "devDependencies": {
     "@types/bluebird": "3.5.42",
-    "mongodb-memory-server": "^10.0.0",
+    "mongodb-memory-server": "^11.3.0",
     "slf-debug": "^0.3.2",
     "viewdb": "*",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.5"
   },
   "license": "MIT",
   "bugs": {

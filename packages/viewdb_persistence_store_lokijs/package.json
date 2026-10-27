@@ -16,7 +16,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/surikaterna/viewdb.git"
+    "url": "git+https://github.com/surikaterna/viewdb.git",
+    "directory": "packages/viewdb_persistence_store_lokijs"
   },
   "author": "Andreas Karlsson",
   "license": "ISC",
@@ -29,7 +30,7 @@
     "typescript": "^5.0.0",
     "viewdb": "*",
     "viewdb-store-tests": "*",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.5"
   },
   "dependencies": {
     "bluebird": "^3.7.2",
