@@ -16,7 +16,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/surikaterna/viewdb_persistence_store_indexeddb.git"
+    "url": "git+https://github.com/surikaterna/viewdb.git",
+    "directory": "packages/viewdb_persistence_store_indexeddb"
   },
   "author": "Andreas Karlsson",
   "license": "ISC",

@@ -18,7 +18,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/surikaterna/viewdb_persistence_store_remote.git"
+    "url": "git+https://github.com/surikaterna/viewdb.git",
+    "directory": "packages/viewdb_persistence_store_remote"
   },
   "author": "Andreas Karlsson",
   "license": "MIT",

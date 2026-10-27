@@ -21,7 +21,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/surikaterna/viewdb_persistence_store_mongodb.git"
+    "url": "git+https://github.com/surikaterna/viewdb.git",
+    "directory": "packages/viewdb_persistence_store_mongodb"
   },
   "author": "Andreas Karlsson",
   "devDependencies": {
