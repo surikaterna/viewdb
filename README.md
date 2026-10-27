@@ -100,6 +100,10 @@ npx turbo test     # run all tests
 
 All packages are TypeScript, compiled to CommonJS targeting ES2018.
 
+### CI and publishing
+
+Add a changeset for package changes with `npm run changeset`. After CI passes on `develop`, Changesets creates or updates a versioning pull request. Merging it publishes the new versions and creates GitHub releases. Pull requests and manual runs do not publish.
+
 ## License
 
 MIT
