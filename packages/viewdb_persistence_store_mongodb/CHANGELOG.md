@@ -1,5 +1,11 @@
 # viewdb_persistence_store_mongodb
 
+## 4.5.4
+
+### Patch Changes
+
+- 226a911: Verify trusted publishing; no functional changes.
+
 ## 4.5.3
 
 ### Patch Changes

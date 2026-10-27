@@ -1,5 +1,11 @@
 # viewdb
 
+## 0.13.3
+
+### Patch Changes
+
+- 226a911: Verify trusted publishing; no functional changes.
+
 ## 0.13.2
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # viewdb_persistence_store_lokijs
 
+## 1.1.4
+
+### Patch Changes
+
+- 226a911: Verify trusted publishing; no functional changes.
+
 ## 1.1.3
 
 ### Patch Changes
