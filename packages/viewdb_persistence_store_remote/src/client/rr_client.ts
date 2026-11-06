@@ -46,7 +46,9 @@ class Client {
       i: this._requestId++,
       p: payload
     };
-    this._requests[req.i] = { cb: callback, k: persistent || false };
+    if (callback) {
+      this._requests[req.i] = { cb: callback, k: persistent || false };
+    }
     this._socket!.emit('/vdb/request', req);
     return req.i;
   }
