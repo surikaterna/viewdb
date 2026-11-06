@@ -1,5 +1,11 @@
 # viewdb_persistence_store_remote
 
+## 4.4.6
+
+### Patch Changes
+
+- 2d60eec: Avoid retaining callback-less requests in the response registry while preserving notification sends, request IDs, and callback and subscription lifecycles.
+
 ## 4.4.5
 
 ### Patch Changes
